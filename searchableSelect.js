@@ -1,92 +1,100 @@
-export class SearchableSelect {
-  constructor(containerId, typeFilter = null) {
-    this.container = document.getElementById(containerId);
-    this.typeFilter = typeFilter; // e.g., "male" or "female" or null
-    this.selectedId = null;
-    this.build();
-    this.registerListeners();
+// searchableSelect.js
+// -------------------
+// Exports a single function `updateSearchableSelects`
+// which re‐builds all searchable dropdowns in the modal
+// based on the current list of SVG <g data-id="…"> persons.
+
+export function updateSearchableSelects(existingModalData = {}) {
+  // existingModalData can contain { motherId, fatherId, spouseId } when editing
+
+  // Helper: build an array of all current persons
+  const allGroups = Array.from(document.querySelectorAll('svg#g svg g[data-id]'));
+  const persons = allGroups.map(g => {
+    return {
+      id: g.getAttribute('data-id'),
+      name: g.getAttribute('data-name'),
+      surname: g.getAttribute('data-surname'),
+      gender: g.getAttribute('data-gender'),
+    };
+  });
+
+  // Build dropdown options HTML for a given gender filter
+  function buildOptions(filterGender, selectedId) {
+    const filtered = persons
+      .filter(p => filterGender === null || p.gender === filterGender)
+      .sort((a, b) => a.name.localeCompare(b.name));
+    return filtered.map(p => {
+      const isSelected = p.id === selectedId ? 'selected' : '';
+      return `<div class="select-option" data-id="${p.id}" ${isSelected}>
+                ${p.name} ${p.surname || ''}
+              </div>`;
+    }).join('');
   }
 
-  build() {
-    this.input = document.createElement('div');
-    this.input.className = 'select-input';
-    this.input.textContent = 'None';
-    this.optionsContainer = document.createElement('div');
-    this.optionsContainer.className = 'options hidden';
-    this.searchField = document.createElement('input');
-    this.searchField.type = 'text';
-    this.searchField.placeholder = 'Search...';
-    this.searchField.className = 'option-search';
-    this.optionsContainer.appendChild(this.searchField);
+  // For each of the three selects: mother (female), father (male), spouse (any)
+  const motherContainer = document.querySelector('#motherSelect');
+  const fatherContainer = document.querySelector('#fatherSelect');
+  const spouseContainer = document.querySelector('#spouseSelect');
 
-    this.container.appendChild(this.input);
-    this.container.appendChild(this.optionsContainer);
-    this.container.__searchableInstance = this;
-  }
+  // Clear previous contents
+  [motherContainer, fatherContainer, spouseContainer].forEach(c => {
+    c.innerHTML = '';
+  });
 
-  registerListeners() {
-    this.input.addEventListener('click', () => this.toggleOptions());
-    this.searchField.addEventListener('input', () => this.filterOptions());
+  // Create the “input box” and the hidden <input> for each
+  function createSearchable(container, placeholder, filterGender, existingId) {
+    // Visible box
+    const inputBox = document.createElement('div');
+    inputBox.className = 'select-input';
+    inputBox.textContent = existingId
+      ? persons.find(p => p.id === existingId)?.name + ' ' + (persons.find(p => p.id === existingId)?.surname || '')
+      : placeholder;
+    inputBox.dataset.selectedId = existingId || '';
+    container.appendChild(inputBox);
+
+    // Hidden actual <input> to store the selected ID
+    const hidden = document.createElement('input');
+    hidden.type = 'hidden';
+    hidden.value = existingId || '';
+    container.appendChild(hidden);
+
+    // Dropdown options wrapper
+    const optionsWrapper = document.createElement('div');
+    optionsWrapper.className = 'options hidden';
+    optionsWrapper.innerHTML = buildOptions(filterGender, existingId);
+    container.appendChild(optionsWrapper);
+
+    // Clicking on inputBox toggles options
+    inputBox.addEventListener('click', () => {
+      optionsWrapper.classList.toggle('hidden');
+      inputBox.classList.toggle('open');
+      // Focus on a filtering input if you want to add one in the future.
+    });
+
+    // When clicking an option:
+    optionsWrapper.addEventListener('click', (e) => {
+      if (!e.target.classList.contains('select-option')) return;
+      const chosenId = e.target.dataset.id;
+      const labelText = e.target.textContent.trim();
+      inputBox.textContent = labelText;
+      inputBox.dataset.selectedId = chosenId;
+      hidden.value = chosenId;
+      // Close dropdown
+      optionsWrapper.classList.add('hidden');
+      inputBox.classList.remove('open');
+    });
+
+    // Click outside to close
     document.addEventListener('click', (e) => {
-      if (!this.container.contains(e.target)) this.closeOptions();
+      if (!container.contains(e.target)) {
+        optionsWrapper.classList.add('hidden');
+        inputBox.classList.remove('open');
+      }
     });
   }
 
-  toggleOptions() {
-    if (this.optionsContainer.classList.contains('hidden')) {
-      this.populateOptions();
-      this.optionsContainer.classList.remove('hidden');
-      setTimeout(() => this.searchField.focus(), 50);
-    } else {
-      this.closeOptions();
-    }
-  }
-
-  closeOptions() {
-    this.optionsContainer.classList.add('hidden');
-    this.searchField.value = '';
-  }
-
-  populateOptions() {
-    // Clear existing options except searchField
-    [...this.optionsContainer.querySelectorAll('.option')].forEach((el) => el.remove());
-    const persons = document.querySelectorAll('g.tree-node');
-    persons.forEach((node) => {
-      const gender = node.getAttribute('data-gender');
-      if (this.typeFilter && gender !== this.typeFilter) return;
-      const id = node.getAttribute('data-id');
-      const name = node.getAttribute('data-name');
-      const surname = node.getAttribute('data-surname');
-      const display = `${name} ${surname}`.trim();
-      const option = document.createElement('div');
-      option.className = 'option';
-      option.textContent = display;
-      option.dataset.id = id;
-      option.addEventListener('click', () => this.selectOption(id, display));
-      this.optionsContainer.appendChild(option);
-    });
-  }
-
-  filterOptions() {
-    const term = this.searchField.value.toLowerCase();
-    this.optionsContainer.querySelectorAll('.option').forEach((opt) => {
-      if (opt.textContent.toLowerCase().includes(term)) opt.classList.remove('hidden');
-      else opt.classList.add('hidden');
-    });
-  }
-
-  selectOption(id, display) {
-    this.selectedId = id;
-    this.input.textContent = display;
-    this.closeOptions();
-  }
-
-  getSelectedId() {
-    return this.selectedId;
-  }
-
-  clear() {
-    this.selectedId = null;
-    this.input.textContent = 'None';
-  }
+  // Build each searchable select
+  createSearchable(motherContainer, 'Select Mother', 'female', existingModalData.motherId);
+  createSearchable(fatherContainer, 'Select Father', 'male', existingModalData.fatherId);
+  createSearchable(spouseContainer, 'Select Spouse', null, existingModalData.spouseId);
 }
