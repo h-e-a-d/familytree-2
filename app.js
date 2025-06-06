@@ -107,21 +107,23 @@ function initializeSettingsPanel() {
 
 function initializeKeyboardShortcuts() {
   document.addEventListener('keydown', (e) => {
+    // Don't interfere with input fields
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+      return;
+    }
+    
     // Toggle between views with Tab key
     if (e.key === 'Tab' && !e.ctrlKey && !e.altKey && !e.shiftKey) {
-      // Only if not in an input field
-      if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'SELECT') {
-        e.preventDefault();
-        const viewToggle = document.getElementById('viewToggle');
-        if (viewToggle) {
-          viewToggle.click();
-        }
+      e.preventDefault();
+      const viewToggle = document.getElementById('viewToggle');
+      if (viewToggle) {
+        viewToggle.click();
       }
     }
     
     // Open add person modal with 'A' key
-    if (e.key === 'a' || e.key === 'A') {
-      if (!e.ctrlKey && !e.altKey && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+    else if (e.key === 'a' || e.key === 'A') {
+      if (!e.ctrlKey && !e.altKey) {
         e.preventDefault();
         const addPersonBtn = document.getElementById('addPersonBtn');
         if (addPersonBtn) addPersonBtn.click();
@@ -129,30 +131,57 @@ function initializeKeyboardShortcuts() {
     }
     
     // Toggle settings with 'S' key
-    if (e.key === 's' || e.key === 'S') {
-      if (!e.ctrlKey && !e.altKey && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+    else if (e.key === 's' || e.key === 'S') {
+      if (!e.ctrlKey && !e.altKey) {
         e.preventDefault();
         const settingsToggle = document.getElementById('settingsToggle');
         if (settingsToggle) settingsToggle.click();
       }
     }
     
+    // Connect selected circles with 'C' key
+    else if (e.key === 'c' || e.key === 'C') {
+      if (!e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        const connectBtn = document.getElementById('connectBtn');
+        if (connectBtn && !connectBtn.classList.contains('hidden')) {
+          connectBtn.click();
+        }
+      }
+    }
+    
+    // Style selected circles with 'T' key (for sTyle)
+    else if (e.key === 't' || e.key === 'T') {
+      if (!e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        const styleBtn = document.getElementById('styleBtn');
+        if (styleBtn && !styleBtn.classList.contains('hidden')) {
+          styleBtn.click();
+        }
+      }
+    }
+    
     // Close modal with Escape key
-    if (e.key === 'Escape') {
-      const modal = document.getElementById('personModal');
+    else if (e.key === 'Escape') {
+      const personModal = document.getElementById('personModal');
+      const styleModal = document.getElementById('styleModal');
       const settingsPanel = document.getElementById('settingsPanel');
       
-      if (modal && !modal.classList.contains('hidden')) {
-        // Import and call closeModal function
+      if (personModal && !personModal.classList.contains('hidden')) {
         import('./modal.js').then(mod => {
           if (typeof mod.closeModal === 'function') {
             mod.closeModal();
           }
         });
+      } else if (styleModal && !styleModal.classList.contains('hidden')) {
+        styleModal.classList.add('hidden');
+        styleModal.style.display = 'none';
       } else if (settingsPanel && !settingsPanel.classList.contains('hidden')) {
         settingsPanel.classList.add('hidden');
       }
     }
+    
+    // Note: Delete key and Ctrl+Z are handled in tree.js
   });
 }
 

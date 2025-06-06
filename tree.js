@@ -2,46 +2,44 @@
 // -------------------
 // Responsible for all SVG‐based logic: adding/editing/removing nodes,
 // dragging, connect‐mode, generate connections, undo stack, etc.
-// Imports `updateSearchableSelects` from searchableSelect.js.
+// Now includes: pan/zoom, grid, selection, connect, and style features
 
 import { updateSearchableSelects } from './searchableSelect.js';
 import { openModalForEdit, closeModal } from './modal.js';
 import { rebuildTableView } from './table.js';
 import { exportTree } from './exporter.js';
 
-let svg, addPersonBtn, undoStack = [], redoStack = [];
+let svg, addPersonBtn, connectBtn, styleBtn, undoStack = [], redoStack = [];
 let connectMode = false, connectFirst = null;
 let nodeRadius = 40, defaultColor = '#3498db';
 let fontFamily = 'Inter', fontSize = 14, nameColor = '#333333', dateColor = '#757575';
 let nextPersonId = 1;
+
+// Pan/Zoom variables
+let isPanning = false, startPoint = { x: 0, y: 0 };
+let scale = 1, panX = 0, panY = 0;
+const minScale = 0.1, maxScale = 5;
+
+// Selection management
+let selectedCircles = new Set();
+
+// Grid settings
+const gridSize = 50;
 
 document.addEventListener('DOMContentLoaded', () => {
   console.log('Tree.js initializing...');
   
   svg = document.getElementById('svgArea');
   addPersonBtn = document.getElementById('addPersonBtn');
+  connectBtn = document.getElementById('connectBtn');
+  styleBtn = document.getElementById('styleBtn');
 
   // Initialize pan/zoom, grid, etc.
   initializeSVGCanvas();
+  drawGrid();
 
-  // Wire up the floating "Add Person" button
-  if (addPersonBtn) {
-    addPersonBtn.addEventListener('click', () => {
-      console.log('Add person button clicked');
-      openModalForEdit(); // no ID = "Add Person" mode
-    });
-  }
-
-  // Form submit handler - attach to form directly
-  const personForm = document.getElementById('personForm');
-  if (personForm) {
-    personForm.addEventListener('submit', (e) => {
-      console.log('Form submit event captured in tree.js');
-      e.preventDefault();
-      e.stopPropagation();
-      savePersonFromModal();
-    });
-  }
+  // Wire up buttons
+  setupButtonEventListeners();
 
   // Settings event listeners
   setupSettingsListeners();
@@ -55,11 +53,461 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('saveData')?.addEventListener('click', saveTreeToJSON);
   document.getElementById('loadData')?.addEventListener('change', loadTreeFromJSON);
 
+  // Style modal events
+  setupStyleModalListeners();
+
   // Push initial undo state
   pushUndoState();
   
   console.log('Tree.js initialization complete');
 });
+
+function setupButtonEventListeners() {
+  // Add person button
+  if (addPersonBtn) {
+    addPersonBtn.addEventListener('click', () => {
+      console.log('Add person button clicked');
+      openModalForEdit(); // no ID = "Add Person" mode
+    });
+  }
+
+  // Connect button
+  if (connectBtn) {
+    connectBtn.addEventListener('click', handleConnectSelected);
+  }
+
+  // Style button
+  if (styleBtn) {
+    styleBtn.addEventListener('click', openStyleModal);
+  }
+
+  // Form submit handler - attach to form directly
+  const personForm = document.getElementById('personForm');
+  if (personForm) {
+    personForm.addEventListener('submit', (e) => {
+      console.log('Form submit event captured in tree.js');
+      e.preventDefault();
+      e.stopPropagation();
+      savePersonFromModal();
+    });
+  }
+}
+
+function setupStyleModalListeners() {
+  const styleForm = document.getElementById('styleForm');
+  const cancelStyleBtn = document.getElementById('cancelStyleModal');
+
+  if (styleForm) {
+    styleForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      applyStylesToSelected();
+    });
+  }
+
+  if (cancelStyleBtn) {
+    cancelStyleBtn.addEventListener('click', closeStyleModal);
+  }
+
+  // Close style modal when clicking outside
+  const styleModal = document.getElementById('styleModal');
+  if (styleModal) {
+    styleModal.addEventListener('click', (e) => {
+      if (e.target === styleModal) {
+        closeStyleModal();
+      }
+    });
+  }
+}
+
+// -----------------------------------------------------------------------------
+// SVG Canvas Initialization with Pan/Zoom
+
+function initializeSVGCanvas() {
+  if (svg) {
+    svg.setAttribute('width', '100%');
+    svg.setAttribute('height', '100%');
+    svg.setAttribute('viewBox', '0 0 1200 800');
+    svg.style.backgroundColor = '#fff';
+    
+    // Create main group for pan/zoom transformations
+    const mainGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    mainGroup.id = 'mainGroup';
+    svg.appendChild(mainGroup);
+    
+    setupPanZoom();
+    setupSelectionHandling();
+  }
+  
+  // Add keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.key === 'z' && !e.shiftKey) {
+      e.preventDefault();
+      undo();
+    } else if (e.ctrlKey && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+      e.preventDefault();
+      redo();
+    } else if (e.key === 'Delete' && selectedCircles.size > 0) {
+      deleteSelectedCircles();
+    } else if (e.key === 'Escape') {
+      clearSelection();
+    }
+  });
+}
+
+function setupPanZoom() {
+  if (!svg) return;
+
+  // Mouse wheel zoom
+  svg.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const rect = svg.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    const newScale = Math.max(minScale, Math.min(maxScale, scale * delta));
+    
+    if (newScale !== scale) {
+      const factor = newScale / scale;
+      panX = mouseX - factor * (mouseX - panX);
+      panY = mouseY - factor * (mouseY - panY);
+      scale = newScale;
+      updateTransform();
+    }
+  });
+
+  // Pan with mouse drag
+  svg.addEventListener('mousedown', (e) => {
+    if (e.target === svg || e.target.classList.contains('grid-line')) {
+      isPanning = true;
+      startPoint = { x: e.clientX - panX, y: e.clientY - panY };
+      svg.classList.add('panning');
+      e.preventDefault();
+    }
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (isPanning) {
+      panX = e.clientX - startPoint.x;
+      panY = e.clientY - startPoint.y;
+      updateTransform();
+    }
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (isPanning) {
+      isPanning = false;
+      svg.classList.remove('panning');
+    }
+  });
+}
+
+function updateTransform() {
+  const mainGroup = document.getElementById('mainGroup');
+  if (mainGroup) {
+    mainGroup.setAttribute('transform', `translate(${panX}, ${panY}) scale(${scale})`);
+  }
+}
+
+function setupSelectionHandling() {
+  if (!svg) return;
+
+  svg.addEventListener('click', (e) => {
+    // If clicking on empty space, clear selection
+    if (e.target === svg || e.target.classList.contains('grid-line')) {
+      clearSelection();
+    }
+  });
+}
+
+// -----------------------------------------------------------------------------
+// Grid Drawing
+
+function drawGrid() {
+  if (!svg) return;
+
+  // Remove existing grid
+  svg.querySelectorAll('.grid-line').forEach(line => line.remove());
+
+  const viewBox = svg.viewBox.baseVal;
+  const width = viewBox.width;
+  const height = viewBox.height;
+
+  // Create grid group
+  const gridGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  gridGroup.id = 'gridGroup';
+
+  // Vertical lines
+  for (let x = 0; x <= width; x += gridSize) {
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.classList.add('grid-line');
+    if (x % (gridSize * 4) === 0) line.classList.add('major');
+    line.setAttribute('x1', x);
+    line.setAttribute('y1', 0);
+    line.setAttribute('x2', x);
+    line.setAttribute('y2', height);
+    gridGroup.appendChild(line);
+  }
+
+  // Horizontal lines
+  for (let y = 0; y <= height; y += gridSize) {
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.classList.add('grid-line');
+    if (y % (gridSize * 4) === 0) line.classList.add('major');
+    line.setAttribute('x1', 0);
+    line.setAttribute('y1', y);
+    line.setAttribute('x2', width);
+    line.setAttribute('y2', y);
+    gridGroup.appendChild(line);
+  }
+
+  // Insert grid as first child so it appears behind everything
+  const mainGroup = document.getElementById('mainGroup');
+  if (mainGroup) {
+    mainGroup.insertBefore(gridGroup, mainGroup.firstChild);
+  } else {
+    svg.insertBefore(gridGroup, svg.firstChild);
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Selection Management
+
+function toggleCircleSelection(personId, circle, group) {
+  if (selectedCircles.has(personId)) {
+    // Deselect
+    selectedCircles.delete(personId);
+    group.classList.remove('selected');
+  } else {
+    // Select
+    selectedCircles.add(personId);
+    group.classList.add('selected');
+  }
+  
+  updateActionButtons();
+  console.log('Selected circles:', Array.from(selectedCircles));
+}
+
+function clearSelection() {
+  selectedCircles.clear();
+  document.querySelectorAll('.person-group.selected').forEach(group => {
+    group.classList.remove('selected');
+  });
+  updateActionButtons();
+  console.log('Selection cleared');
+}
+
+function updateActionButtons() {
+  const hasSelection = selectedCircles.size > 0;
+  const canConnect = selectedCircles.size === 2;
+  
+  if (connectBtn) {
+    if (canConnect) {
+      connectBtn.classList.remove('hidden');
+    } else {
+      connectBtn.classList.add('hidden');
+    }
+  }
+  
+  if (styleBtn) {
+    if (hasSelection) {
+      styleBtn.classList.remove('hidden');
+    } else {
+      styleBtn.classList.add('hidden');
+    }
+  }
+}
+
+function deleteSelectedCircles() {
+  if (selectedCircles.size === 0) return;
+  
+  const selectedArray = Array.from(selectedCircles);
+  const confirmMessage = `Delete ${selectedArray.length} selected person(s)?`;
+  
+  if (!confirm(confirmMessage)) return;
+  
+  selectedArray.forEach(personId => {
+    const group = svg.querySelector(`g[data-id="${personId}"]`);
+    if (group) group.remove();
+  });
+  
+  clearSelection();
+  generateAllConnections();
+  rebuildTableView();
+  pushUndoState();
+}
+
+// -----------------------------------------------------------------------------
+// Connect Functionality
+
+function handleConnectSelected() {
+  if (selectedCircles.size !== 2) {
+    alert('Please select exactly 2 circles to connect.');
+    return;
+  }
+  
+  const [personId1, personId2] = Array.from(selectedCircles);
+  
+  // Show connection type dialog
+  const connectionType = prompt('Connection type:\n1. Parent-Child\n2. Spouse\n\nEnter 1 or 2:');
+  
+  if (connectionType === '1') {
+    // Parent-child connection
+    const parentId = prompt(`Which person is the parent?\nEnter 1 for ${getPersonDisplayName(personId1)} or 2 for ${getPersonDisplayName(personId2)}:`);
+    
+    if (parentId === '1' || parentId === '2') {
+      const parent = parentId === '1' ? personId1 : personId2;
+      const child = parentId === '1' ? personId2 : personId1;
+      
+      const parentGroup = svg.querySelector(`g[data-id="${parent}"]`);
+      const parentGender = parentGroup?.getAttribute('data-gender');
+      
+      if (parentGender === 'male') {
+        setPersonAttribute(child, 'data-fatherId', parent);
+      } else if (parentGender === 'female') {
+        setPersonAttribute(child, 'data-motherId', parent);
+      }
+    }
+  } else if (connectionType === '2') {
+    // Spouse connection
+    setPersonAttribute(personId1, 'data-spouseId', personId2);
+    setPersonAttribute(personId2, 'data-spouseId', personId1);
+  } else {
+    return; // Cancelled or invalid input
+  }
+  
+  generateAllConnections();
+  rebuildTableView();
+  pushUndoState();
+  clearSelection();
+}
+
+function getPersonDisplayName(personId) {
+  const group = svg.querySelector(`g[data-id="${personId}"]`);
+  if (!group) return personId;
+  
+  const name = group.getAttribute('data-name') || '';
+  const surname = group.getAttribute('data-surname') || '';
+  return `${name} ${surname}`.trim();
+}
+
+function setPersonAttribute(personId, attribute, value) {
+  const group = svg.querySelector(`g[data-id="${personId}"]`);
+  if (group) {
+    group.setAttribute(attribute, value);
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Style Modal and Apply Styles
+
+function openStyleModal() {
+  if (selectedCircles.size === 0) {
+    alert('Please select at least one circle to style.');
+    return;
+  }
+  
+  const styleModal = document.getElementById('styleModal');
+  if (!styleModal) return;
+  
+  // Get current style from first selected circle
+  const firstSelectedId = Array.from(selectedCircles)[0];
+  const firstGroup = svg.querySelector(`g[data-id="${firstSelectedId}"]`);
+  const firstCircle = firstGroup?.querySelector('circle.person');
+  const firstNameText = firstGroup?.querySelector('text.name');
+  const firstDobText = firstGroup?.querySelector('text.dob');
+  
+  if (firstCircle) {
+    document.getElementById('selectedNodeColor').value = rgbToHex(firstCircle.getAttribute('fill') || defaultColor);
+    document.getElementById('selectedNodeSize').value = firstCircle.getAttribute('r') || nodeRadius;
+  }
+  
+  if (firstNameText) {
+    document.getElementById('selectedFont').value = firstNameText.getAttribute('font-family') || fontFamily;
+    document.getElementById('selectedFontSize').value = parseInt(firstNameText.getAttribute('font-size')) || fontSize;
+    document.getElementById('selectedNameColor').value = rgbToHex(firstNameText.getAttribute('fill') || nameColor);
+  }
+  
+  if (firstDobText) {
+    document.getElementById('selectedDateColor').value = rgbToHex(firstDobText.getAttribute('fill') || dateColor);
+  }
+  
+  styleModal.classList.remove('hidden');
+  styleModal.style.display = 'flex';
+}
+
+function closeStyleModal() {
+  const styleModal = document.getElementById('styleModal');
+  if (styleModal) {
+    styleModal.classList.add('hidden');
+    styleModal.style.display = 'none';
+  }
+}
+
+function applyStylesToSelected() {
+  if (selectedCircles.size === 0) return;
+  
+  const nodeColor = document.getElementById('selectedNodeColor').value;
+  const nodeSize = parseInt(document.getElementById('selectedNodeSize').value);
+  const font = document.getElementById('selectedFont').value;
+  const fontSize = parseInt(document.getElementById('selectedFontSize').value);
+  const nameColor = document.getElementById('selectedNameColor').value;
+  const dateColor = document.getElementById('selectedDateColor').value;
+  
+  selectedCircles.forEach(personId => {
+    const group = svg.querySelector(`g[data-id="${personId}"]`);
+    if (!group) return;
+    
+    const circle = group.querySelector('circle.person');
+    const nameText = group.querySelector('text.name');
+    const dobText = group.querySelector('text.dob');
+    
+    if (circle) {
+      circle.setAttribute('fill', nodeColor);
+      circle.setAttribute('r', nodeSize);
+    }
+    
+    if (nameText) {
+      nameText.setAttribute('font-family', font);
+      nameText.setAttribute('font-size', `${fontSize}px`);
+      nameText.setAttribute('fill', nameColor);
+      
+      // Update text position based on new circle size
+      const cx = parseFloat(circle.getAttribute('cx'));
+      const cy = parseFloat(circle.getAttribute('cy'));
+      nameText.setAttribute('y', cy - nodeSize - 8);
+    }
+    
+    if (dobText) {
+      dobText.setAttribute('font-family', font);
+      dobText.setAttribute('font-size', `${fontSize - 2}px`);
+      dobText.setAttribute('fill', dateColor);
+      
+      // Update text position based on new circle size
+      const cx = parseFloat(circle.getAttribute('cx'));
+      const cy = parseFloat(circle.getAttribute('cy'));
+      dobText.setAttribute('y', cy + nodeSize + 16);
+    }
+  });
+  
+  closeStyleModal();
+  pushUndoState();
+  console.log('Applied styles to selected circles');
+}
+
+function rgbToHex(rgb) {
+  if (rgb.startsWith('#')) return rgb;
+  if (rgb.startsWith('rgb')) {
+    const values = rgb.match(/\d+/g);
+    if (values && values.length >= 3) {
+      return '#' + values.slice(0, 3).map(x => parseInt(x).toString(16).padStart(2, '0')).join('');
+    }
+  }
+  return rgb;
+}
+
+// -----------------------------------------------------------------------------
+// Settings Listeners
 
 function setupSettingsListeners() {
   const applyBtn = document.getElementById('applyNodeStyle');
@@ -114,31 +562,7 @@ function setupSettingsListeners() {
 }
 
 // -----------------------------------------------------------------------------
-// SVG Initialization, grid, pan/zoom, etc.
-
-function initializeSVGCanvas() {
-  // Set up SVG viewBox and basic attributes
-  if (svg) {
-    svg.setAttribute('width', '100%');
-    svg.setAttribute('height', '100%');
-    svg.setAttribute('viewBox', '0 0 1200 800');
-    svg.style.backgroundColor = '#fff';
-  }
-  
-  // Add keyboard shortcuts
-  document.addEventListener('keydown', (e) => {
-    if (e.ctrlKey && e.key === 'z' && !e.shiftKey) {
-      e.preventDefault();
-      undo();
-    } else if (e.ctrlKey && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
-      e.preventDefault();
-      redo();
-    }
-  });
-}
-
-// -----------------------------------------------------------------------------
-// Modal Save Logic: add or update a person
+// Modal Save Logic
 
 function savePersonFromModal() {
   console.log('savePersonFromModal called');
@@ -149,7 +573,6 @@ function savePersonFromModal() {
   const dobInput = document.getElementById('personDob').value.trim();
   const genderInput = document.getElementById('personGender').value;
 
-  // Hidden selects values:
   const motherId = document.querySelector('#motherSelect input[type="hidden"]')?.value || '';
   const fatherId = document.querySelector('#fatherSelect input[type="hidden"]')?.value || '';
   const spouseId = document.querySelector('#spouseSelect input[type="hidden"]')?.value || '';
@@ -159,7 +582,6 @@ function savePersonFromModal() {
     return;
   }
 
-  // Determine if we're editing or adding
   const modal = document.getElementById('personModal');
   const editingId = modal?.dataset.editingId;
   
@@ -167,32 +589,21 @@ function savePersonFromModal() {
     if (editingId) {
       console.log('Updating existing person:', editingId);
       updateExistingPersonSVG(editingId, { 
-        name: nameInput, 
-        surname: surnameInput, 
-        birthName: birthNameInput, 
-        dob: dobInput, 
-        gender: genderInput, 
-        motherId, fatherId, spouseId 
+        name: nameInput, surname: surnameInput, birthName: birthNameInput, 
+        dob: dobInput, gender: genderInput, motherId, fatherId, spouseId 
       });
     } else {
       console.log('Creating new person');
       createNewPersonSVG({ 
-        name: nameInput, 
-        surname: surnameInput, 
-        birthName: birthNameInput, 
-        dob: dobInput, 
-        gender: genderInput, 
-        motherId, fatherId, spouseId 
+        name: nameInput, surname: surnameInput, birthName: birthNameInput, 
+        dob: dobInput, gender: genderInput, motherId, fatherId, spouseId 
       });
     }
 
-    // Close modal first
     closeModal();
-    
-    // Update other components
-    generateAllConnections();   // regenerate connection lines
-    rebuildTableView();         // refresh the table view data
-    pushUndoState();            // save state for undo
+    generateAllConnections();
+    rebuildTableView();
+    pushUndoState();
     
     console.log('Person saved successfully');
   } catch (error) {
@@ -201,11 +612,10 @@ function savePersonFromModal() {
   }
 }
 
-// Create a new <g> circle‐node in the SVG
+// Create a new person node
 function createNewPersonSVG(data) {
   if (!svg) return;
   
-  // Generate a unique ID
   const existingIds = Array.from(svg.querySelectorAll('g[data-id]'))
     .map(g => g.getAttribute('data-id'))
     .map(id => parseInt(id.replace('p', '')) || 0);
@@ -225,7 +635,7 @@ function createNewPersonSVG(data) {
   group.setAttribute('data-spouseId', data.spouseId);
   group.classList.add('person-group');
 
-  // Positioning: center of viewport by default
+  // Position in center with slight randomization
   const viewBox = svg.viewBox.baseVal;
   const cx = viewBox.width / 2 + Math.random() * 200 - 100;
   const cy = viewBox.height / 2 + Math.random() * 200 - 100;
@@ -263,18 +673,21 @@ function createNewPersonSVG(data) {
   dobText.setAttribute('fill', dateColor);
   group.appendChild(dobText);
 
-  // Make draggable and add double-click event
   setupCircleInteractions(group, circle, nextId);
 
-  svg.appendChild(group);
+  const mainGroup = document.getElementById('mainGroup');
+  if (mainGroup) {
+    mainGroup.appendChild(group);
+  } else {
+    svg.appendChild(group);
+  }
 }
 
-// Update an existing person's attributes and re‐render texts
+// Update existing person
 function updateExistingPersonSVG(id, data) {
   const group = svg.querySelector(`g[data-id="${id}"]`);
   if (!group) return;
 
-  // Overwrite attributes
   group.setAttribute('data-name', data.name);
   group.setAttribute('data-surname', data.surname);
   group.setAttribute('data-birthName', data.birthName);
@@ -284,7 +697,6 @@ function updateExistingPersonSVG(id, data) {
   group.setAttribute('data-fatherId', data.fatherId);
   group.setAttribute('data-spouseId', data.spouseId);
 
-  // Update text elements
   const nameText = group.querySelector('text.name');
   if (nameText) nameText.textContent = data.name;
   
@@ -292,68 +704,49 @@ function updateExistingPersonSVG(id, data) {
   if (dobText) dobText.textContent = data.dob;
 }
 
-// Setup circle interactions (dragging and double-click)
+// Setup circle interactions
 function setupCircleInteractions(group, circle, personId) {
-  // Make draggable
   makeCircleDraggable(group, circle);
+  
+  // Click to select/deselect
+  circle.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleCircleSelection(personId, circle, group);
+  });
   
   // Double-click to edit
   circle.addEventListener('dblclick', (e) => {
     console.log('Double-clicked on circle:', personId);
     e.preventDefault();
     e.stopPropagation();
+    clearSelection(); // Clear selection when editing
     openModalForEdit(personId);
   });
 }
 
-// Apply global font, font size, nameColor, dateColor to all existing <text> nodes
-function applyGlobalFontAndColors() {
-  if (!svg) return;
-  
-  const allNameTexts = svg.querySelectorAll('text.name');
-  const allDobTexts = svg.querySelectorAll('text.dob');
-  
-  allNameTexts.forEach(t => {
-    t.setAttribute('font-family', fontFamily);
-    t.setAttribute('font-size', `${fontSize}px`);
-    t.setAttribute('fill', nameColor);
-  });
-  
-  allDobTexts.forEach(t => {
-    t.setAttribute('font-family', fontFamily);
-    t.setAttribute('font-size', `${fontSize - 2}px`);
-    t.setAttribute('fill', dateColor);
-  });
-}
-
-// Reapply node radius & fill color to all circles
-function reapplyAllNodeStyles() {
-  if (!svg) return;
-  
-  svg.querySelectorAll('circle.person').forEach(c => {
-    c.setAttribute('r', nodeRadius);
-    c.setAttribute('fill', defaultColor);
-  });
-}
-
-// Make a given <circle> draggable within the SVG
+// Make circle draggable
 function makeCircleDraggable(group, circle) {
   let offsetX, offsetY, isDragging = false;
 
   circle.addEventListener('mousedown', (e) => {
-    e.preventDefault();
+    if (e.detail === 1) { // Single click
+      setTimeout(() => {
+        if (!isDragging) return;
+        
+        e.preventDefault();
+        const pt = svg.createSVGPoint();
+        pt.x = e.clientX; 
+        pt.y = e.clientY;
+        const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
+        
+        offsetX = svgP.x - parseFloat(circle.getAttribute('cx'));
+        offsetY = svgP.y - parseFloat(circle.getAttribute('cy'));
+        
+        circle.style.cursor = 'grabbing';
+      }, 200);
+    }
     isDragging = true;
-    
-    // Get SVG coordinates
-    const pt = svg.createSVGPoint();
-    pt.x = e.clientX; 
-    pt.y = e.clientY;
-    const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
-    
-    offsetX = svgP.x - parseFloat(circle.getAttribute('cx'));
-    offsetY = svgP.y - parseFloat(circle.getAttribute('cy'));
-    
-    circle.style.cursor = 'grabbing';
   });
 
   document.addEventListener('mousemove', (e) => {
@@ -370,21 +763,20 @@ function makeCircleDraggable(group, circle) {
     circle.setAttribute('cx', newCx);
     circle.setAttribute('cy', newCy);
     
-    // Move the text labels along
     const nameText = group.querySelector('text.name');
     const dobText = group.querySelector('text.dob');
+    const radius = parseFloat(circle.getAttribute('r'));
     
     if (nameText) {
       nameText.setAttribute('x', newCx);
-      nameText.setAttribute('y', newCy - nodeRadius - 8);
+      nameText.setAttribute('y', newCy - radius - 8);
     }
     
     if (dobText) {
       dobText.setAttribute('x', newCx);
-      dobText.setAttribute('y', newCy + nodeRadius + 16);
+      dobText.setAttribute('y', newCy + radius + 16);
     }
 
-    // Update any connected lines
     generateAllConnections();
   });
 
@@ -396,30 +788,56 @@ function makeCircleDraggable(group, circle) {
   });
 }
 
+// Apply global styles
+function applyGlobalFontAndColors() {
+  if (!svg) return;
+  
+  svg.querySelectorAll('text.name').forEach(t => {
+    t.setAttribute('font-family', fontFamily);
+    t.setAttribute('font-size', `${fontSize}px`);
+    t.setAttribute('fill', nameColor);
+  });
+  
+  svg.querySelectorAll('text.dob').forEach(t => {
+    t.setAttribute('font-family', fontFamily);
+    t.setAttribute('font-size', `${fontSize - 2}px`);
+    t.setAttribute('fill', dateColor);
+  });
+}
+
+function reapplyAllNodeStyles() {
+  if (!svg) return;
+  
+  svg.querySelectorAll('circle.person').forEach(c => {
+    c.setAttribute('r', nodeRadius);
+    c.setAttribute('fill', defaultColor);
+  });
+}
+
 // -----------------------------------------------------------------------------
-// Undo Stack
+// Undo/Redo System
 
 export function pushUndoState() {
   if (!svg) return;
   
-  // Serialize the entire <svg> innerHTML and global settings
+  const mainGroup = document.getElementById('mainGroup');
   const state = {
-    svgInner: svg.innerHTML,
-    nodeRadius, defaultColor, fontFamily, fontSize, nameColor, dateColor
+    svgInner: mainGroup ? mainGroup.innerHTML : svg.innerHTML,
+    nodeRadius, defaultColor, fontFamily, fontSize, nameColor, dateColor,
+    selectedCircles: Array.from(selectedCircles),
+    panX, panY, scale
   };
   undoStack.push(state);
   
-  // Limit undo stack size
   if (undoStack.length > 50) {
     undoStack.shift();
   }
   
-  // Clear redo stack on new action
   redoStack = [];
 }
 
 function undo() {
-  if (undoStack.length < 2) return; // nothing to undo
+  if (undoStack.length < 2) return;
   const current = undoStack.pop();
   redoStack.push(current);
   const previous = undoStack[undoStack.length - 1];
@@ -436,7 +854,13 @@ function redo() {
 function restoreState(state) {
   if (!svg) return;
   
-  svg.innerHTML = state.svgInner;
+  const mainGroup = document.getElementById('mainGroup');
+  if (mainGroup) {
+    mainGroup.innerHTML = state.svgInner;
+  } else {
+    svg.innerHTML = state.svgInner;
+  }
+  
   nodeRadius = state.nodeRadius;
   defaultColor = state.defaultColor;
   fontFamily = state.fontFamily;
@@ -444,7 +868,28 @@ function restoreState(state) {
   nameColor = state.nameColor;
   dateColor = state.dateColor;
   
-  // Re‐wire interactions on restored nodes:
+  // Restore pan/zoom
+  if (state.panX !== undefined) {
+    panX = state.panX;
+    panY = state.panY;
+    scale = state.scale;
+    updateTransform();
+  }
+  
+  // Restore selection
+  clearSelection();
+  if (state.selectedCircles) {
+    state.selectedCircles.forEach(personId => {
+      const group = svg.querySelector(`g[data-id="${personId}"]`);
+      if (group) {
+        selectedCircles.add(personId);
+        group.classList.add('selected');
+      }
+    });
+    updateActionButtons();
+  }
+  
+  // Re-wire interactions
   svg.querySelectorAll('g[data-id]').forEach(group => {
     const circle = group.querySelector('circle.person');
     if (circle) {
@@ -453,30 +898,31 @@ function restoreState(state) {
     }
   });
   
-  applyGlobalFontAndColors();
-  reapplyAllNodeStyles();
+  drawGrid();
   rebuildTableView();
 }
 
 // -----------------------------------------------------------------------------
-// Generate Connections (parent/child & spouse)
+// Generate Connections
 
 export function generateAllConnections() {
   if (!svg) return;
   
-  // Remove all existing relation lines first
-  svg.querySelectorAll('line.relation').forEach(l => l.remove());
+  const mainGroup = document.getElementById('mainGroup');
+  const container = mainGroup || svg;
+  
+  // Remove existing relation lines
+  container.querySelectorAll('line.relation').forEach(l => l.remove());
 
-  svg.querySelectorAll('g[data-id]').forEach(childGroup => {
+  container.querySelectorAll('g[data-id]').forEach(childGroup => {
     const childId = childGroup.getAttribute('data-id');
     const motherId = childGroup.getAttribute('data-motherId');
     const fatherId = childGroup.getAttribute('data-fatherId');
     const spouseId = childGroup.getAttribute('data-spouseId');
 
-    // Helper to draw a line between two circles
     function drawLineBetween(idA, idB, isSpouse = false) {
-      const gA = svg.querySelector(`g[data-id="${idA}"]`);
-      const gB = svg.querySelector(`g[data-id="${idB}"]`);
+      const gA = container.querySelector(`g[data-id="${idA}"]`);
+      const gB = container.querySelector(`g[data-id="${idB}"]`);
       if (!gA || !gB) return;
       
       const circleA = gA.querySelector('circle.person');
@@ -499,8 +945,13 @@ export function generateAllConnections() {
       line.setAttribute('stroke-width', '2');
       if (isSpouse) line.setAttribute('stroke-dasharray', '4 2');
       
-      // Insert at beginning so lines appear behind circles
-      svg.insertBefore(line, svg.firstChild);
+      // Insert before person groups so lines appear behind circles
+      const firstPersonGroup = container.querySelector('g[data-id]');
+      if (firstPersonGroup) {
+        container.insertBefore(line, firstPersonGroup);
+      } else {
+        container.appendChild(line);
+      }
     }
 
     if (motherId) drawLineBetween(childId, motherId, false);
@@ -510,7 +961,7 @@ export function generateAllConnections() {
 }
 
 // -----------------------------------------------------------------------------
-// Save / Load (JSON serialization)
+// Save/Load JSON
 
 function saveTreeToJSON() {
   if (!svg) return;
@@ -518,6 +969,7 @@ function saveTreeToJSON() {
   const allGroups = Array.from(svg.querySelectorAll('g[data-id]'));
   const data = {
     settings: { nodeRadius, defaultColor, fontFamily, fontSize, nameColor, dateColor },
+    view: { panX, panY, scale },
     persons: allGroups.map(g => {
       const circle = g.querySelector('circle.person');
       return {
@@ -532,6 +984,8 @@ function saveTreeToJSON() {
         spouseId: g.getAttribute('data-spouseId') || '',
         cx: circle ? circle.getAttribute('cx') : '0',
         cy: circle ? circle.getAttribute('cy') : '0',
+        nodeColor: circle ? circle.getAttribute('fill') : defaultColor,
+        nodeSize: circle ? circle.getAttribute('r') : nodeRadius,
       };
     })
   };
@@ -556,8 +1010,16 @@ function loadTreeFromJSON(e) {
     try {
       const data = JSON.parse(evt.target.result);
       
-      // Clear existing SVG
-      svg.innerHTML = '';
+      // Clear existing content
+      const mainGroup = document.getElementById('mainGroup');
+      if (mainGroup) {
+        mainGroup.innerHTML = '';
+      } else {
+        svg.innerHTML = '';
+        const newMainGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        newMainGroup.id = 'mainGroup';
+        svg.appendChild(newMainGroup);
+      }
       
       // Restore settings
       if (data.settings) {
@@ -569,7 +1031,15 @@ function loadTreeFromJSON(e) {
         dateColor = data.settings.dateColor || '#757575';
       }
       
-      // Recreate each person
+      // Restore view
+      if (data.view) {
+        panX = data.view.panX || 0;
+        panY = data.view.panY || 0;
+        scale = data.view.scale || 1;
+        updateTransform();
+      }
+      
+      // Recreate persons
       data.persons.forEach(p => {
         const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         group.setAttribute('data-id', p.id);
@@ -587,15 +1057,15 @@ function loadTreeFromJSON(e) {
         circle.classList.add('person');
         circle.setAttribute('cx', p.cx);
         circle.setAttribute('cy', p.cy);
-        circle.setAttribute('r', nodeRadius);
-        circle.setAttribute('fill', defaultColor);
+        circle.setAttribute('r', p.nodeSize || nodeRadius);
+        circle.setAttribute('fill', p.nodeColor || defaultColor);
         group.appendChild(circle);
 
         const nameText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         nameText.classList.add('name');
         nameText.textContent = p.name;
         nameText.setAttribute('x', p.cx);
-        nameText.setAttribute('y', p.cy - nodeRadius - 8);
+        nameText.setAttribute('y', p.cy - (p.nodeSize || nodeRadius) - 8);
         nameText.setAttribute('text-anchor', 'middle');
         nameText.setAttribute('font-family', fontFamily);
         nameText.setAttribute('font-size', `${fontSize}px`);
@@ -606,7 +1076,7 @@ function loadTreeFromJSON(e) {
         dobText.classList.add('dob');
         dobText.textContent = p.dob;
         dobText.setAttribute('x', p.cx);
-        dobText.setAttribute('y', p.cy + nodeRadius + 16);
+        dobText.setAttribute('y', p.cy + (p.nodeSize || nodeRadius) + 16);
         dobText.setAttribute('text-anchor', 'middle');
         dobText.setAttribute('font-family', fontFamily);
         dobText.setAttribute('font-size', `${fontSize - 2}px`);
@@ -614,14 +1084,15 @@ function loadTreeFromJSON(e) {
         group.appendChild(dobText);
 
         setupCircleInteractions(group, circle, p.id);
-        svg.appendChild(group);
+        
+        const container = document.getElementById('mainGroup') || svg;
+        container.appendChild(group);
       });
 
-      // Re‐apply global styles and generate lines
-      applyGlobalFontAndColors();
-      reapplyAllNodeStyles();
+      drawGrid();
       generateAllConnections();
       rebuildTableView();
+      clearSelection();
       pushUndoState();
       
     } catch (error) {
