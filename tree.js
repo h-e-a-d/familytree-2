@@ -1,3 +1,6 @@
+/* =================================================================
+File: tree.js
+================================================================= */
 import { redrawTable } from './table.js';
 import { updateSearchableSelects } from './searchableSelect.js';
 import { exportTree } from './exporter.js';
@@ -9,165 +12,191 @@ let connectMode = false;
 let firstNode = null;
 
 export function initializeTree() {
-  svg = document.getElementById('svgArea');
-  svgGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-  svg.appendChild(svgGroup);
-  createGrid();
-  document.getElementById('exportSvg').addEventListener('click', () => exportTree('svg'));
-  document.getElementById('exportPng').addEventListener('click', () => exportTree('png'));
-  document.getElementById('exportPdf').addEventListener('click', () => exportTree('pdf'));
+svg = document.getElementById('svgArea');
+svgGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+svg.appendChild(svgGroup);
+svg.addEventListener('click', () => {
+if (connectMode) return;
+// Deselect any node selection
+document.querySelectorAll('g.tree-node circle').forEach(c => c.classList.remove('selected'));
+});
 }
 
-function createGrid() {
-  const gridGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-  const size = 800;
-  const step = 50;
-  for (let x = 0; x <= size; x += step) {
-    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    line.setAttribute('x1', x);
-    line.setAttribute('y1', 0);
-    line.setAttribute('x2', x);
-    line.setAttribute('y2', size);
-    line.setAttribute('class', 'grid-line');
-    gridGroup.appendChild(line);
-  }
-  for (let y = 0; y <= size; y += step) {
-    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    line.setAttribute('x1', 0);
-    line.setAttribute('y1', y);
-    line.setAttribute('x2', size);
-    line.setAttribute('y2', y);
-    line.setAttribute('class', 'grid-line');
-    gridGroup.appendChild(line);
-  }
-  svgGroup.appendChild(gridGroup);
+export function addPerson({ name, surname, birthname, dob, gender, motherId, fatherId, spouseId }) {
+const id = p${++personCount};
+const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+group.setAttribute('data-id', id);
+group.setAttribute('data-name', name);
+group.setAttribute('data-surname', surname);
+group.setAttribute('data-birthname', birthname);
+group.setAttribute('data-dob', dob);
+group.setAttribute('data-gender', gender);
+if (motherId) group.setAttribute('data-mother', motherId);
+if (fatherId) group.setAttribute('data-father', fatherId);
+if (spouseId) group.setAttribute('data-spouse', spouseId);
+group.classList.add('tree-node');
+
+const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+circle.setAttribute('r', document.getElementById('nodeSizeInput').value || 40);
+circle.setAttribute('fill', document.getElementById('nodeColorPicker').value || '#3498db');
+circle.classList.add('node-shape');
+group.appendChild(circle);
+
+const textName = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+textName.classList.add('name');
+textName.setAttribute('text-anchor', 'middle');
+textName.setAttribute('dy', '-10');
+textName.setAttribute('fill', document.getElementById('nameColorPicker').value || '#333');
+textName.setAttribute('font-family', document.getElementById('fontSelect').value || 'Inter');
+textName.setAttribute('font-size', document.getElementById('fontSizeInput').value || '14');
+textName.textContent = name;
+group.appendChild(textName);
+
+const textDob = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+textDob.classList.add('dob');
+textDob.setAttribute('text-anchor', 'middle');
+textDob.setAttribute('dy', '12');
+textDob.setAttribute('fill', document.getElementById('dateColorPicker').value || '#757575');
+textDob.setAttribute('font-family', document.getElementById('fontSelect').value || 'Inter');
+textDob.setAttribute('font-size', document.getElementById('fontSizeInput').value || '12');
+textDob.textContent = dob;
+group.appendChild(textDob);
+
+// Position new nodes at center
+const rect = svg.getBoundingClientRect();
+group.setAttribute('transform', translate(${rect.width/2}, ${rect.height/2}));
+
+// Register drag behavior
+circle.addEventListener('mousedown', (e) => startDrag(e, group));
+
+// Selection styling
+circle.addEventListener('click', (e) => {
+e.stopPropagation();
+document.querySelectorAll('g.tree-node circle').forEach(c => c.classList.remove('selected'));
+circle.classList.add('selected');
+});
+
+svgGroup.appendChild(group);
+recordHistory();
+updateSearchableSelects();
+redrawTable();
 }
 
-export function addPerson(data) {
-  pushHistory();
-  personCount++;
-  const nodeGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-  nodeGroup.setAttribute('class', 'tree-node');
-  nodeGroup.setAttribute('data-id', `p${personCount}`);
-  nodeGroup.setAttribute('data-name', data.name);
-  nodeGroup.setAttribute('data-surname', data.surname || '');
-  nodeGroup.setAttribute('data-birthname', data.birthname || '');
-  nodeGroup.setAttribute('data-dob', data.dob || '');
-  nodeGroup.setAttribute('data-gender', data.gender);
-  nodeGroup.setAttribute('data-mother', data.motherId || '');
-  nodeGroup.setAttribute('data-father', data.fatherId || '');
-  nodeGroup.setAttribute('data-spouse', data.spouseId || '');
-  const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-  circle.setAttribute('r', document.getElementById('nodeSizeInput').value || 40);
-  circle.setAttribute('fill', document.getElementById('nodeColorPicker').value || '#3498db');
-  circle.addEventListener('click', (e) => selectNode(e, nodeGroup));
-  circle.addEventListener('dblclick', () => openEdit(nodeGroup.getAttribute('data-id')));
-  nodeGroup.appendChild(circle);
-  const nameText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-  nameText.setAttribute('class', 'name');
-  nameText.setAttribute('text-anchor', 'middle');
-  nameText.setAttribute('dy', '-10');
-  nameText.textContent = data.name + (data.surname ? ` ${data.surname}` : '');
-  nodeGroup.appendChild(nameText);
-  const dobText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-  dobText.setAttribute('class', 'dob');
-  dobText.setAttribute('text-anchor', 'middle');
-  dobText.setAttribute('dy', '12');
-  dobText.textContent = data.dob;
-  nodeGroup.appendChild(dobText);
-  nodeGroup.setAttribute('transform', `translate(${100 + personCount * 10}, ${100 + personCount * 10})`);
-  svgGroup.appendChild(nodeGroup);
-  updateSearchableSelects();
-  redrawTable();
+export function editPerson(id, { name, surname, birthname, dob, gender, motherId, fatherId, spouseId }) {
+const group = document.querySelector(g[data-id='${id}']);
+group.setAttribute('data-name', name);
+group.setAttribute('data-surname', surname);
+group.setAttribute('data-birthname', birthname);
+group.setAttribute('data-dob', dob);
+group.setAttribute('data-gender', gender);
+if (motherId) group.setAttribute('data-mother', motherId);
+else group.removeAttribute('data-mother');
+if (fatherId) group.setAttribute('data-father', fatherId);
+else group.removeAttribute('data-father');
+if (spouseId) group.setAttribute('data-spouse', spouseId);
+else group.removeAttribute('data-spouse');
+group.querySelector('text.name').textContent = name;
+group.querySelector('text.dob').textContent = dob;
+recordHistory();
+updateSearchableSelects();
+redrawTable();
 }
 
-function openEdit(id) {
-  import('./modal.js').then(({ openModal }) => openModal(true, id));
+function startDrag(evt, node) {
+evt.preventDefault();
+let pt = svg.createSVGPoint();
+const onMouseMove = (e) => {
+pt.x = e.clientX;
+pt.y = e.clientY;
+const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse());
+node.setAttribute('transform', translate(${svgPt.x}, ${svgPt.y}));
+updateConnections(id);
+};
+const onMouseUp = () => {
+document.removeEventListener('mousemove', onMouseMove);
+document.removeEventListener('mouseup', onMouseUp);
+recordHistory();
+};
+document.addEventListener('mousemove', onMouseMove);
+document.addEventListener('mouseup', onMouseUp);
 }
 
-function selectNode(event, nodeGroup) {
-  if (connectMode) {
-    if (!firstNode) {
-      firstNode = nodeGroup;
-      highlightNode(firstNode);
-    } else {
-      createRelation(firstNode, nodeGroup);
-      unhighlightNode(firstNode);
-      firstNode = null;
-      connectMode = false;
-      redrawTable();
-    }
-  }
-  event.stopPropagation();
+export function toggleConnectMode() {
+connectMode = !connectMode;
+firstNode = null;
+// Visual indicator (e.g., change cursor)
+svg.style.cursor = connectMode ? 'crosshair' : 'grab';
 }
 
-export function editPerson(id, data) {
-  pushHistory();
-  const node = document.querySelector(`g[data-id='${id}']`);
-  node.setAttribute('data-name', data.name);
-  node.setAttribute('data-surname', data.surname || '');
-  node.setAttribute('data-birthname', data.birthname || '');
-  node.setAttribute('data-dob', data.dob || '');
-  node.setAttribute('data-gender', data.gender);
-  node.setAttribute('data-mother', data.motherId || '');
-  node.setAttribute('data-father', data.fatherId || '');
-  node.setAttribute('data-spouse', data.spouseId || '');
-  const texts = node.querySelectorAll('text');
-  texts[0].textContent = data.name + (data.surname ? ` ${data.surname}` : '');
-  texts[1].textContent = data.dob;
-  updateSearchableSelects();
-  redrawTable();
+export function handleSvgClick(evt) {
+if (!connectMode) return;
+const target = evt.target;
+if (target.tagName === 'circle') {
+const node = target.parentNode;
+if (!firstNode) {
+firstNode = node;
+target.classList.add('selected');
+} else if (firstNode !== node) {
+createConnection(firstNode, node);
+firstNode.querySelector('circle').classList.remove('selected');
+firstNode = null;
+recordHistory();
+}
+}
 }
 
-function highlightNode(node) {
-  node.querySelector('circle').setAttribute('stroke', '#e74c3c');
+function createConnection(nodeA, nodeB) {
+const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+const posA = getNodeCenter(nodeA);
+const posB = getNodeCenter(nodeB);
+line.setAttribute('x1', posA.x);
+line.setAttribute('y1', posA.y);
+line.setAttribute('x2', posB.x);
+line.setAttribute('y2', posB.y);
+line.classList.add('relation');
+svgGroup.insertBefore(line, svgGroup.firstChild);
 }
 
-function unhighlightNode(node) {
-  node.querySelector('circle').removeAttribute('stroke');
+function getNodeCenter(node) {
+const matrix = node.getCTM();
+const circle = node.querySelector('circle');
+const r = parseFloat(circle.getAttribute('r'));
+return { x: matrix.e, y: matrix.f };
 }
 
-function createRelation(nodeA, nodeB) {
-  pushHistory();
-  const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-  line.setAttribute('class', 'relation');
-  const x1 = getCenterX(nodeA);
-  const y1 = getCenterY(nodeA);
-  const x2 = getCenterX(nodeB);
-  const y2 = getCenterY(nodeB);
-  line.setAttribute('x1', x1);
-  line.setAttribute('y1', y1);
-  line.setAttribute('x2', x2);
-  line.setAttribute('y2', y2);
-  svgGroup.appendChild(line);
-}
-
-function getCenterX(node) {
-  const transform = node.getAttribute('transform');
-  const match = /translate\(([^,]+), ([^)]+)\)/.exec(transform);
-  return parseFloat(match[1]);
-}
-
-function getCenterY(node) {
-  const transform = node.getAttribute('transform');
-  const match = /translate\(([^,]+), ([^)]+)\)/.exec(transform);
-  return parseFloat(match[2]);
-}
-
-function pushHistory() {
-  const snapshot = svgGroup.cloneNode(true);
-  undoStack.push(snapshot);
+export function recordHistory() {
+const snapshot = svgGroup.innerHTML;
+undoStack.push(snapshot);
 }
 
 export function undo() {
-  if (undoStack.length === 0) return;
-  const last = undoStack.pop();
-  svg.replaceChild(last, svgGroup);
-  svgGroup = last;
-  updateSearchableSelects();
-  redrawTable();
+if (undoStack.length < 2) return;
+undoStack.pop();
+const last = undoStack[undoStack.length - 1];
+svgGroup.innerHTML = last;
+updateSearchableSelects();
+redrawTable();
 }
 
-window.addEventListener('DOMContentLoaded', initializeTree);
+export function exportCurrentTree(format) {
+exportTree(format, svgGroup);
+}
 
-document.documentElement.addEventListener('click', () => { firstNode = null; connectMode = false; });
+export function deletePerson(id) {
+const group = document.querySelector(g[data-id='${id}']);
+if (!group) return;
+svgGroup.removeChild(group);
+// Also remove associated lines
+document.querySelectorAll('line.relation').forEach((line) => {
+// Simplified: any line connecting to this node should be removed
+const x1 = parseFloat(line.getAttribute('x1'));
+const y1 = parseFloat(line.getAttribute('y1'));
+const pos = getNodeCenter(group);
+if ((x1 === pos.x && y1 === pos.y)) {
+line.parentNode.removeChild(line);
+}
+});
+recordHistory();
+updateSearchableSelects();
+redrawTable();
+}
