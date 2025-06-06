@@ -8,12 +8,12 @@ export function updateSearchableSelects(existingModalData = {}) {
   // existingModalData can contain { motherId, fatherId, spouseId } when editing
 
   // Helper: build an array of all current persons
-  const allGroups = Array.from(document.querySelectorAll('svg#g svg g[data-id]'));
+  const allGroups = Array.from(document.querySelectorAll('svg#svgArea g[data-id]'));
   const persons = allGroups.map(g => {
     return {
       id: g.getAttribute('data-id'),
-      name: g.getAttribute('data-name'),
-      surname: g.getAttribute('data-surname'),
+      name: g.getAttribute('data-name') || '',
+      surname: g.getAttribute('data-surname') || '',
       gender: g.getAttribute('data-gender'),
     };
   });
@@ -23,12 +23,16 @@ export function updateSearchableSelects(existingModalData = {}) {
     const filtered = persons
       .filter(p => filterGender === null || p.gender === filterGender)
       .sort((a, b) => a.name.localeCompare(b.name));
-    return filtered.map(p => {
+    
+    let options = '<div class="select-option" data-id="">None</div>';
+    options += filtered.map(p => {
       const isSelected = p.id === selectedId ? 'selected' : '';
+      const displayName = `${p.name} ${p.surname}`.trim();
       return `<div class="select-option" data-id="${p.id}" ${isSelected}>
-                ${p.name} ${p.surname || ''}
+                ${displayName}
               </div>`;
     }).join('');
+    return options;
   }
 
   // For each of the three selects: mother (female), father (male), spouse (any)
@@ -38,17 +42,26 @@ export function updateSearchableSelects(existingModalData = {}) {
 
   // Clear previous contents
   [motherContainer, fatherContainer, spouseContainer].forEach(c => {
-    c.innerHTML = '';
+    if (c) c.innerHTML = '';
   });
 
-  // Create the “input box” and the hidden <input> for each
+  // Create the "input box" and the hidden <input> for each
   function createSearchable(container, placeholder, filterGender, existingId) {
+    if (!container) return;
+
+    // Find selected person's display name
+    let displayText = placeholder;
+    if (existingId) {
+      const selectedPerson = persons.find(p => p.id === existingId);
+      if (selectedPerson) {
+        displayText = `${selectedPerson.name} ${selectedPerson.surname}`.trim();
+      }
+    }
+
     // Visible box
     const inputBox = document.createElement('div');
     inputBox.className = 'select-input';
-    inputBox.textContent = existingId
-      ? persons.find(p => p.id === existingId)?.name + ' ' + (persons.find(p => p.id === existingId)?.surname || '')
-      : placeholder;
+    inputBox.textContent = displayText;
     inputBox.dataset.selectedId = existingId || '';
     container.appendChild(inputBox);
 
@@ -56,6 +69,7 @@ export function updateSearchableSelects(existingModalData = {}) {
     const hidden = document.createElement('input');
     hidden.type = 'hidden';
     hidden.value = existingId || '';
+    hidden.name = container.id + '_value';
     container.appendChild(hidden);
 
     // Dropdown options wrapper
@@ -65,31 +79,41 @@ export function updateSearchableSelects(existingModalData = {}) {
     container.appendChild(optionsWrapper);
 
     // Clicking on inputBox toggles options
-    inputBox.addEventListener('click', () => {
+    inputBox.addEventListener('click', (e) => {
+      e.stopPropagation();
+      // Close other open dropdowns
+      document.querySelectorAll('.searchable-select .options').forEach(opt => {
+        if (opt !== optionsWrapper) {
+          opt.classList.add('hidden');
+          opt.parentNode.querySelector('.select-input').classList.remove('open');
+        }
+      });
+      
       optionsWrapper.classList.toggle('hidden');
       inputBox.classList.toggle('open');
-      // Focus on a filtering input if you want to add one in the future.
     });
 
     // When clicking an option:
     optionsWrapper.addEventListener('click', (e) => {
+      e.stopPropagation();
       if (!e.target.classList.contains('select-option')) return;
+      
       const chosenId = e.target.dataset.id;
       const labelText = e.target.textContent.trim();
+      
       inputBox.textContent = labelText;
       inputBox.dataset.selectedId = chosenId;
       hidden.value = chosenId;
+      
+      // Update selected state
+      optionsWrapper.querySelectorAll('.select-option').forEach(opt => {
+        opt.classList.remove('selected');
+      });
+      e.target.classList.add('selected');
+      
       // Close dropdown
       optionsWrapper.classList.add('hidden');
       inputBox.classList.remove('open');
-    });
-
-    // Click outside to close
-    document.addEventListener('click', (e) => {
-      if (!container.contains(e.target)) {
-        optionsWrapper.classList.add('hidden');
-        inputBox.classList.remove('open');
-      }
     });
   }
 
@@ -98,3 +122,16 @@ export function updateSearchableSelects(existingModalData = {}) {
   createSearchable(fatherContainer, 'Select Father', 'male', existingModalData.fatherId);
   createSearchable(spouseContainer, 'Select Spouse', null, existingModalData.spouseId);
 }
+
+// Close all dropdowns when clicking outside
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.searchable-select')) {
+    document.querySelectorAll('.searchable-select .options').forEach(options => {
+      options.classList.add('hidden');
+      const inputBox = options.parentNode.querySelector('.select-input');
+      if (inputBox) {
+        inputBox.classList.remove('open');
+      }
+    });
+  }
+});

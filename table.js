@@ -1,13 +1,18 @@
 // table.js
 // --------
-// Renders the “Table View” of all persons, handles search/sort, 
+// Renders the "Table View" of all persons, handles search/sort, 
 // and wires up Edit/Delete buttons within each row.
 
 export function rebuildTableView() {
   const svg = document.getElementById('svgArea');
   const tbody = document.getElementById('familyTableBody');
-  const searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
-  const sortKey = document.getElementById('sortSelect').value;
+  const searchInput = document.getElementById('searchInput');
+  const sortSelect = document.getElementById('sortSelect');
+  
+  if (!svg || !tbody || !searchInput || !sortSelect) return;
+  
+  const searchTerm = searchInput.value.trim().toLowerCase();
+  const sortKey = sortSelect.value;
 
   // Gather all person <g> elements
   const allGroups = Array.from(svg.querySelectorAll('g[data-id]'));
@@ -41,7 +46,7 @@ export function rebuildTableView() {
   rowsData.sort((a, b) => {
     let valA = a[sortKey] || '';
     let valB = b[sortKey] || '';
-    // For DOB, if it’s numeric (year only), sort numerically
+    // For DOB, if it's numeric (year only), sort numerically
     if (sortKey === 'dob') {
       const numA = parseInt(valA, 10);
       const numB = parseInt(valB, 10);
@@ -59,7 +64,10 @@ export function rebuildTableView() {
   function getNameById(id) {
     if (!id) return '';
     const g = svg.querySelector(`g[data-id="${id}"]`);
-    return g ? (g.getAttribute('data-name') + ' ' + (g.getAttribute('data-surname') || '')) : '';
+    if (!g) return '';
+    const name = g.getAttribute('data-name') || '';
+    const surname = g.getAttribute('data-surname') || '';
+    return `${name} ${surname}`.trim();
   }
 
   // Build table rows
@@ -108,29 +116,33 @@ export function rebuildTableView() {
 
     // Actions (Edit/Delete)
     const actionsTd = document.createElement('td');
+    
     const editBtn = document.createElement('button');
     editBtn.textContent = 'Edit';
+    editBtn.classList.add('table-btn');
     editBtn.addEventListener('click', () => {
-      // Dispatch a custom event so tree.js’s openModalForEdit can pick it up
+      // Dispatch a custom event so tree.js's openModalForEdit can pick it up
       const event = new CustomEvent('editPerson', { detail: { id: r.id } });
       document.dispatchEvent(event);
     });
-    editBtn.classList.add('table-btn');
     actionsTd.appendChild(editBtn);
 
     const deleteBtn = document.createElement('button');
     deleteBtn.textContent = 'Delete';
+    deleteBtn.classList.add('table-btn');
     deleteBtn.addEventListener('click', () => {
-      if (!confirm(`Delete ${r.name} ${r.surname || ''}?`)) return;
+      const displayName = `${r.name} ${r.surname}`.trim();
+      if (!confirm(`Delete ${displayName}?`)) return;
+      
       // Remove the SVG node
       const g = svg.querySelector(`g[data-id="${r.id}"]`);
       if (g) g.remove();
+      
       // After removal, rebuild connections and table
       rebuildTableView();
       const rebuildEvent = new Event('tableRebuilt');
       document.dispatchEvent(rebuildEvent);
     });
-    deleteBtn.classList.add('table-btn');
     actionsTd.appendChild(deleteBtn);
 
     tr.appendChild(actionsTd);
@@ -138,12 +150,23 @@ export function rebuildTableView() {
   });
 }
 
-// Wire up search and sort inputs to automatically rebuild table
-document.getElementById('searchInput').addEventListener('input', () => {
-  rebuildTableView();
-});
-document.getElementById('sortSelect').addEventListener('change', () => {
-  rebuildTableView();
+// Initialize event listeners when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+  // Wire up search and sort inputs to automatically rebuild table
+  const searchInput = document.getElementById('searchInput');
+  const sortSelect = document.getElementById('sortSelect');
+  
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      rebuildTableView();
+    });
+  }
+  
+  if (sortSelect) {
+    sortSelect.addEventListener('change', () => {
+      rebuildTableView();
+    });
+  }
 });
 
 // Listen for `editPerson` from this module's buttons and call modal.openModalForEdit

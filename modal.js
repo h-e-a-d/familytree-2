@@ -9,7 +9,7 @@ export function openModalForEdit(personId) {
   const modal = document.getElementById('personModal');
   const titleEl = document.getElementById('modalTitle');
 
-  // If personId is provided, we are in “Edit” mode; otherwise “Add” mode
+  // If personId is provided, we are in "Edit" mode; otherwise "Add" mode
   if (personId) {
     titleEl.textContent = 'Edit Person';
     modal.dataset.editingId = personId;
@@ -54,15 +54,25 @@ export function openModalForEdit(personId) {
 
   // Show the modal
   modal.classList.remove('hidden');
-  // Dispatch a "show" event so anyone (e.g., tree.js) can react
-  modal.dispatchEvent(new Event('show'));
+  
+  // Focus on the first input
+  setTimeout(() => {
+    const firstInput = document.getElementById('personName');
+    if (firstInput) firstInput.focus();
+  }, 100);
 }
 
 export function closeModal() {
   const modal = document.getElementById('personModal');
 
   // Clear any validation state (optional)
-  document.getElementById('personForm').reset();
+  const form = document.getElementById('personForm');
+  if (form) form.reset();
+
+  // Clear searchable selects
+  document.querySelectorAll('.searchable-select').forEach(container => {
+    container.innerHTML = '';
+  });
 
   // Hide the modal
   modal.classList.add('hidden');

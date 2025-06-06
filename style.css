@@ -27,6 +27,33 @@ html, body {
   cursor: grab;
 }
 .hidden { display: none; }
+
+/* View Toggle Buttons */
+.view-toggle {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  display: flex;
+  gap: 8px;
+  z-index: 1000;
+}
+.view-toggle button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  background-color: #3498db;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s ease;
+}
+.view-toggle button.active {
+  background-color: #2980b9;
+}
+.view-toggle button:hover {
+  background-color: #2980b9;
+}
+
 /* Floating Add Person Button */
 .floating-btn {
   position: fixed;
@@ -45,6 +72,7 @@ html, body {
   transition: background-color 0.2s ease;
 }
 .floating-btn:hover { background-color: #27ae60; }
+
 /* Settings Toggle (Cog Icon) */
 .icon-button {
   position: fixed;
@@ -61,6 +89,7 @@ html, body {
   transition: fill 0.2s ease;
 }
 .icon-button:hover .cog { fill: #000; }
+
 /* Settings Panel */
 #settingsPanel {
   position: fixed;
@@ -81,14 +110,30 @@ html, body {
 .setting-group select,
 .setting-group button { flex: 2; font-size: 14px; padding: 4px 8px; }
 .export-group { display: flex; justify-content: space-between; }
+.export-group button { flex: 1; margin: 0 2px; font-size: 12px; }
 #settingsPanel button { background-color: #3498db; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
 #settingsPanel button:hover { background-color: #2980b9; }
+#settingsPanel input[type="file"] { background-color: #fff; color: #333; }
+
 /* Table View Styles */
 #tableControls { padding: 8px; background-color: #fff; display: flex; gap: 8px; border-bottom: 1px solid #ddd; }
 #tableControls input, #tableControls select { padding: 6px; font-size: 14px; }
 #familyTable { width: 100%; border-collapse: collapse; }
 #familyTable th, #familyTable td { padding: 8px; text-align: left; border-bottom: 1px solid #eee; }
+#familyTable th { background-color: #f8f9fa; font-weight: 600; }
 #familyTable tbody tr:hover { background-color: #f9f9f9; }
+.table-btn { 
+  padding: 4px 8px; 
+  margin: 2px; 
+  border: none; 
+  border-radius: 3px; 
+  cursor: pointer; 
+  font-size: 12px;
+}
+.table-btn:first-child { background-color: #3498db; color: white; }
+.table-btn:last-child { background-color: #e74c3c; color: white; }
+.table-btn:hover { opacity: 0.8; }
+
 /* Modal Styles */
 .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1001; }
 .modal-content { background: #fff; padding: 24px; border-radius: 8px; width: 400px; max-width: 90%; }
@@ -97,20 +142,90 @@ html, body {
 .form-group input, .form-group select { width: 100%; padding: 8px; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; }
 .help-text { font-size: 12px; color: #777; }
 .required { color: red; }
+
+/* Searchable Select Styles */
 .searchable-select { position: relative; }
-.searchable-select .select-input { width: 100%; padding: 8px; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; }
-.searchable-select .options { position: absolute; top: 100%; left: 0; right: 0; max-height: 160px; overflow-y: auto; background: #fff; border: 1px solid #ccc; border-radius: 4px; z-index: 1002; }
+.searchable-select .select-input { 
+  width: 100%; 
+  padding: 8px; 
+  font-size: 14px; 
+  border: 1px solid #ccc; 
+  border-radius: 4px; 
+  cursor: pointer; 
+  background-color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.searchable-select .select-input.open { border-color: #3498db; }
+.searchable-select .select-input::after {
+  content: '▼';
+  font-size: 12px;
+  color: #666;
+}
+.searchable-select .options { 
+  position: absolute; 
+  top: 100%; 
+  left: 0; 
+  right: 0; 
+  max-height: 160px; 
+  overflow-y: auto; 
+  background: #fff; 
+  border: 1px solid #ccc; 
+  border-radius: 4px; 
+  z-index: 1002; 
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
 .searchable-select .options.hidden { display: none; }
-.searchable-select .option { padding: 8px; cursor: pointer; }
-.searchable-select .option:hover, .searchable-select .option.active { background-color: #f0f0f0; }
+.searchable-select .select-option { 
+  padding: 8px; 
+  cursor: pointer; 
+  border-bottom: 1px solid #f0f0f0;
+}
+.searchable-select .select-option:last-child { border-bottom: none; }
+.searchable-select .select-option:hover, 
+.searchable-select .select-option.selected { 
+  background-color: #f0f0f0; 
+}
+
 .form-actions { display: flex; justify-content: flex-end; gap: 8px; }
 .form-actions button { padding: 8px 16px; border: none; border-radius: 4px; font-size: 14px; cursor: pointer; }
 .form-actions button#cancelModal { background: #ccc; color: #fff; }
 .form-actions button#savePerson { background: #2ecc71; color: #fff; }
-/* Shared Export Styles */
-/* These styles were previously duplicated in exporter.js; now centralized */
-.tree-node circle { stroke: #2c3e50; stroke-width: 2px; }
-.tree-node text.name { font-weight: 600; }
-.tree-node text.dob { font-size: 12px; fill: #757575; }
-.relation { stroke: #7f8c8d; stroke-width: 2px; }
-.relation.spouse { stroke-dasharray: 4 2; }
+.form-actions button:hover { opacity: 0.9; }
+
+/* SVG Styles */
+.person-group circle { 
+  stroke: #2c3e50; 
+  stroke-width: 2px; 
+  cursor: grab;
+}
+.person-group circle:hover {
+  stroke-width: 3px;
+}
+.person-group text.name { 
+  font-weight: 600; 
+  font-family: 'Inter', sans-serif;
+  pointer-events: none;
+}
+.person-group text.dob { 
+  font-size: 12px; 
+  fill: #757575; 
+  font-family: 'Inter', sans-serif;
+  pointer-events: none;
+}
+.relation { 
+  stroke: #7f8c8d; 
+  stroke-width: 2px; 
+  pointer-events: none;
+}
+.relation.spouse { 
+  stroke-dasharray: 4 2; 
+}
+
+/* Grid lines (if implemented) */
+.grid-line {
+  stroke: #f0f0f0;
+  stroke-width: 1px;
+  pointer-events: none;
+}
