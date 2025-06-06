@@ -345,10 +345,13 @@ function setupPanZoom() {
 
   // Touch events for mobile - Fixed passive event handling
   svg.addEventListener('touchstart', (e) => {
-    // Always prevent default to avoid browser intervention
-    if (e.cancelable) {
-      e.preventDefault();
+    // Only handle touches on the SVG background itself
+    if (e.target !== svg && !e.target.classList.contains('grid-line')) {
+      return; // Let circles handle their own touches
     }
+    
+    // Always prevent default to avoid browser intervention
+    e.preventDefault();
     e.stopPropagation();
     
     isTouching = true;
@@ -359,11 +362,8 @@ function setupPanZoom() {
       // Single finger - prepare for panning
       const touch = e.touches[0];
       lastTouchPos = { x: touch.clientX, y: touch.clientY };
-      
-      if (e.target === svg || e.target.classList.contains('grid-line')) {
-        isPanning = true;
-        svg.classList.add('panning');
-      }
+      isPanning = true;
+      svg.classList.add('panning');
     } else if (e.touches.length === 2) {
       // Two fingers - prepare for pinch zoom
       isPanning = false;
@@ -375,13 +375,16 @@ function setupPanZoom() {
       initialScale = scale;
       initialPan = { x: panX, y: panY };
     }
-  }, { passive: false, capture: true });
+  }, { passive: false });
 
   svg.addEventListener('touchmove', (e) => {
-    // Always prevent default to avoid browser intervention
-    if (e.cancelable) {
-      e.preventDefault();
+    // Only handle touches on the SVG background itself
+    if (e.target !== svg && !e.target.classList.contains('grid-line')) {
+      return; // Let circles handle their own touches
     }
+    
+    // Always prevent default to avoid browser intervention
+    e.preventDefault();
     e.stopPropagation();
     
     if (!isTouching) return;
@@ -431,13 +434,11 @@ function setupPanZoom() {
       lastTouchDistance = currentDistance;
       lastTouchCenter = currentCenter;
     }
-  }, { passive: false, capture: true });
+  }, { passive: false });
 
   svg.addEventListener('touchend', (e) => {
     // Always prevent default to avoid browser intervention
-    if (e.cancelable) {
-      e.preventDefault();
-    }
+    e.preventDefault();
     e.stopPropagation();
     
     if (e.touches.length === 0) {
@@ -460,13 +461,10 @@ function setupPanZoom() {
       // One finger still down, switch back to pan mode
       const touch = e.touches[0];
       lastTouchPos = { x: touch.clientX, y: touch.clientY };
-      
-      if (e.target === svg || e.target.classList.contains('grid-line')) {
-        isPanning = true;
-        svg.classList.add('panning');
-      }
+      isPanning = true;
+      svg.classList.add('panning');
     }
-  }, { passive: false, capture: true });
+  }, { passive: false });
 
   // Prevent context menu on long press
   svg.addEventListener('contextmenu', (e) => {
