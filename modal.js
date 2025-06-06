@@ -1,94 +1,70 @@
-import { SearchableSelect } from './searchableSelect.js';
+// modal.js
+// --------
+// Manages opening/closing the Add/Edit Person modal, pre‐populating fields when editing,
+// and invoking updateSearchableSelects() so Mother/Father/Spouse dropdowns are rebuilt.
 
-const addPersonBtn = document.getElementById('addPersonBtn');
-const personModal = document.getElementById('personModal');
-const cancelModalBtn = document.getElementById('cancelModal');
-const personForm = document.getElementById('personForm');
-const modalTitle = document.getElementById('modalTitle');
+import { updateSearchableSelects } from './searchableSelect.js';
 
-let editingId = null;
-let motherSelect, fatherSelect, spouseSelect;
+export function openModalForEdit(personId) {
+  const modal = document.getElementById('personModal');
+  const titleEl = document.getElementById('modalTitle');
 
-function openModal(isEdit = false, personId = null) {
-  personModal.classList.remove('hidden');
-  if (isEdit) {
-    modalTitle.textContent = 'Edit Person';
-    editingId = personId;
-    populateForm(personId);
+  // If personId is provided, we are in “Edit” mode; otherwise “Add” mode
+  if (personId) {
+    titleEl.textContent = 'Edit Person';
+    modal.dataset.editingId = personId;
+
+    // Fetch the existing <g data-id="…"> element
+    const group = document.querySelector(`svg#svgArea g[data-id="${personId}"]`);
+    if (!group) {
+      console.warn(`No <g> found for id="${personId}"`);
+      return;
+    }
+
+    // Populate the text inputs
+    document.getElementById('personName').value = group.getAttribute('data-name') || '';
+    document.getElementById('personSurname').value = group.getAttribute('data-surname') || '';
+    document.getElementById('personBirthName').value = group.getAttribute('data-birthName') || '';
+    document.getElementById('personDob').value = group.getAttribute('data-dob') || '';
+    document.getElementById('personGender').value = group.getAttribute('data-gender') || '';
+
+    // Extract existing mother/father/spouse IDs
+    const existingData = {
+      motherId: group.getAttribute('data-motherId') || '',
+      fatherId: group.getAttribute('data-fatherId') || '',
+      spouseId: group.getAttribute('data-spouseId') || ''
+    };
+
+    // Rebuild searchable selects, passing in existing IDs
+    updateSearchableSelects(existingData);
   } else {
-    modalTitle.textContent = 'Add Person';
-    editingId = null;
-    personForm.reset();
-    motherSelect.clear();
-    fatherSelect.clear();
-    spouseSelect.clear();
+    titleEl.textContent = 'Add Person';
+    delete modal.dataset.editingId;
+
+    // Clear all form fields
+    document.getElementById('personName').value = '';
+    document.getElementById('personSurname').value = '';
+    document.getElementById('personBirthName').value = '';
+    document.getElementById('personDob').value = '';
+    document.getElementById('personGender').value = '';
+
+    // No existing relationships
+    updateSearchableSelects({});
   }
+
+  // Show the modal
+  modal.classList.remove('hidden');
+  // Dispatch a "show" event so anyone (e.g., tree.js) can react
+  modal.dispatchEvent(new Event('show'));
 }
 
-function closeModal() {
-  personModal.classList.add('hidden');
+export function closeModal() {
+  const modal = document.getElementById('personModal');
+
+  // Clear any validation state (optional)
+  document.getElementById('personForm').reset();
+
+  // Hide the modal
+  modal.classList.add('hidden');
+  delete modal.dataset.editingId;
 }
-
-function populateForm(personId) {
-  const node = document.querySelector(`g[data-id='${personId}']`);
-  document.getElementById('personName').value = node.getAttribute('data-name');
-  document.getElementById('personSurname').value = node.getAttribute('data-surname');
-  document.getElementById('personBirthName').value = node.getAttribute('data-birthname');
-  document.getElementById('personDob').value = node.getAttribute('data-dob');
-  document.getElementById('personGender').value = node.getAttribute('data-gender');
-  motherSelect.clear();
-  fatherSelect.clear();
-  spouseSelect.clear();
-  const mId = node.getAttribute('data-mother');
-  const fId = node.getAttribute('data-father');
-  const sId = node.getAttribute('data-spouse');
-  if (mId) motherSelect.selectOption(mId, getDisplayName(mId));
-  if (fId) fatherSelect.selectOption(fId, getDisplayName(fId));
-  if (sId) spouseSelect.selectOption(sId, getDisplayName(sId));
-}
-
-function getDisplayName(id) {
-  const node = document.querySelector(`g[data-id='${id}']`);
-  return `${node.getAttribute('data-name')} ${node.getAttribute('data-surname')}`.trim();
-}
-
-addPersonBtn.addEventListener('click', () => openModal());
-cancelModalBtn.addEventListener('click', closeModal);
-
-personForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-  const name = document.getElementById('personName').value.trim();
-  const surname = document.getElementById('personSurname').value.trim();
-  const birthname = document.getElementById('personBirthName').value.trim();
-  const dob = document.getElementById('personDob').value.trim();
-  const gender = document.getElementById('personGender').value;
-  const motherId = motherSelect.getSelectedId();
-  const fatherId = fatherSelect.getSelectedId();
-  const spouseId = spouseSelect.getSelectedId();
-  if (!name || !gender) {
-    alert('Name and Gender are required.');
-    return;
-  }
-  // Validate DOB format (basic)
-  const yearOnly = /^\d{4}$/;
-  const fullDate = /^\d{2}\.\d{2}\.\d{4}$/;
-  if (dob && !yearOnly.test(dob) && !fullDate.test(dob)) {
-    alert('DOB must be yyyy or dd.mm.yyyy');
-    return;
-  }
-  const personData = { name, surname, birthname, dob, gender, motherId, fatherId, spouseId };
-  if (editingId) {
-    import('./tree.js').then(({ editPerson }) => editPerson(editingId, personData));
-  } else {
-    import('./tree.js').then(({ addPerson }) => addPerson(personData));
-  }
-  closeModal();
-});
-
-window.initModal = () => {
-  motherSelect = new SearchableSelect('motherSelect', 'female');
-  fatherSelect = new SearchableSelect('fatherSelect', 'male');
-  spouseSelect = new SearchableSelect('spouseSelect', null);
-};
-
-document.addEventListener('DOMContentLoaded', window.initModal);
