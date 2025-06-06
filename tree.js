@@ -3,6 +3,7 @@
 // Responsible for all SVG‐based logic: adding/editing/removing nodes,
 // dragging, connect‐mode, generate connections, undo stack, etc.
 // Now includes: pan/zoom, grid, selection, connect, and style features
+// FIXED: Added proper double-tap detection for mobile devices
 
 import { updateSearchableSelects } from './searchableSelect.js';
 import { openModalForEdit, closeModal } from './modal.js';
@@ -31,6 +32,10 @@ let selectedCircles = new Set();
 
 // Grid settings
 const gridSize = 50;
+
+// Double-tap detection constants
+const DOUBLE_TAP_DELAY = 300; // milliseconds
+const DOUBLE_TAP_DISTANCE = 50; // pixels
 
 // Throttled grid redraw for better performance
 function throttledGridRedraw() {
@@ -1101,13 +1106,14 @@ function updateExistingPersonSVG(id, data) {
   if (dobText) dobText.textContent = data.dob;
 }
 
-// Setup circle interactions
+// FIXED: Setup circle interactions with proper double-tap detection for mobile
 function setupCircleInteractions(group, circle, personId) {
   makeCircleDraggable(group, circle);
   
   let clickTimeout;
   let tapCount = 0;
   let lastTapTime = 0;
+  let lastTapPosition = { x: 0, y: 0 };
 
   // Mouse events for desktop
   circle.addEventListener('click', (e) => {
@@ -1143,6 +1149,90 @@ function setupCircleInteractions(group, circle, personId) {
     clearSelection(); // Clear selection when editing
     openModalForEdit(personId);
   });
+
+  // FIXED: Mobile touch events with proper double-tap detection
+  let touchStartTime = 0;
+  let hasTouchMoved = false;
+  let touchStartPos = { x: 0, y: 0 };
+
+  circle.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const now = Date.now();
+    const touch = e.touches[0];
+    const currentPos = { x: touch.clientX, y: touch.clientY };
+    
+    touchStartTime = now;
+    hasTouchMoved = false;
+    touchStartPos = currentPos;
+    
+    // Check for double-tap
+    const timeSinceLastTap = now - lastTapTime;
+    const distanceFromLastTap = Math.sqrt(
+      Math.pow(currentPos.x - lastTapPosition.x, 2) + 
+      Math.pow(currentPos.y - lastTapPosition.y, 2)
+    );
+    
+    if (timeSinceLastTap < DOUBLE_TAP_DELAY && 
+        distanceFromLastTap < DOUBLE_TAP_DISTANCE && 
+        tapCount === 1) {
+      // This is a double-tap!
+      console.log('Double-tap detected on circle:', personId);
+      tapCount = 0; // Reset tap count
+      lastTapTime = 0;
+      
+      // Clear any pending single-tap timeout
+      if (clickTimeout) {
+        clearTimeout(clickTimeout);
+        clickTimeout = null;
+      }
+      
+      clearSelection(); // Clear selection when editing
+      openModalForEdit(personId);
+      return;
+    }
+    
+    // Record this tap
+    tapCount = 1;
+    lastTapTime = now;
+    lastTapPosition = currentPos;
+  }, { passive: false });
+
+  circle.addEventListener('touchmove', (e) => {
+    // If the touch moves significantly, it's not a tap
+    const touch = e.touches[0];
+    const currentPos = { x: touch.clientX, y: touch.clientY };
+    const distance = Math.sqrt(
+      Math.pow(currentPos.x - touchStartPos.x, 2) + 
+      Math.pow(currentPos.y - touchStartPos.y, 2)
+    );
+    
+    if (distance > 10) { // 10px threshold for considering it a move
+      hasTouchMoved = true;
+    }
+  }, { passive: false });
+
+  circle.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const now = Date.now();
+    const touchDuration = now - touchStartTime;
+    
+    // If this was a short touch without movement and not part of a double-tap sequence
+    if (!hasTouchMoved && touchDuration < 500 && tapCount === 1) {
+      // Set a timeout for single-tap action (selection)
+      // This will be cancelled if a second tap comes within the double-tap delay
+      clickTimeout = setTimeout(() => {
+        if (!isDragging && tapCount === 1) {
+          console.log('Single-tap on circle:', personId);
+          toggleCircleSelection(personId, circle, group);
+          tapCount = 0; // Reset after processing
+        }
+      }, DOUBLE_TAP_DELAY);
+    }
+  }, { passive: false });
 }
 
 // Make circle draggable
@@ -1177,14 +1267,20 @@ function makeCircleDraggable(group, circle) {
     }
   });
 
-  // Touch events for mobile
+  // Touch events for mobile - FIXED: Separate dragging from tap detection
+  let dragStarted = false;
+  let dragThreshold = 15; // pixels
+  let touchStartPos = { x: 0, y: 0 };
+  let initialTouchTime = 0;
+
   circle.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
     if (e.touches.length === 1) {
       isCircleTouching = true;
-      isDragging = true;
+      dragStarted = false;
+      
+      const touch = e.touches[0];
+      touchStartPos = { x: touch.clientX, y: touch.clientY };
+      initialTouchTime = Date.now();
       
       // Get current circle position
       const currentCx = parseFloat(circle.getAttribute('cx')) || 0;
@@ -1192,7 +1288,6 @@ function makeCircleDraggable(group, circle) {
       
       // Get touch position in SVG coordinates
       const rect = svg.getBoundingClientRect();
-      const touch = e.touches[0];
       const touchX = touch.clientX - rect.left;
       const touchY = touch.clientY - rect.top;
       
@@ -1206,57 +1301,72 @@ function makeCircleDraggable(group, circle) {
   }, { passive: false });
 
   circle.addEventListener('touchmove', (e) => {
-    if (!isCircleTouching || !isDragging || e.touches.length !== 1) return;
+    if (!isCircleTouching || e.touches.length !== 1) return;
     
-    e.preventDefault();
-    e.stopPropagation();
-    
-    // Get touch position in SVG coordinates
-    const rect = svg.getBoundingClientRect();
     const touch = e.touches[0];
-    const touchX = touch.clientX - rect.left;
-    const touchY = touch.clientY - rect.top;
+    const currentPos = { x: touch.clientX, y: touch.clientY };
+    const distance = Math.sqrt(
+      Math.pow(currentPos.x - touchStartPos.x, 2) + 
+      Math.pow(currentPos.y - touchStartPos.y, 2)
+    );
     
-    // Convert to SVG coordinates considering pan/zoom
-    const svgX = (touchX - panX) / scale;
-    const svgY = (touchY - panY) / scale;
+    // Only start dragging if we've moved beyond the threshold
+    if (!dragStarted && distance > dragThreshold) {
+      dragStarted = true;
+      isDragging = true;
+    }
     
-    const newCx = svgX - offsetX;
-    const newCy = svgY - offsetY;
-    
-    // Ensure coordinates are valid numbers
-    if (!isNaN(newCx) && !isNaN(newCy)) {
-      circle.setAttribute('cx', newCx);
-      circle.setAttribute('cy', newCy);
+    if (dragStarted) {
+      e.preventDefault();
+      e.stopPropagation();
       
-      const nameText = group.querySelector('text.name');
-      const dobText = group.querySelector('text.dob');
-      const radius = parseFloat(circle.getAttribute('r')) || nodeRadius;
+      // Get touch position in SVG coordinates
+      const rect = svg.getBoundingClientRect();
+      const touchX = touch.clientX - rect.left;
+      const touchY = touch.clientY - rect.top;
       
-      if (nameText) {
-        nameText.setAttribute('x', newCx);
-        nameText.setAttribute('y', newCy - radius - 8);
-      }
+      // Convert to SVG coordinates considering pan/zoom
+      const svgX = (touchX - panX) / scale;
+      const svgY = (touchY - panY) / scale;
       
-      if (dobText) {
-        dobText.setAttribute('x', newCx);
-        dobText.setAttribute('y', newCy + radius + 16);
-      }
+      const newCx = svgX - offsetX;
+      const newCy = svgY - offsetY;
+      
+      // Ensure coordinates are valid numbers
+      if (!isNaN(newCx) && !isNaN(newCy)) {
+        circle.setAttribute('cx', newCx);
+        circle.setAttribute('cy', newCy);
+        
+        const nameText = group.querySelector('text.name');
+        const dobText = group.querySelector('text.dob');
+        const radius = parseFloat(circle.getAttribute('r')) || nodeRadius;
+        
+        if (nameText) {
+          nameText.setAttribute('x', newCx);
+          nameText.setAttribute('y', newCy - radius - 8);
+        }
+        
+        if (dobText) {
+          dobText.setAttribute('x', newCx);
+          dobText.setAttribute('y', newCy + radius + 16);
+        }
 
-      generateAllConnections();
+        generateAllConnections();
+      }
     }
   }, { passive: false });
 
   circle.addEventListener('touchend', (e) => {
     if (!isCircleTouching) return;
     
-    e.preventDefault();
-    e.stopPropagation();
-    
     isCircleTouching = false;
     
-    if (isDragging) {
+    if (dragStarted) {
+      e.preventDefault();
+      e.stopPropagation();
+      
       isDragging = false;
+      dragStarted = false;
       pushUndoState();
     }
   }, { passive: false });
