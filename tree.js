@@ -19,6 +19,7 @@ let nextPersonId = 1;
 let isPanning = false, startPoint = { x: 0, y: 0 };
 let scale = 1, panX = 0, panY = 0;
 const minScale = 0.1, maxScale = 5;
+let isDragging = false; // Global drag state
 
 // Selection management
 let selectedCircles = new Set();
@@ -176,13 +177,14 @@ function setupPanZoom() {
     }
   });
 
-  // Pan with mouse drag
+  // Pan with mouse drag - only on empty space
   svg.addEventListener('mousedown', (e) => {
     if (e.target === svg || e.target.classList.contains('grid-line')) {
       isPanning = true;
       startPoint = { x: e.clientX - panX, y: e.clientY - panY };
       svg.classList.add('panning');
       e.preventDefault();
+      e.stopPropagation();
     }
   });
 
@@ -191,13 +193,15 @@ function setupPanZoom() {
       panX = e.clientX - startPoint.x;
       panY = e.clientY - startPoint.y;
       updateTransform();
+      e.preventDefault();
     }
   });
 
-  document.addEventListener('mouseup', () => {
+  document.addEventListener('mouseup', (e) => {
     if (isPanning) {
       isPanning = false;
       svg.classList.remove('panning');
+      e.preventDefault();
     }
   });
 }
@@ -213,9 +217,12 @@ function setupSelectionHandling() {
   if (!svg) return;
 
   svg.addEventListener('click', (e) => {
-    // If clicking on empty space, clear selection
+    // If clicking on empty space (not on circles or lines), clear selection
     if (e.target === svg || e.target.classList.contains('grid-line')) {
-      clearSelection();
+      // Only clear if we're not panning
+      if (!isPanning) {
+        clearSelection();
+      }
     }
   });
 }
@@ -635,10 +642,9 @@ function createNewPersonSVG(data) {
   group.setAttribute('data-spouseId', data.spouseId);
   group.classList.add('person-group');
 
-  // Position in center with slight randomization
-  const viewBox = svg.viewBox.baseVal;
-  const cx = viewBox.width / 2 + Math.random() * 200 - 100;
-  const cy = viewBox.height / 2 + Math.random() * 200 - 100;
+  // Position in center with slight randomization - use fixed coordinates
+  const cx = 600 + Math.random() * 200 - 100; // Center around 600 (middle of 1200 viewBox)
+  const cy = 400 + Math.random() * 200 - 100; // Center around 400 (middle of 800 viewBox)
 
   // Circle
   const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
@@ -708,11 +714,25 @@ function updateExistingPersonSVG(id, data) {
 function setupCircleInteractions(group, circle, personId) {
   makeCircleDraggable(group, circle);
   
+  let clickTimeout;
+  
   // Click to select/deselect
   circle.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
-    toggleCircleSelection(personId, circle, group);
+    
+    // Clear any existing timeout
+    if (clickTimeout) {
+      clearTimeout(clickTimeout);
+      clickTimeout = null;
+    }
+    
+    // Delay the selection to allow for double-click detection
+    clickTimeout = setTimeout(() => {
+      if (!isDragging) { // Only select if we're not dragging
+        toggleCircleSelection(personId, circle, group);
+      }
+    }, 200);
   });
   
   // Double-click to edit
@@ -720,6 +740,13 @@ function setupCircleInteractions(group, circle, personId) {
     console.log('Double-clicked on circle:', personId);
     e.preventDefault();
     e.stopPropagation();
+    
+    // Clear the single-click timeout
+    if (clickTimeout) {
+      clearTimeout(clickTimeout);
+      clickTimeout = null;
+    }
+    
     clearSelection(); // Clear selection when editing
     openModalForEdit(personId);
   });
@@ -731,53 +758,65 @@ function makeCircleDraggable(group, circle) {
 
   circle.addEventListener('mousedown', (e) => {
     if (e.detail === 1) { // Single click
-      setTimeout(() => {
-        if (!isDragging) return;
-        
-        e.preventDefault();
-        const pt = svg.createSVGPoint();
-        pt.x = e.clientX; 
-        pt.y = e.clientY;
-        const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
-        
-        offsetX = svgP.x - parseFloat(circle.getAttribute('cx'));
-        offsetY = svgP.y - parseFloat(circle.getAttribute('cy'));
-        
-        circle.style.cursor = 'grabbing';
-      }, 200);
+      e.preventDefault();
+      isDragging = true;
+      
+      // Get current circle position
+      const currentCx = parseFloat(circle.getAttribute('cx')) || 0;
+      const currentCy = parseFloat(circle.getAttribute('cy')) || 0;
+      
+      // Get mouse position in SVG coordinates
+      const rect = svg.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      
+      // Calculate offset considering current pan/zoom
+      const svgX = (mouseX - panX) / scale;
+      const svgY = (mouseY - panY) / scale;
+      
+      offsetX = svgX - currentCx;
+      offsetY = svgY - currentCy;
+      
+      circle.style.cursor = 'grabbing';
     }
-    isDragging = true;
   });
 
   document.addEventListener('mousemove', (e) => {
     if (!isDragging) return;
     
-    const pt = svg.createSVGPoint();
-    pt.x = e.clientX; 
-    pt.y = e.clientY;
-    const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
+    // Get mouse position in SVG coordinates
+    const rect = svg.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
     
-    const newCx = svgP.x - offsetX;
-    const newCy = svgP.y - offsetY;
+    // Convert to SVG coordinates considering pan/zoom
+    const svgX = (mouseX - panX) / scale;
+    const svgY = (mouseY - panY) / scale;
     
-    circle.setAttribute('cx', newCx);
-    circle.setAttribute('cy', newCy);
+    const newCx = svgX - offsetX;
+    const newCy = svgY - offsetY;
     
-    const nameText = group.querySelector('text.name');
-    const dobText = group.querySelector('text.dob');
-    const radius = parseFloat(circle.getAttribute('r'));
-    
-    if (nameText) {
-      nameText.setAttribute('x', newCx);
-      nameText.setAttribute('y', newCy - radius - 8);
-    }
-    
-    if (dobText) {
-      dobText.setAttribute('x', newCx);
-      dobText.setAttribute('y', newCy + radius + 16);
-    }
+    // Ensure coordinates are valid numbers
+    if (!isNaN(newCx) && !isNaN(newCy)) {
+      circle.setAttribute('cx', newCx);
+      circle.setAttribute('cy', newCy);
+      
+      const nameText = group.querySelector('text.name');
+      const dobText = group.querySelector('text.dob');
+      const radius = parseFloat(circle.getAttribute('r')) || nodeRadius;
+      
+      if (nameText) {
+        nameText.setAttribute('x', newCx);
+        nameText.setAttribute('y', newCy - radius - 8);
+      }
+      
+      if (dobText) {
+        dobText.setAttribute('x', newCx);
+        dobText.setAttribute('y', newCy + radius + 16);
+      }
 
-    generateAllConnections();
+      generateAllConnections();
+    }
   });
 
   document.addEventListener('mouseup', () => {
@@ -889,11 +928,39 @@ function restoreState(state) {
     updateActionButtons();
   }
   
-  // Re-wire interactions
+  // Re-wire interactions - ensure coordinates are valid
   svg.querySelectorAll('g[data-id]').forEach(group => {
     const circle = group.querySelector('circle.person');
     if (circle) {
       const personId = group.getAttribute('data-id');
+      
+      // Validate and fix coordinates if needed
+      let cx = parseFloat(circle.getAttribute('cx'));
+      let cy = parseFloat(circle.getAttribute('cy'));
+      
+      if (isNaN(cx) || isNaN(cy)) {
+        console.warn('Invalid coordinates detected, fixing...', personId);
+        cx = 600 + Math.random() * 200 - 100;
+        cy = 400 + Math.random() * 200 - 100;
+        circle.setAttribute('cx', cx);
+        circle.setAttribute('cy', cy);
+        
+        // Fix text positions too
+        const nameText = group.querySelector('text.name');
+        const dobText = group.querySelector('text.dob');
+        const radius = parseFloat(circle.getAttribute('r')) || nodeRadius;
+        
+        if (nameText) {
+          nameText.setAttribute('x', cx);
+          nameText.setAttribute('y', cy - radius - 8);
+        }
+        
+        if (dobText) {
+          dobText.setAttribute('x', cx);
+          dobText.setAttribute('y', cy + radius + 16);
+        }
+      }
+      
       setupCircleInteractions(group, circle, personId);
     }
   });
@@ -1053,10 +1120,19 @@ function loadTreeFromJSON(e) {
         group.setAttribute('data-spouseId', p.spouseId);
         group.classList.add('person-group');
 
+        // Ensure coordinates are valid numbers
+        let cx = parseFloat(p.cx);
+        let cy = parseFloat(p.cy);
+        
+        if (isNaN(cx) || isNaN(cy)) {
+          cx = 600 + Math.random() * 200 - 100;
+          cy = 400 + Math.random() * 200 - 100;
+        }
+
         const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
         circle.classList.add('person');
-        circle.setAttribute('cx', p.cx);
-        circle.setAttribute('cy', p.cy);
+        circle.setAttribute('cx', cx);
+        circle.setAttribute('cy', cy);
         circle.setAttribute('r', p.nodeSize || nodeRadius);
         circle.setAttribute('fill', p.nodeColor || defaultColor);
         group.appendChild(circle);
@@ -1064,8 +1140,8 @@ function loadTreeFromJSON(e) {
         const nameText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         nameText.classList.add('name');
         nameText.textContent = p.name;
-        nameText.setAttribute('x', p.cx);
-        nameText.setAttribute('y', p.cy - (p.nodeSize || nodeRadius) - 8);
+        nameText.setAttribute('x', cx);
+        nameText.setAttribute('y', cy - (p.nodeSize || nodeRadius) - 8);
         nameText.setAttribute('text-anchor', 'middle');
         nameText.setAttribute('font-family', fontFamily);
         nameText.setAttribute('font-size', `${fontSize}px`);
@@ -1075,8 +1151,8 @@ function loadTreeFromJSON(e) {
         const dobText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         dobText.classList.add('dob');
         dobText.textContent = p.dob;
-        dobText.setAttribute('x', p.cx);
-        dobText.setAttribute('y', p.cy + (p.nodeSize || nodeRadius) + 16);
+        dobText.setAttribute('x', cx);
+        dobText.setAttribute('y', cy + (p.nodeSize || nodeRadius) + 16);
         dobText.setAttribute('text-anchor', 'middle');
         dobText.setAttribute('font-family', fontFamily);
         dobText.setAttribute('font-size', `${fontSize - 2}px`);
