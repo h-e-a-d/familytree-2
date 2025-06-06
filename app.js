@@ -5,44 +5,69 @@
 
 import { rebuildTableView } from './table.js';
 
+let currentView = 'graphic'; // 'graphic' or 'table'
+
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('App.js initializing...');
   initializeViewToggle();
   initializeSettingsPanel();
   initializeKeyboardShortcuts();
+  console.log('App.js initialization complete');
 });
 
 function initializeViewToggle() {
-  const graphicViewBtn = document.getElementById('graphicViewBtn');
-  const tableViewBtn = document.getElementById('tableViewBtn');
+  const viewToggle = document.getElementById('viewToggle');
   const graphicView = document.getElementById('graphicView');
   const tableView = document.getElementById('tableView');
 
-  if (!graphicViewBtn || !tableViewBtn || !graphicView || !tableView) {
+  if (!viewToggle || !graphicView || !tableView) {
     console.error('View toggle elements not found');
     return;
   }
 
-  graphicViewBtn.addEventListener('click', () => {
-    // Show graphic view, hide table view
-    graphicView.classList.remove('hidden');
-    tableView.classList.add('hidden');
-    
-    // Update button states
-    graphicViewBtn.classList.add('active');
-    tableViewBtn.classList.remove('active');
-  });
+  // Set initial state
+  currentView = 'graphic';
+  graphicView.classList.remove('hidden');
+  tableView.classList.add('hidden');
 
-  tableViewBtn.addEventListener('click', () => {
-    // Show table view, hide graphic view
-    tableView.classList.remove('hidden');
-    graphicView.classList.add('hidden');
+  viewToggle.addEventListener('click', () => {
+    console.log('View toggle clicked, current view:', currentView);
     
-    // Update button states
-    tableViewBtn.classList.add('active');
-    graphicViewBtn.classList.remove('active');
+    if (currentView === 'graphic') {
+      // Switch to table view
+      currentView = 'table';
+      tableView.classList.remove('hidden');
+      graphicView.classList.add('hidden');
+      
+      // Update icon to show table icon (grid)
+      const icon = viewToggle.querySelector('.icon.toggle');
+      if (icon) {
+        icon.innerHTML = `
+          <path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z" fill="currentColor" stroke="none"></path>
+        `;
+      }
+      
+      // Rebuild table data when switching to table view
+      rebuildTableView();
+    } else {
+      // Switch to graphic view
+      currentView = 'graphic';
+      graphicView.classList.remove('hidden');
+      tableView.classList.add('hidden');
+      
+      // Update icon to show graphic icon (circles)
+      const icon = viewToggle.querySelector('.icon.toggle');
+      if (icon) {
+        icon.innerHTML = `
+          <rect x="3" y="3" width="7" height="7" fill="none" stroke="currentColor" stroke-width="2"></rect>
+          <rect x="14" y="3" width="7" height="7" fill="none" stroke="currentColor" stroke-width="2"></rect>
+          <rect x="14" y="14" width="7" height="7" fill="none" stroke="currentColor" stroke-width="2"></rect>
+          <rect x="3" y="14" width="7" height="7" fill="none" stroke="currentColor" stroke-width="2"></rect>
+        `;
+      }
+    }
     
-    // Rebuild table data when switching to table view
-    rebuildTableView();
+    console.log('Switched to view:', currentView);
   });
 }
 
@@ -55,15 +80,22 @@ function initializeSettingsPanel() {
     return;
   }
 
+  // Ensure settings panel starts hidden
+  settingsPanel.classList.add('hidden');
+
   settingsToggle.addEventListener('click', (e) => {
     e.stopPropagation();
+    console.log('Settings toggle clicked');
     settingsPanel.classList.toggle('hidden');
   });
 
   // Close settings panel when clicking outside
   document.addEventListener('click', (e) => {
     if (!settingsPanel.contains(e.target) && !settingsToggle.contains(e.target)) {
-      settingsPanel.classList.add('hidden');
+      if (!settingsPanel.classList.contains('hidden')) {
+        console.log('Closing settings panel (clicked outside)');
+        settingsPanel.classList.add('hidden');
+      }
     }
   });
 
@@ -77,15 +109,12 @@ function initializeKeyboardShortcuts() {
   document.addEventListener('keydown', (e) => {
     // Toggle between views with Tab key
     if (e.key === 'Tab' && !e.ctrlKey && !e.altKey && !e.shiftKey) {
-      const graphicViewBtn = document.getElementById('graphicViewBtn');
-      const tableViewBtn = document.getElementById('tableViewBtn');
-      
-      if (graphicViewBtn && tableViewBtn) {
+      // Only if not in an input field
+      if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'SELECT') {
         e.preventDefault();
-        if (graphicViewBtn.classList.contains('active')) {
-          tableViewBtn.click();
-        } else {
-          graphicViewBtn.click();
+        const viewToggle = document.getElementById('viewToggle');
+        if (viewToggle) {
+          viewToggle.click();
         }
       }
     }
@@ -128,4 +157,4 @@ function initializeKeyboardShortcuts() {
 }
 
 // Export functions that might be needed by other modules
-export { initializeViewToggle, initializeSettingsPanel };
+export { initializeViewToggle, initializeSettingsPanel, currentView };

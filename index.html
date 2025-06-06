@@ -14,73 +14,101 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- View Toggle Buttons -->
-  <div class="view-toggle">
-    <button id="graphicViewBtn" class="active">Graphic View</button>
-    <button id="tableViewBtn">Table View</button>
+  <!-- View Toggle Icon (upper left) -->
+  <div id="viewToggle" class="icon-button view-toggle-icon">
+    <svg xmlns="http://www.w3.org/2000/svg" class="icon toggle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="3" y="3" width="7" height="7"></rect>
+      <rect x="14" y="3" width="7" height="7"></rect>
+      <rect x="14" y="14" width="7" height="7"></rect>
+      <rect x="3" y="14" width="7" height="7"></rect>
+    </svg>
   </div>
 
-  <!-- Cog Icon for Settings -->
-  <div id="settingsToggle" class="icon-button">
-    <svg xmlns="http://www.w3.org/2000/svg" class="icon cog" viewBox="0 0 24 24">
-      <path d="M12 8a4 4 0 100 8 4 4 0 000-8zm8.94 4a6.96 6.96 0 00-.6-2.64l2.03-1.58-2-3.46-2.36.96a6.97 6.97 0 00-1.56-0.9l-.36-2.52h-4l-.36 2.52c-.56.2-1.08.5-1.56.9l-2.36-.96-2 3.46 2.03 1.58A6.96 6.96 0 003.06 12c0 .94.2 1.84.6 2.64l-2.03 1.58 2 3.46 2.36-.96a6.97 6.97 0 001.56.9l.36 2.52h4l.36-2.52c.56-.2 1.08-.5 1.56-.9l2.36.96 2-3.46-2.03-1.58c.4-.8.6-1.7.6-2.64z"/>
+  <!-- Settings Icon (upper right) -->
+  <div id="settingsToggle" class="icon-button settings-icon">
+    <svg xmlns="http://www.w3.org/2000/svg" class="icon cog" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="3"></circle>
+      <path d="m12 1 1.5 4 3.5-1-1 3.5 4 1.5-4 1.5 1 3.5-3.5-1L12 23l-1.5-4-3.5 1 1-3.5L4 14.5l4-1.5-1-3.5 3.5 1L12 1z"></path>
     </svg>
   </div>
 
   <!-- Settings Panel (hidden by default) -->
   <div id="settingsPanel" class="panel hidden">
-    <h3>Global Settings</h3>
-    <div class="setting-group">
-      <label for="nodeColorPicker">Node Color:</label>
-      <input type="color" id="nodeColorPicker" value="#3498db" />
+    <h3>Settings</h3>
+    
+    <!-- Node Settings -->
+    <div class="setting-section">
+      <h4>Node Appearance</h4>
+      <div class="setting-group">
+        <label for="nodeColorPicker">Node Color:</label>
+        <input type="color" id="nodeColorPicker" value="#3498db" />
+      </div>
+      <div class="setting-group">
+        <label for="nodeSizeInput">Node Size:</label>
+        <input type="number" id="nodeSizeInput" min="10" max="100" value="40" />
+        <button id="applyNodeStyle">Apply</button>
+      </div>
     </div>
-    <div class="setting-group">
-      <label for="nodeSizeInput">Node Size:</label>
-      <input type="number" id="nodeSizeInput" min="10" max="100" value="40" />
-      <button id="applyNodeStyle">Apply</button>
+
+    <!-- Font Settings -->
+    <div class="setting-section">
+      <h4>Text Settings</h4>
+      <div class="setting-group">
+        <label for="fontSelect">Font:</label>
+        <select id="fontSelect">
+          <optgroup label="Modern Sans-Serif">
+            <option value="Inter">Inter</option>
+            <option value="Roboto">Roboto</option>
+            <option value="Lato">Lato</option>
+            <option value="Montserrat">Montserrat</option>
+            <option value="Poppins">Poppins</option>
+            <option value="Open Sans">Open Sans</option>
+          </optgroup>
+          <optgroup label="Serif">
+            <option value="Merriweather">Merriweather</option>
+            <option value="Playfair Display">Playfair Display</option>
+            <option value="Roboto Slab">Roboto Slab</option>
+          </optgroup>
+          <optgroup label="Monospace">
+            <option value="Courier New">Courier New</option>
+            <option value="Roboto Mono">Roboto Mono</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="setting-group">
+        <label for="fontSizeInput">Font Size:</label>
+        <input type="number" id="fontSizeInput" min="6" max="72" value="14" />
+      </div>
+      <div class="setting-group">
+        <label for="nameColorPicker">Name Color:</label>
+        <input type="color" id="nameColorPicker" value="#333333" />
+      </div>
+      <div class="setting-group">
+        <label for="dateColorPicker">Date Color:</label>
+        <input type="color" id="dateColorPicker" value="#757575" />
+      </div>
     </div>
-    <div class="setting-group">
-      <label for="fontSelect">Font:</label>
-      <select id="fontSelect">
-        <optgroup label="Modern Sans-Serif">
-          <option value="Inter">Inter</option>
-          <option value="Roboto">Roboto</option>
-          <option value="Lato">Lato</option>
-          <option value="Montserrat">Montserrat</option>
-          <option value="Poppins">Poppins</option>
-          <option value="Open Sans">Open Sans</option>
-        </optgroup>
-        <optgroup label="Serif">
-          <option value="Merriweather">Merriweather</option>
-          <option value="Playfair Display">Playfair Display</option>
-          <option value="Roboto Slab">Roboto Slab</option>
-        </optgroup>
-        <optgroup label="Monospace">
-          <option value="Courier New">Courier New</option>
-          <option value="Roboto Mono">Roboto Mono</option>
-        </optgroup>
-      </select>
+
+    <!-- Export Settings -->
+    <div class="setting-section">
+      <h4>Export</h4>
+      <div class="export-group">
+        <button id="exportSvg">SVG</button>
+        <button id="exportPng">PNG</button>
+        <button id="exportPdf">PDF</button>
+      </div>
     </div>
-    <div class="setting-group">
-      <label for="fontSizeInput">Font Size:</label>
-      <input type="number" id="fontSizeInput" min="6" max="72" value="14" />
-    </div>
-    <div class="setting-group">
-      <label for="nameColorPicker">Name Color:</label>
-      <input type="color" id="nameColorPicker" value="#333333" />
-    </div>
-    <div class="setting-group">
-      <label for="dateColorPicker">Date Color:</label>
-      <input type="color" id="dateColorPicker" value="#757575" />
-    </div>
-    <div class="setting-group export-group">
-      <button id="exportSvg">Export SVG</button>
-      <button id="exportPng">Export PNG</button>
-      <button id="exportPdf">Export PDF</button>
-    </div>
-    <div class="setting-group">
-      <button id="saveData">Save</button>
-      <input type="file" id="loadData" accept=".json" />
+
+    <!-- Data Settings -->
+    <div class="setting-section">
+      <h4>Data</h4>
+      <div class="setting-group">
+        <button id="saveData">Save JSON</button>
+        <label for="loadData" class="file-label">
+          <span>Load JSON</span>
+          <input type="file" id="loadData" accept=".json" style="display: none;" />
+        </label>
+      </div>
     </div>
   </div>
 
@@ -124,8 +152,8 @@
   <!-- Floating Add Person Button -->
   <button id="addPersonBtn" class="floating-btn">+</button>
 
-  <!-- Person Modal (starts hidden) -->
-  <div id="personModal" class="modal hidden">
+  <!-- Person Modal (ALWAYS starts hidden) -->
+  <div id="personModal" class="modal hidden" style="display: none;">
     <div class="modal-content">
       <h2 id="modalTitle">Add Person</h2>
       <form id="personForm">

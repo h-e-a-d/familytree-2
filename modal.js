@@ -8,6 +8,8 @@ import { updateSearchableSelects } from './searchableSelect.js';
 let isModalOpen = false;
 
 export function openModalForEdit(personId) {
+  console.log('Opening modal for:', personId || 'new person');
+  
   const modal = document.getElementById('personModal');
   const titleEl = document.getElementById('modalTitle');
 
@@ -43,37 +45,35 @@ export function openModalForEdit(personId) {
     };
 
     // Rebuild searchable selects, passing in existing IDs
-    updateSearchableSelects(existingData);
+    setTimeout(() => updateSearchableSelects(existingData), 100);
   } else {
     titleEl.textContent = 'Add Person';
     delete modal.dataset.editingId;
 
     // Clear all form fields
-    const form = document.getElementById('personForm');
-    if (form) form.reset();
-    
-    document.getElementById('personName').value = '';
-    document.getElementById('personSurname').value = '';
-    document.getElementById('personBirthName').value = '';
-    document.getElementById('personDob').value = '';
-    document.getElementById('personGender').value = '';
+    clearForm();
 
     // No existing relationships
-    updateSearchableSelects({});
+    setTimeout(() => updateSearchableSelects({}), 100);
   }
 
   // Show the modal
   modal.classList.remove('hidden');
+  modal.style.display = 'flex';
   isModalOpen = true;
   
   // Focus on the first input
   setTimeout(() => {
     const firstInput = document.getElementById('personName');
     if (firstInput) firstInput.focus();
-  }, 100);
+  }, 150);
+  
+  console.log('Modal opened successfully');
 }
 
 export function closeModal() {
+  console.log('Closing modal...');
+  
   const modal = document.getElementById('personModal');
 
   if (!modal) {
@@ -82,6 +82,23 @@ export function closeModal() {
   }
 
   // Clear the form
+  clearForm();
+
+  // Clear searchable selects
+  document.querySelectorAll('.searchable-select').forEach(container => {
+    container.innerHTML = '';
+  });
+
+  // Hide the modal
+  modal.classList.add('hidden');
+  modal.style.display = 'none';
+  delete modal.dataset.editingId;
+  isModalOpen = false;
+  
+  console.log('Modal closed successfully');
+}
+
+function clearForm() {
   const form = document.getElementById('personForm');
   if (form) {
     form.reset();
@@ -93,42 +110,50 @@ export function closeModal() {
     const input = document.getElementById(inputId);
     if (input) input.value = '';
   });
-
-  // Clear searchable selects
-  document.querySelectorAll('.searchable-select').forEach(container => {
-    container.innerHTML = '';
-  });
-
-  // Hide the modal
-  modal.classList.add('hidden');
-  delete modal.dataset.editingId;
-  isModalOpen = false;
-  
-  console.log('Modal closed');
 }
 
 export function isModalCurrentlyOpen() {
   return isModalOpen;
 }
 
-// Initialize modal event listeners when DOM is ready
+// Initialize modal when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('Modal initializing...');
+  
   const modal = document.getElementById('personModal');
   const cancelBtn = document.getElementById('cancelModal');
+  const form = document.getElementById('personForm');
   
-  // Ensure modal starts hidden
+  // Force modal to be hidden initially
   if (modal) {
     modal.classList.add('hidden');
+    modal.style.display = 'none';
     isModalOpen = false;
+    console.log('Modal initialized as hidden');
   }
   
-  // Cancel button event listener
+  // Cancel button event listener - using direct event binding
   if (cancelBtn) {
-    cancelBtn.addEventListener('click', (e) => {
+    // Remove any existing listeners first
+    const newCancelBtn = cancelBtn.cloneNode(true);
+    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+    
+    newCancelBtn.addEventListener('click', (e) => {
+      console.log('Cancel button clicked');
       e.preventDefault();
       e.stopPropagation();
-      console.log('Cancel button clicked');
       closeModal();
+    });
+    console.log('Cancel button listener attached');
+  }
+  
+  // Form submit handler
+  if (form) {
+    form.addEventListener('submit', (e) => {
+      console.log('Form submitted');
+      e.preventDefault();
+      // The form submission will be handled by tree.js
+      // Modal will be closed from there after successful save
     });
   }
   
@@ -136,6 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (modal) {
     modal.addEventListener('click', (e) => {
       if (e.target === modal) {
+        console.log('Clicked outside modal');
         closeModal();
       }
     });
@@ -148,4 +174,6 @@ document.addEventListener('DOMContentLoaded', () => {
       e.stopPropagation();
     });
   }
+  
+  console.log('Modal initialization complete');
 });

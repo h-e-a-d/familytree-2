@@ -16,6 +16,8 @@ let fontFamily = 'Inter', fontSize = 14, nameColor = '#333333', dateColor = '#75
 let nextPersonId = 1;
 
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('Tree.js initializing...');
+  
   svg = document.getElementById('svgArea');
   addPersonBtn = document.getElementById('addPersonBtn');
 
@@ -25,77 +27,103 @@ document.addEventListener('DOMContentLoaded', () => {
   // Wire up the floating "Add Person" button
   if (addPersonBtn) {
     addPersonBtn.addEventListener('click', () => {
+      console.log('Add person button clicked');
       openModalForEdit(); // no ID = "Add Person" mode
     });
   }
 
-  // Catch save from modal
+  // Form submit handler - attach to form directly
   const personForm = document.getElementById('personForm');
   if (personForm) {
     personForm.addEventListener('submit', (e) => {
+      console.log('Form submit event captured in tree.js');
       e.preventDefault();
+      e.stopPropagation();
       savePersonFromModal();
     });
   }
 
-  // Settings from cog panel
-  document.getElementById('applyNodeStyle').addEventListener('click', () => {
-    const color = document.getElementById('nodeColorPicker').value;
-    const size = parseInt(document.getElementById('nodeSizeInput').value, 10);
-    if (!isNaN(size) && size > 0) {
-      nodeRadius = size;
-      defaultColor = color;
-      reapplyAllNodeStyles();
-      pushUndoState();
-    }
-  });
-
-  document.getElementById('fontSelect').addEventListener('change', (e) => {
-    fontFamily = e.target.value;
-    applyGlobalFontAndColors();
-    pushUndoState();
-  });
-
-  document.getElementById('fontSizeInput').addEventListener('change', (e) => {
-    fontSize = parseInt(e.target.value, 10) || fontSize;
-    applyGlobalFontAndColors();
-    pushUndoState();
-  });
-
-  document.getElementById('nameColorPicker').addEventListener('change', (e) => {
-    nameColor = e.target.value;
-    applyGlobalFontAndColors();
-    pushUndoState();
-  });
-
-  document.getElementById('dateColorPicker').addEventListener('change', (e) => {
-    dateColor = e.target.value;
-    applyGlobalFontAndColors();
-    pushUndoState();
-  });
+  // Settings event listeners
+  setupSettingsListeners();
 
   // Export buttons
-  document.getElementById('exportSvg').addEventListener('click', () => exportTree('svg'));
-  document.getElementById('exportPng').addEventListener('click', () => exportTree('png'));
-  document.getElementById('exportPdf').addEventListener('click', () => exportTree('pdf'));
+  document.getElementById('exportSvg')?.addEventListener('click', () => exportTree('svg'));
+  document.getElementById('exportPng')?.addEventListener('click', () => exportTree('png'));
+  document.getElementById('exportPdf')?.addEventListener('click', () => exportTree('pdf'));
 
   // Save/Load
-  document.getElementById('saveData').addEventListener('click', saveTreeToJSON);
-  document.getElementById('loadData').addEventListener('change', loadTreeFromJSON);
+  document.getElementById('saveData')?.addEventListener('click', saveTreeToJSON);
+  document.getElementById('loadData')?.addEventListener('change', loadTreeFromJSON);
 
   // Push initial undo state
   pushUndoState();
+  
+  console.log('Tree.js initialization complete');
 });
+
+function setupSettingsListeners() {
+  const applyBtn = document.getElementById('applyNodeStyle');
+  if (applyBtn) {
+    applyBtn.addEventListener('click', () => {
+      const color = document.getElementById('nodeColorPicker').value;
+      const size = parseInt(document.getElementById('nodeSizeInput').value, 10);
+      if (!isNaN(size) && size > 0) {
+        nodeRadius = size;
+        defaultColor = color;
+        reapplyAllNodeStyles();
+        pushUndoState();
+      }
+    });
+  }
+
+  const fontSelect = document.getElementById('fontSelect');
+  if (fontSelect) {
+    fontSelect.addEventListener('change', (e) => {
+      fontFamily = e.target.value;
+      applyGlobalFontAndColors();
+      pushUndoState();
+    });
+  }
+
+  const fontSizeInput = document.getElementById('fontSizeInput');
+  if (fontSizeInput) {
+    fontSizeInput.addEventListener('change', (e) => {
+      fontSize = parseInt(e.target.value, 10) || fontSize;
+      applyGlobalFontAndColors();
+      pushUndoState();
+    });
+  }
+
+  const nameColorPicker = document.getElementById('nameColorPicker');
+  if (nameColorPicker) {
+    nameColorPicker.addEventListener('change', (e) => {
+      nameColor = e.target.value;
+      applyGlobalFontAndColors();
+      pushUndoState();
+    });
+  }
+
+  const dateColorPicker = document.getElementById('dateColorPicker');
+  if (dateColorPicker) {
+    dateColorPicker.addEventListener('change', (e) => {
+      dateColor = e.target.value;
+      applyGlobalFontAndColors();
+      pushUndoState();
+    });
+  }
+}
 
 // -----------------------------------------------------------------------------
 // SVG Initialization, grid, pan/zoom, etc.
 
 function initializeSVGCanvas() {
   // Set up SVG viewBox and basic attributes
-  svg.setAttribute('width', '100%');
-  svg.setAttribute('height', '100%');
-  svg.setAttribute('viewBox', '0 0 1200 800');
-  svg.style.backgroundColor = '#fff';
+  if (svg) {
+    svg.setAttribute('width', '100%');
+    svg.setAttribute('height', '100%');
+    svg.setAttribute('viewBox', '0 0 1200 800');
+    svg.style.backgroundColor = '#fff';
+  }
   
   // Add keyboard shortcuts
   document.addEventListener('keydown', (e) => {
@@ -113,6 +141,8 @@ function initializeSVGCanvas() {
 // Modal Save Logic: add or update a person
 
 function savePersonFromModal() {
+  console.log('savePersonFromModal called');
+  
   const nameInput = document.getElementById('personName').value.trim();
   const surnameInput = document.getElementById('personSurname').value.trim();
   const birthNameInput = document.getElementById('personBirthName').value.trim();
@@ -130,10 +160,12 @@ function savePersonFromModal() {
   }
 
   // Determine if we're editing or adding
-  const editingId = document.getElementById('personModal').dataset.editingId;
+  const modal = document.getElementById('personModal');
+  const editingId = modal?.dataset.editingId;
   
   try {
     if (editingId) {
+      console.log('Updating existing person:', editingId);
       updateExistingPersonSVG(editingId, { 
         name: nameInput, 
         surname: surnameInput, 
@@ -143,6 +175,7 @@ function savePersonFromModal() {
         motherId, fatherId, spouseId 
       });
     } else {
+      console.log('Creating new person');
       createNewPersonSVG({ 
         name: nameInput, 
         surname: surnameInput, 
@@ -153,7 +186,7 @@ function savePersonFromModal() {
       });
     }
 
-    // Close modal first, then update other components
+    // Close modal first
     closeModal();
     
     // Update other components
@@ -170,8 +203,10 @@ function savePersonFromModal() {
 
 // Create a new <g> circle‐node in the SVG
 function createNewPersonSVG(data) {
+  if (!svg) return;
+  
   // Generate a unique ID
-  const existingIds = Array.from(document.querySelectorAll('svg#svgArea g[data-id]'))
+  const existingIds = Array.from(svg.querySelectorAll('g[data-id]'))
     .map(g => g.getAttribute('data-id'))
     .map(id => parseInt(id.replace('p', '')) || 0);
   
@@ -228,13 +263,8 @@ function createNewPersonSVG(data) {
   dobText.setAttribute('fill', dateColor);
   group.appendChild(dobText);
 
-  // Make draggable
-  makeCircleDraggable(group, circle);
-
-  // Click to open edit modal
-  circle.addEventListener('dblclick', () => {
-    openModalForEdit(nextId);
-  });
+  // Make draggable and add double-click event
+  setupCircleInteractions(group, circle, nextId);
 
   svg.appendChild(group);
 }
@@ -262,8 +292,24 @@ function updateExistingPersonSVG(id, data) {
   if (dobText) dobText.textContent = data.dob;
 }
 
+// Setup circle interactions (dragging and double-click)
+function setupCircleInteractions(group, circle, personId) {
+  // Make draggable
+  makeCircleDraggable(group, circle);
+  
+  // Double-click to edit
+  circle.addEventListener('dblclick', (e) => {
+    console.log('Double-clicked on circle:', personId);
+    e.preventDefault();
+    e.stopPropagation();
+    openModalForEdit(personId);
+  });
+}
+
 // Apply global font, font size, nameColor, dateColor to all existing <text> nodes
 function applyGlobalFontAndColors() {
+  if (!svg) return;
+  
   const allNameTexts = svg.querySelectorAll('text.name');
   const allDobTexts = svg.querySelectorAll('text.dob');
   
@@ -282,6 +328,8 @@ function applyGlobalFontAndColors() {
 
 // Reapply node radius & fill color to all circles
 function reapplyAllNodeStyles() {
+  if (!svg) return;
+  
   svg.querySelectorAll('circle.person').forEach(c => {
     c.setAttribute('r', nodeRadius);
     c.setAttribute('fill', defaultColor);
@@ -352,6 +400,8 @@ function makeCircleDraggable(group, circle) {
 // Undo Stack
 
 export function pushUndoState() {
+  if (!svg) return;
+  
   // Serialize the entire <svg> innerHTML and global settings
   const state = {
     svgInner: svg.innerHTML,
@@ -384,6 +434,8 @@ function redo() {
 }
 
 function restoreState(state) {
+  if (!svg) return;
+  
   svg.innerHTML = state.svgInner;
   nodeRadius = state.nodeRadius;
   defaultColor = state.defaultColor;
@@ -396,10 +448,8 @@ function restoreState(state) {
   svg.querySelectorAll('g[data-id]').forEach(group => {
     const circle = group.querySelector('circle.person');
     if (circle) {
-      makeCircleDraggable(group, circle);
-      circle.addEventListener('dblclick', () => {
-        openModalForEdit(group.getAttribute('data-id'));
-      });
+      const personId = group.getAttribute('data-id');
+      setupCircleInteractions(group, circle, personId);
     }
   });
   
@@ -412,6 +462,8 @@ function restoreState(state) {
 // Generate Connections (parent/child & spouse)
 
 export function generateAllConnections() {
+  if (!svg) return;
+  
   // Remove all existing relation lines first
   svg.querySelectorAll('line.relation').forEach(l => l.remove());
 
@@ -461,6 +513,8 @@ export function generateAllConnections() {
 // Save / Load (JSON serialization)
 
 function saveTreeToJSON() {
+  if (!svg) return;
+  
   const allGroups = Array.from(svg.querySelectorAll('g[data-id]'));
   const data = {
     settings: { nodeRadius, defaultColor, fontFamily, fontSize, nameColor, dateColor },
@@ -495,7 +549,7 @@ function saveTreeToJSON() {
 
 function loadTreeFromJSON(e) {
   const file = e.target.files[0];
-  if (!file) return;
+  if (!file || !svg) return;
   
   const reader = new FileReader();
   reader.onload = (evt) => {
@@ -559,11 +613,7 @@ function loadTreeFromJSON(e) {
         dobText.setAttribute('fill', dateColor);
         group.appendChild(dobText);
 
-        makeCircleDraggable(group, circle);
-        circle.addEventListener('dblclick', () => {
-          openModalForEdit(p.id);
-        });
-
+        setupCircleInteractions(group, circle, p.id);
         svg.appendChild(group);
       });
 
