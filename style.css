@@ -503,11 +503,9 @@ header button:hover {
   -khtml-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
-  /* Improve rendering performance on mobile */
-  will-change: transform;
-  transform-origin: 0 0;
 }
 
+<<<<<<< HEAD
 /* Performance optimizations for mobile */
 .person-group {
   will-change: transform;
@@ -515,6 +513,10 @@ header button:hover {
 
 .person-group circle {
   will-change: transform;
+=======
+#svgArea.panning {
+  cursor: grabbing;
+>>>>>>> parent of 98947fd (1)
 }
 
 /* Responsive Design */

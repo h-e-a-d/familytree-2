@@ -21,8 +21,19 @@ let scale = 1, panX = 0, panY = 0;
 const minScale = 0.1, maxScale = 5;
 let isDragging = false; // Global drag state
 
+<<<<<<< HEAD
 // Performance optimization variables
 let gridRedrawTimeout;
+=======
+// Selection management
+let selectedCircles = new Set();
+
+// Grid settings
+const gridSize = 50;
+
+// Connection modal variables
+let connectionPersonA = null, connectionPersonB = null;
+>>>>>>> parent of 98947fd (1)
 
 // ----------------------------------------------------------------------------
 // Initialize SVG, buttons, and event listeners
@@ -48,12 +59,43 @@ document.addEventListener('DOMContentLoaded', () => {
 // Pan & Zoom
 // ----------------------------------------------------------------------------
 function setupPanZoom() {
+<<<<<<< HEAD
+=======
+  if (!svg) return;
+
+  // Touch handling variables
+  let lastTouchDistance = 0;
+  let lastTouchCenter = { x: 0, y: 0 };
+  let isTouching = false;
+  let touchStartTime = 0;
+  let initialTouchDistance = 0;
+  let initialScale = 1;
+  let initialPan = { x: 0, y: 0 };
+
+  // Helper function to get touch distance
+  function getTouchDistance(touches) {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  // Helper function to get touch center
+  function getTouchCenter(touches) {
+    return {
+      x: (touches[0].clientX + touches[1].clientX) / 2,
+      y: (touches[0].clientY + touches[1].clientY) / 2
+    };
+  }
+
+  // Mouse wheel zoom (desktop)
+>>>>>>> parent of 98947fd (1)
   svg.addEventListener('wheel', (e) => {
     e.preventDefault();
 
     const rect = svg.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
+<<<<<<< HEAD
     const delta = e.deltaY < 0 ? 1.1 : 0.9;
 
     const newScale = Math.min(maxScale, Math.max(minScale, scale * delta));
@@ -66,6 +108,136 @@ function setupPanZoom() {
     svg.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
   }, { passive: false });
 
+=======
+    
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    const newScale = Math.max(minScale, Math.min(maxScale, scale * delta));
+    
+    if (newScale !== scale) {
+      const factor = newScale / scale;
+      panX = mouseX - factor * (mouseX - panX);
+      panY = mouseY - factor * (mouseY - panY);
+      scale = newScale;
+      updateTransform();
+      
+      // Redraw grid after zoom
+      drawGrid();
+    }
+  }, { passive: false });
+
+  // Touch events for mobile
+  svg.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    isTouching = true;
+    touchStartTime = Date.now();
+    
+    if (e.touches.length === 1) {
+      // Single finger - prepare for panning
+      const touch = e.touches[0];
+      if (e.target === svg || e.target.classList.contains('grid-line')) {
+        isPanning = true;
+        startPoint = { 
+          x: touch.clientX - panX, 
+          y: touch.clientY - panY 
+        };
+        svg.classList.add('panning');
+      }
+    } else if (e.touches.length === 2) {
+      // Two fingers - prepare for pinch zoom
+      isPanning = false;
+      svg.classList.remove('panning');
+      
+      initialTouchDistance = getTouchDistance(e.touches);
+      lastTouchDistance = initialTouchDistance;
+      lastTouchCenter = getTouchCenter(e.touches);
+      initialScale = scale;
+      initialPan = { x: panX, y: panY };
+    }
+  }, { passive: false });
+
+  svg.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!isTouching) return;
+    
+    if (e.touches.length === 1 && isPanning) {
+      // Single finger panning
+      const touch = e.touches[0];
+      panX = touch.clientX - startPoint.x;
+      panY = touch.clientY - startPoint.y;
+      updateTransform();
+    } else if (e.touches.length === 2) {
+      // Two finger pinch zoom
+      const currentDistance = getTouchDistance(e.touches);
+      const currentCenter = getTouchCenter(e.touches);
+      
+      if (initialTouchDistance > 0) {
+        // Calculate zoom
+        const scaleChange = currentDistance / initialTouchDistance;
+        const newScale = Math.max(minScale, Math.min(maxScale, initialScale * scaleChange));
+        
+        if (newScale !== scale) {
+          // Get SVG coordinates of the pinch center
+          const rect = svg.getBoundingClientRect();
+          const centerX = currentCenter.x - rect.left;
+          const centerY = currentCenter.y - rect.top;
+          
+          // Calculate new pan to keep zoom centered on pinch point
+          const factor = newScale / scale;
+          panX = centerX - factor * (centerX - panX);
+          panY = centerY - factor * (centerY - panY);
+          scale = newScale;
+          
+          updateTransform();
+        }
+      }
+      
+      lastTouchDistance = currentDistance;
+      lastTouchCenter = currentCenter;
+    }
+  }, { passive: false });
+
+  svg.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (e.touches.length === 0) {
+      // All fingers lifted
+      isTouching = false;
+      isPanning = false;
+      svg.classList.remove('panning');
+      
+      // Redraw grid after pan/zoom
+      drawGrid();
+      
+      // Reset touch variables
+      lastTouchDistance = 0;
+      initialTouchDistance = 0;
+      touchStartTime = 0;
+    } else if (e.touches.length === 1) {
+      // One finger still down, switch back to pan mode
+      const touch = e.touches[0];
+      if (e.target === svg || e.target.classList.contains('grid-line')) {
+        isPanning = true;
+        startPoint = { 
+          x: touch.clientX - panX, 
+          y: touch.clientY - panY 
+        };
+        svg.classList.add('panning');
+      }
+    }
+  }, { passive: false });
+
+  // Prevent context menu on long press
+  svg.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+  });
+
+  // Mouse events for desktop (existing functionality)
+>>>>>>> parent of 98947fd (1)
   svg.addEventListener('mousedown', (e) => {
     isPanning = true;
     startPoint = { x: e.clientX - panX, y: e.clientY - panY };
@@ -79,6 +251,7 @@ function setupPanZoom() {
     svg.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
   });
 
+<<<<<<< HEAD
   svg.addEventListener('mouseup', () => {
     isPanning = false;
     svg.style.cursor = 'grab';
@@ -87,6 +260,16 @@ function setupPanZoom() {
   svg.addEventListener('mouseleave', () => {
     isPanning = false;
     svg.style.cursor = 'grab';
+=======
+  document.addEventListener('mouseup', (e) => {
+    if (isPanning && !isTouching) { // Only handle mouse release if not touching
+      isPanning = false;
+      svg.classList.remove('panning');
+      // Redraw grid after pan
+      drawGrid();
+      e.preventDefault();
+    }
+>>>>>>> parent of 98947fd (1)
   });
 }
 
@@ -98,6 +281,59 @@ function drawGrid() {
   const width = svg.clientWidth;
   const height = svg.clientHeight;
 
+<<<<<<< HEAD
+=======
+  // Remove existing grid
+  svg.querySelectorAll('.grid-line').forEach(line => line.remove());
+
+  // Get the current viewport dimensions
+  const rect = svg.getBoundingClientRect();
+  const viewportWidth = rect.width;
+  const viewportHeight = rect.height;
+
+  // Calculate the visible area considering pan and zoom
+  const visibleLeft = -panX / scale;
+  const visibleTop = -panY / scale;
+  const visibleWidth = viewportWidth / scale;
+  const visibleHeight = viewportHeight / scale;
+
+  // Extend grid beyond visible area for smooth panning
+  const padding = gridSize * 10;
+  const gridLeft = Math.floor((visibleLeft - padding) / gridSize) * gridSize;
+  const gridTop = Math.floor((visibleTop - padding) / gridSize) * gridSize;
+  const gridRight = Math.ceil((visibleLeft + visibleWidth + padding) / gridSize) * gridSize;
+  const gridBottom = Math.ceil((visibleTop + visibleHeight + padding) / gridSize) * gridSize;
+
+  // Create grid group
+  const gridGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  gridGroup.id = 'gridGroup';
+
+  // Vertical lines
+  for (let x = gridLeft; x <= gridRight; x += gridSize) {
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.classList.add('grid-line');
+    if (x % (gridSize * 4) === 0) line.classList.add('major');
+    line.setAttribute('x1', x);
+    line.setAttribute('y1', gridTop);
+    line.setAttribute('x2', x);
+    line.setAttribute('y2', gridBottom);
+    gridGroup.appendChild(line);
+  }
+
+  // Horizontal lines
+  for (let y = gridTop; y <= gridBottom; y += gridSize) {
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.classList.add('grid-line');
+    if (y % (gridSize * 4) === 0) line.classList.add('major');
+    line.setAttribute('x1', gridLeft);
+    line.setAttribute('y1', y);
+    line.setAttribute('x2', gridRight);
+    line.setAttribute('y2', y);
+    gridGroup.appendChild(line);
+  }
+
+  // Insert grid as first child so it appears behind everything
+>>>>>>> parent of 98947fd (1)
   const mainGroup = document.getElementById('mainGroup');
   if (gridRedrawTimeout) clearTimeout(gridRedrawTimeout);
 
