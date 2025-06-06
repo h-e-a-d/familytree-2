@@ -187,9 +187,31 @@ html, body {
   bottom: 24px;
   right: 24px;
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  flex-direction: column-reverse;
+  align-items: center;
   z-index: 998;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.floating-buttons::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0);
+  backdrop-filter: blur(0px);
+  opacity: 0;
+  transition: all 0.3s ease;
+  pointer-events: none;
+  z-index: 997;
+}
+
+.floating-buttons.expanded::before {
+  background: rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(2px);
+  opacity: 1;
 }
 
 .floating-btn {
@@ -197,38 +219,119 @@ html, body {
   height: 56px;
   border-radius: 50%;
   border: none;
-  font-size: 36px;
-  line-height: 0;
   cursor: pointer;
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
+  position: relative;
+  margin-bottom: 0;
+  outline: none;
+  user-select: none;
+}
+
+.floating-btn:active {
+  transform: scale(0.95);
 }
 
 .floating-btn.primary {
   background-color: #2ecc71;
   color: #fff;
-  font-size: 36px;
+  font-size: 28px;
+  z-index: 1003;
+  transform: rotate(0deg);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 6px 16px rgba(46, 204, 113, 0.3);
+}
+
+.floating-buttons.expanded .floating-btn.primary {
+  transform: rotate(45deg);
+  background-color: #e74c3c;
+  box-shadow: 0 6px 16px rgba(231, 76, 60, 0.3);
 }
 
 .floating-btn.primary:hover { 
-  background-color: #27ae60; 
+  background-color: #27ae60;
+  transform: scale(1.1) rotate(0deg);
+  box-shadow: 0 8px 20px rgba(46, 204, 113, 0.4);
+}
+
+.floating-buttons.expanded .floating-btn.primary:hover {
+  background-color: #c0392b;
+  transform: scale(1.1) rotate(45deg);
+  box-shadow: 0 8px 20px rgba(231, 76, 60, 0.4);
 }
 
 .floating-btn.secondary {
   background-color: #3498db;
   color: #fff;
-  font-size: 12px;
-  width: 64px;
-  height: 40px;
-  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  z-index: 1002;
+  opacity: 0;
+  transform: translateY(0px) scale(0);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  position: absolute;
+  bottom: 0;
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+}
+
+.floating-buttons.expanded .floating-btn.secondary {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.floating-buttons.expanded #styleBtn {
+  transform: translateY(-70px) scale(1);
+  transition-delay: 0.1s;
+}
+
+.floating-buttons.expanded #connectBtn {
+  transform: translateY(-140px) scale(1);
+  transition-delay: 0.15s;
 }
 
 .floating-btn.secondary:hover {
   background-color: #2980b9;
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(52, 152, 219, 0.4);
+}
+
+.floating-buttons.expanded #styleBtn:hover {
+  transform: translateY(-70px) scale(1.1);
+  box-shadow: 0 6px 16px rgba(52, 152, 219, 0.4);
+}
+
+.floating-buttons.expanded #connectBtn:hover {
+  transform: translateY(-140px) scale(1.1);
+  box-shadow: 0 6px 16px rgba(52, 152, 219, 0.4);
+}
+
+.floating-buttons.expanded #connectBtn:active,
+.floating-buttons.expanded #styleBtn:active {
+  transform: scale(0.95);
+}
+
+.floating-buttons.expanded #styleBtn:active {
+  transform: translateY(-70px) scale(0.95);
+}
+
+.floating-buttons.expanded #connectBtn:active {
+  transform: translateY(-140px) scale(0.95);
+}
+
+/* Hide secondary buttons by default */
+.floating-btn.secondary.hidden {
+  display: none !important;
+}
+
+/* Improved button labels for better UX */
+.floating-btn.secondary {
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
 /* Table View Styles */

@@ -64,22 +64,35 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function setupButtonEventListeners() {
-  // Add person button
+  // Add person button with toggle functionality
   if (addPersonBtn) {
     addPersonBtn.addEventListener('click', () => {
-      console.log('Add person button clicked');
-      openModalForEdit(); // no ID = "Add Person" mode
+      const floatingButtons = document.querySelector('.floating-buttons');
+      
+      // If buttons are expanded, close them instead of opening modal
+      if (floatingButtons && floatingButtons.classList.contains('expanded')) {
+        clearSelection(); // This will close the expanded menu
+      } else {
+        console.log('Add person button clicked');
+        openModalForEdit(); // no ID = "Add Person" mode
+      }
     });
   }
 
   // Connect button
   if (connectBtn) {
-    connectBtn.addEventListener('click', handleConnectSelected);
+    connectBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      handleConnectSelected();
+    });
   }
 
   // Style button
   if (styleBtn) {
-    styleBtn.addEventListener('click', openStyleModal);
+    styleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openStyleModal();
+    });
   }
 
   // Form submit handler - attach to form directly
@@ -285,14 +298,16 @@ function toggleCircleSelection(personId, circle, group) {
     // Deselect
     selectedCircles.delete(personId);
     group.classList.remove('selected');
+    console.log('Deselected:', personId);
   } else {
     // Select
     selectedCircles.add(personId);
     group.classList.add('selected');
+    console.log('Selected:', personId);
   }
   
   updateActionButtons();
-  console.log('Selected circles:', Array.from(selectedCircles));
+  console.log('Current selection:', Array.from(selectedCircles));
 }
 
 function clearSelection() {
@@ -308,19 +323,43 @@ function updateActionButtons() {
   const hasSelection = selectedCircles.size > 0;
   const canConnect = selectedCircles.size === 2;
   
-  if (connectBtn) {
-    if (canConnect) {
-      connectBtn.classList.remove('hidden');
-    } else {
-      connectBtn.classList.add('hidden');
-    }
-  }
+  console.log('Updating action buttons:', { hasSelection, canConnect, selectedCount: selectedCircles.size });
   
-  if (styleBtn) {
-    if (hasSelection) {
+  const floatingButtons = document.querySelector('.floating-buttons');
+  if (!floatingButtons) return;
+  
+  if (hasSelection) {
+    // Add animation class to show buttons
+    floatingButtons.classList.add('expanded');
+    
+    // Show/hide connect button based on selection count
+    if (connectBtn) {
+      if (canConnect) {
+        connectBtn.classList.remove('hidden');
+        connectBtn.style.display = 'flex';
+      } else {
+        connectBtn.classList.add('hidden');
+        connectBtn.style.display = 'none';
+      }
+    }
+    
+    // Always show style button when something is selected
+    if (styleBtn) {
       styleBtn.classList.remove('hidden');
-    } else {
+      styleBtn.style.display = 'flex';
+    }
+  } else {
+    // Hide all secondary buttons
+    floatingButtons.classList.remove('expanded');
+    
+    if (connectBtn) {
+      connectBtn.classList.add('hidden');
+      connectBtn.style.display = 'none';
+    }
+    
+    if (styleBtn) {
       styleBtn.classList.add('hidden');
+      styleBtn.style.display = 'none';
     }
   }
 }
@@ -354,28 +393,52 @@ function handleConnectSelected() {
   }
   
   const [personId1, personId2] = Array.from(selectedCircles);
+  const person1Name = getPersonDisplayName(personId1);
+  const person2Name = getPersonDisplayName(personId2);
   
-  // Show connection type dialog
-  const connectionType = prompt('Connection type:\n1. Parent-Child\n2. Spouse\n\nEnter 1 or 2:');
+  // Create a more user-friendly dialog
+  const connectionOptions = [
+    'Cancel',
+    `${person1Name} is parent of ${person2Name}`,
+    `${person2Name} is parent of ${person1Name}`,
+    `${person1Name} and ${person2Name} are spouses`
+  ];
   
-  if (connectionType === '1') {
-    // Parent-child connection
-    const parentId = prompt(`Which person is the parent?\nEnter 1 for ${getPersonDisplayName(personId1)} or 2 for ${getPersonDisplayName(personId2)}:`);
+  const choice = prompt(
+    `Connect ${person1Name} and ${person2Name}:\n\n` +
+    `1. ${connectionOptions[1]}\n` +
+    `2. ${connectionOptions[2]}\n` +
+    `3. ${connectionOptions[3]}\n\n` +
+    `Enter 1, 2, or 3 (or Cancel):`
+  );
+  
+  if (choice === '1') {
+    // Person 1 is parent of Person 2
+    const parentGroup = svg.querySelector(`g[data-id="${personId1}"]`);
+    const parentGender = parentGroup?.getAttribute('data-gender');
     
-    if (parentId === '1' || parentId === '2') {
-      const parent = parentId === '1' ? personId1 : personId2;
-      const child = parentId === '1' ? personId2 : personId1;
-      
-      const parentGroup = svg.querySelector(`g[data-id="${parent}"]`);
-      const parentGender = parentGroup?.getAttribute('data-gender');
-      
-      if (parentGender === 'male') {
-        setPersonAttribute(child, 'data-fatherId', parent);
-      } else if (parentGender === 'female') {
-        setPersonAttribute(child, 'data-motherId', parent);
-      }
+    if (parentGender === 'male') {
+      setPersonAttribute(personId2, 'data-fatherId', personId1);
+    } else if (parentGender === 'female') {
+      setPersonAttribute(personId2, 'data-motherId', personId1);
+    } else {
+      alert('Parent gender must be specified to create parent-child relationship.');
+      return;
     }
-  } else if (connectionType === '2') {
+  } else if (choice === '2') {
+    // Person 2 is parent of Person 1
+    const parentGroup = svg.querySelector(`g[data-id="${personId2}"]`);
+    const parentGender = parentGroup?.getAttribute('data-gender');
+    
+    if (parentGender === 'male') {
+      setPersonAttribute(personId1, 'data-fatherId', personId2);
+    } else if (parentGender === 'female') {
+      setPersonAttribute(personId1, 'data-motherId', personId2);
+    } else {
+      alert('Parent gender must be specified to create parent-child relationship.');
+      return;
+    }
+  } else if (choice === '3') {
     // Spouse connection
     setPersonAttribute(personId1, 'data-spouseId', personId2);
     setPersonAttribute(personId2, 'data-spouseId', personId1);
@@ -383,9 +446,15 @@ function handleConnectSelected() {
     return; // Cancelled or invalid input
   }
   
+  // Update the tree
   generateAllConnections();
   rebuildTableView();
   pushUndoState();
+  
+  // Show success message
+  console.log(`Connected ${person1Name} and ${person2Name}`);
+  
+  // Clear selection after connecting
   clearSelection();
 }
 

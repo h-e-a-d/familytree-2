@@ -144,7 +144,8 @@ function initializeKeyboardShortcuts() {
       if (!e.ctrlKey && !e.altKey) {
         e.preventDefault();
         const connectBtn = document.getElementById('connectBtn');
-        if (connectBtn && !connectBtn.classList.contains('hidden')) {
+        const floatingButtons = document.querySelector('.floating-buttons');
+        if (connectBtn && floatingButtons && floatingButtons.classList.contains('expanded') && !connectBtn.classList.contains('hidden')) {
           connectBtn.click();
         }
       }
@@ -155,7 +156,8 @@ function initializeKeyboardShortcuts() {
       if (!e.ctrlKey && !e.altKey) {
         e.preventDefault();
         const styleBtn = document.getElementById('styleBtn');
-        if (styleBtn && !styleBtn.classList.contains('hidden')) {
+        const floatingButtons = document.querySelector('.floating-buttons');
+        if (styleBtn && floatingButtons && floatingButtons.classList.contains('expanded') && !styleBtn.classList.contains('hidden')) {
           styleBtn.click();
         }
       }
