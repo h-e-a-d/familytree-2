@@ -5,9 +5,16 @@
 
 import { updateSearchableSelects } from './searchableSelect.js';
 
+let isModalOpen = false;
+
 export function openModalForEdit(personId) {
   const modal = document.getElementById('personModal');
   const titleEl = document.getElementById('modalTitle');
+
+  if (!modal || !titleEl) {
+    console.error('Modal elements not found');
+    return;
+  }
 
   // If personId is provided, we are in "Edit" mode; otherwise "Add" mode
   if (personId) {
@@ -42,6 +49,9 @@ export function openModalForEdit(personId) {
     delete modal.dataset.editingId;
 
     // Clear all form fields
+    const form = document.getElementById('personForm');
+    if (form) form.reset();
+    
     document.getElementById('personName').value = '';
     document.getElementById('personSurname').value = '';
     document.getElementById('personBirthName').value = '';
@@ -54,6 +64,7 @@ export function openModalForEdit(personId) {
 
   // Show the modal
   modal.classList.remove('hidden');
+  isModalOpen = true;
   
   // Focus on the first input
   setTimeout(() => {
@@ -65,9 +76,23 @@ export function openModalForEdit(personId) {
 export function closeModal() {
   const modal = document.getElementById('personModal');
 
-  // Clear any validation state (optional)
+  if (!modal) {
+    console.error('Modal not found');
+    return;
+  }
+
+  // Clear the form
   const form = document.getElementById('personForm');
-  if (form) form.reset();
+  if (form) {
+    form.reset();
+  }
+
+  // Clear individual inputs manually as well
+  const inputs = ['personName', 'personSurname', 'personBirthName', 'personDob', 'personGender'];
+  inputs.forEach(inputId => {
+    const input = document.getElementById(inputId);
+    if (input) input.value = '';
+  });
 
   // Clear searchable selects
   document.querySelectorAll('.searchable-select').forEach(container => {
@@ -77,4 +102,50 @@ export function closeModal() {
   // Hide the modal
   modal.classList.add('hidden');
   delete modal.dataset.editingId;
+  isModalOpen = false;
+  
+  console.log('Modal closed');
 }
+
+export function isModalCurrentlyOpen() {
+  return isModalOpen;
+}
+
+// Initialize modal event listeners when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+  const modal = document.getElementById('personModal');
+  const cancelBtn = document.getElementById('cancelModal');
+  
+  // Ensure modal starts hidden
+  if (modal) {
+    modal.classList.add('hidden');
+    isModalOpen = false;
+  }
+  
+  // Cancel button event listener
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      console.log('Cancel button clicked');
+      closeModal();
+    });
+  }
+  
+  // Close modal when clicking outside of modal content
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closeModal();
+      }
+    });
+  }
+  
+  // Prevent modal content clicks from closing modal
+  const modalContent = document.querySelector('.modal-content');
+  if (modalContent) {
+    modalContent.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+  }
+});

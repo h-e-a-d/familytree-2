@@ -114,8 +114,12 @@ function initializeKeyboardShortcuts() {
       const settingsPanel = document.getElementById('settingsPanel');
       
       if (modal && !modal.classList.contains('hidden')) {
-        const cancelBtn = document.getElementById('cancelModal');
-        if (cancelBtn) cancelBtn.click();
+        // Import and call closeModal function
+        import('./modal.js').then(mod => {
+          if (typeof mod.closeModal === 'function') {
+            mod.closeModal();
+          }
+        });
       } else if (settingsPanel && !settingsPanel.classList.contains('hidden')) {
         settingsPanel.classList.add('hidden');
       }

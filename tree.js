@@ -23,20 +23,20 @@ document.addEventListener('DOMContentLoaded', () => {
   initializeSVGCanvas();
 
   // Wire up the floating "Add Person" button
-  addPersonBtn.addEventListener('click', () => {
-    openModalForEdit(); // no ID = "Add Person" mode
-  });
+  if (addPersonBtn) {
+    addPersonBtn.addEventListener('click', () => {
+      openModalForEdit(); // no ID = "Add Person" mode
+    });
+  }
 
   // Catch save from modal
-  document.getElementById('personForm').addEventListener('submit', (e) => {
-    e.preventDefault();
-    savePersonFromModal();
-  });
-
-  // Cancel modal
-  document.getElementById('cancelModal').addEventListener('click', () => {
-    closeModal();
-  });
+  const personForm = document.getElementById('personForm');
+  if (personForm) {
+    personForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      savePersonFromModal();
+    });
+  }
 
   // Settings from cog panel
   document.getElementById('applyNodeStyle').addEventListener('click', () => {
@@ -131,30 +131,41 @@ function savePersonFromModal() {
 
   // Determine if we're editing or adding
   const editingId = document.getElementById('personModal').dataset.editingId;
-  if (editingId) {
-    updateExistingPersonSVG(editingId, { 
-      name: nameInput, 
-      surname: surnameInput, 
-      birthName: birthNameInput, 
-      dob: dobInput, 
-      gender: genderInput, 
-      motherId, fatherId, spouseId 
-    });
-  } else {
-    createNewPersonSVG({ 
-      name: nameInput, 
-      surname: surnameInput, 
-      birthName: birthNameInput, 
-      dob: dobInput, 
-      gender: genderInput, 
-      motherId, fatherId, spouseId 
-    });
-  }
+  
+  try {
+    if (editingId) {
+      updateExistingPersonSVG(editingId, { 
+        name: nameInput, 
+        surname: surnameInput, 
+        birthName: birthNameInput, 
+        dob: dobInput, 
+        gender: genderInput, 
+        motherId, fatherId, spouseId 
+      });
+    } else {
+      createNewPersonSVG({ 
+        name: nameInput, 
+        surname: surnameInput, 
+        birthName: birthNameInput, 
+        dob: dobInput, 
+        gender: genderInput, 
+        motherId, fatherId, spouseId 
+      });
+    }
 
-  closeModal();
-  generateAllConnections();   // regenerate connection lines
-  rebuildTableView();         // refresh the table view data
-  pushUndoState();            // save state for undo
+    // Close modal first, then update other components
+    closeModal();
+    
+    // Update other components
+    generateAllConnections();   // regenerate connection lines
+    rebuildTableView();         // refresh the table view data
+    pushUndoState();            // save state for undo
+    
+    console.log('Person saved successfully');
+  } catch (error) {
+    console.error('Error saving person:', error);
+    alert('Error saving person. Please try again.');
+  }
 }
 
 // Create a new <g> circle‐node in the SVG
