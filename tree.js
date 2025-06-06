@@ -3,7 +3,7 @@
 // Responsible for all SVG‐based logic: adding/editing/removing nodes,
 // dragging, connect‐mode, generate connections, undo stack, etc.
 // Now includes: pan/zoom, grid, selection, connect, and style features
-// FIXED: Added proper double-tap detection for mobile devices
+// OPTIMIZED: Ultra-smooth circle dragging with zero lag
 
 import { updateSearchableSelects } from './searchableSelect.js';
 import { openModalForEdit, closeModal } from './modal.js';
@@ -1106,7 +1106,7 @@ function updateExistingPersonSVG(id, data) {
   if (dobText) dobText.textContent = data.dob;
 }
 
-// FIXED: Setup circle interactions with proper double-tap detection for mobile
+// Setup circle interactions with proper double-tap detection for mobile
 function setupCircleInteractions(group, circle, personId) {
   makeCircleDraggable(group, circle);
   
@@ -1150,7 +1150,7 @@ function setupCircleInteractions(group, circle, personId) {
     openModalForEdit(personId);
   });
 
-  // FIXED: Mobile touch events with proper double-tap detection
+  // Mobile touch events with proper double-tap detection
   let touchStartTime = 0;
   let hasTouchMoved = false;
   let touchStartPos = { x: 0, y: 0 };
@@ -1235,19 +1235,34 @@ function setupCircleInteractions(group, circle, personId) {
   }, { passive: false });
 }
 
-// Make circle draggable
+// OPTIMIZED: Ultra-smooth circle dragging with zero lag
 function makeCircleDraggable(group, circle) {
   let offsetX, offsetY, isDragging = false;
   let isCircleTouching = false;
-  let connectionUpdateTimeout = null;
+  let cachedRect = null;
 
-  // Helper function to update circle position
+  // Cache SVG rect for better performance during drag
+  function getCachedRect() {
+    if (!cachedRect) {
+      cachedRect = svg.getBoundingClientRect();
+    }
+    return cachedRect;
+  }
+
+  // Invalidate rect cache when needed
+  function invalidateRectCache() {
+    cachedRect = null;
+  }
+
+  // Ultra-fast position update - no expensive operations during drag
   function updateCirclePosition(newCx, newCy) {
     if (isNaN(newCx) || isNaN(newCy)) return;
     
+    // Update circle position immediately
     circle.setAttribute('cx', newCx);
     circle.setAttribute('cy', newCy);
     
+    // Update text positions immediately
     const nameText = group.querySelector('text.name');
     const dobText = group.querySelector('text.dob');
     const radius = parseFloat(circle.getAttribute('r')) || nodeRadius;
@@ -1263,17 +1278,6 @@ function makeCircleDraggable(group, circle) {
     }
   }
 
-  // Throttled connection update - only update connections every 16ms during drag
-  function throttledConnectionUpdate() {
-    if (connectionUpdateTimeout) {
-      cancelAnimationFrame(connectionUpdateTimeout);
-    }
-    connectionUpdateTimeout = requestAnimationFrame(() => {
-      generateAllConnections();
-      connectionUpdateTimeout = null;
-    });
-  }
-
   // Mouse events for desktop
   circle.addEventListener('mousedown', (e) => {
     if (e.detail === 1) { // Single click
@@ -1281,12 +1285,15 @@ function makeCircleDraggable(group, circle) {
       e.stopPropagation();
       isDragging = true;
       
+      // Cache rect at start of drag
+      invalidateRectCache();
+      
       // Get current circle position
       const currentCx = parseFloat(circle.getAttribute('cx')) || 0;
       const currentCy = parseFloat(circle.getAttribute('cy')) || 0;
       
       // Get mouse position in SVG coordinates
-      const rect = svg.getBoundingClientRect();
+      const rect = getCachedRect();
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;
       
@@ -1301,29 +1308,28 @@ function makeCircleDraggable(group, circle) {
     }
   });
 
-  // Touch events for mobile - OPTIMIZED: Reduced calculations and smoother movement
+  // Touch events for mobile - ULTRA OPTIMIZED for smoothness
   let dragStarted = false;
-  let dragThreshold = 10; // Reduced threshold for more responsive dragging
+  let dragThreshold = 8; // Very responsive threshold
   let touchStartPos = { x: 0, y: 0 };
-  let initialTouchTime = 0;
-  let lastUpdateTime = 0;
-  const updateThrottle = 16; // ~60fps
 
   circle.addEventListener('touchstart', (e) => {
     if (e.touches.length === 1) {
       isCircleTouching = true;
       dragStarted = false;
       
+      // Cache rect at start of touch
+      invalidateRectCache();
+      
       const touch = e.touches[0];
       touchStartPos = { x: touch.clientX, y: touch.clientY };
-      initialTouchTime = Date.now();
       
       // Get current circle position
       const currentCx = parseFloat(circle.getAttribute('cx')) || 0;
       const currentCy = parseFloat(circle.getAttribute('cy')) || 0;
       
       // Get touch position in SVG coordinates
-      const rect = svg.getBoundingClientRect();
+      const rect = getCachedRect();
       const touchX = touch.clientX - rect.left;
       const touchY = touch.clientY - rect.top;
       
@@ -1341,45 +1347,40 @@ function makeCircleDraggable(group, circle) {
     
     const touch = e.touches[0];
     const currentPos = { x: touch.clientX, y: touch.clientY };
-    const distance = Math.sqrt(
-      Math.pow(currentPos.x - touchStartPos.x, 2) + 
-      Math.pow(currentPos.y - touchStartPos.y, 2)
-    );
     
-    // Only start dragging if we've moved beyond the threshold
-    if (!dragStarted && distance > dragThreshold) {
-      dragStarted = true;
-      isDragging = true;
+    // Check if we should start dragging
+    if (!dragStarted) {
+      const distance = Math.sqrt(
+        Math.pow(currentPos.x - touchStartPos.x, 2) + 
+        Math.pow(currentPos.y - touchStartPos.y, 2)
+      );
+      
+      if (distance > dragThreshold) {
+        dragStarted = true;
+        isDragging = true;
+      } else {
+        return; // Don't process movement until threshold is reached
+      }
     }
     
     if (dragStarted) {
       e.preventDefault();
       e.stopPropagation();
       
-      // Throttle updates for better performance
-      const now = Date.now();
-      if (now - lastUpdateTime < updateThrottle) {
-        return;
-      }
-      lastUpdateTime = now;
-      
-      // Get touch position in SVG coordinates (cached rect for performance)
-      const rect = svg.getBoundingClientRect();
+      // OPTIMIZED: Use cached rect and minimal calculations
+      const rect = getCachedRect();
       const touchX = touch.clientX - rect.left;
       const touchY = touch.clientY - rect.top;
       
-      // Convert to SVG coordinates considering pan/zoom
+      // Direct SVG coordinate calculation
       const svgX = (touchX - panX) / scale;
       const svgY = (touchY - panY) / scale;
       
       const newCx = svgX - offsetX;
       const newCy = svgY - offsetY;
       
-      // Update position immediately for smooth visual feedback
+      // IMMEDIATE position update - no throttling, no connection updates during drag
       updateCirclePosition(newCx, newCy);
-      
-      // Throttle connection updates to avoid performance issues
-      throttledConnectionUpdate();
     }
   }, { passive: false });
 
@@ -1395,33 +1396,33 @@ function makeCircleDraggable(group, circle) {
       isDragging = false;
       dragStarted = false;
       
-      // Final connection update and undo state
+      // Only update connections and save state at the end
       generateAllConnections();
       pushUndoState();
     }
+    
+    // Invalidate cache
+    invalidateRectCache();
   }, { passive: false });
 
   // Mouse move and up events (for desktop) - OPTIMIZED
   document.addEventListener('mousemove', (e) => {
     if (!isDragging || isCircleTouching) return;
     
-    // Get mouse position in SVG coordinates
-    const rect = svg.getBoundingClientRect();
+    // Use cached rect for better performance
+    const rect = getCachedRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
     
-    // Convert to SVG coordinates considering pan/zoom
+    // Direct coordinate calculation
     const svgX = (mouseX - panX) / scale;
     const svgY = (mouseY - panY) / scale;
     
     const newCx = svgX - offsetX;
     const newCy = svgY - offsetY;
     
-    // Update position immediately
+    // IMMEDIATE position update - no connection updates during drag
     updateCirclePosition(newCx, newCy);
-    
-    // Throttle connection updates
-    throttledConnectionUpdate();
   });
 
   document.addEventListener('mouseup', () => {
@@ -1429,9 +1430,12 @@ function makeCircleDraggable(group, circle) {
     isDragging = false;
     circle.style.cursor = 'grab';
     
-    // Final connection update and undo state
+    // Only update connections and save state at the end
     generateAllConnections();
     pushUndoState();
+    
+    // Invalidate cache
+    invalidateRectCache();
   });
 }
 
