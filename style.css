@@ -181,16 +181,44 @@ html, body {
   pointer-events: none;
 }
 
-/* Floating Action Buttons */
+/* Floating Action Buttons - UPDATED FOR UNDO BUTTON */
 .floating-buttons {
   position: fixed;
   bottom: 24px;
   right: 24px;
   display: flex;
-  flex-direction: column-reverse;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-end;
   z-index: 998;
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Main button row (undo and add buttons) */
+.floating-buttons .main-buttons {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Removed the blur effect completely */
+.floating-buttons::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0);
+  opacity: 0;
+  transition: all 0.3s ease;
+  pointer-events: none;
+  z-index: 997;
+}
+
+.floating-buttons.expanded::before {
+  background: rgba(0, 0, 0, 0.1);
+  opacity: 1;
 }
 
 .floating-btn {
@@ -215,6 +243,26 @@ html, body {
   transform: scale(0.95);
 }
 
+/* Undo Button Styles */
+.floating-btn.undo {
+  background-color: #95a5a6;
+  color: #fff;
+  z-index: 1003;
+  box-shadow: 0 4px 12px rgba(149, 165, 166, 0.3);
+}
+
+.floating-btn.undo:hover {
+  background-color: #7f8c8d;
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(149, 165, 166, 0.4);
+}
+
+.floating-btn.undo svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* Primary Button (Add) Styles */
 .floating-btn.primary {
   background-color: #2ecc71;
   color: #fff;
@@ -243,6 +291,7 @@ html, body {
   box-shadow: 0 8px 20px rgba(231, 76, 60, 0.4);
 }
 
+/* Secondary Buttons */
 .floating-btn.secondary {
   background-color: #3498db;
   color: #fff;
@@ -253,7 +302,7 @@ html, body {
   transform: translateY(0px) scale(0);
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   position: absolute;
-  bottom: 0;
+  right: 0;
   box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
 }
 
@@ -306,124 +355,11 @@ html, body {
   display: none !important;
 }
 
-/* Connection Modal */
-.connection-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1010;
-}
-
-.connection-modal-content {
-  background: #fff;
-  padding: 32px;
-  border-radius: 16px;
-  width: 420px;
-  max-width: 90%;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-  text-align: center;
-}
-
-.connection-modal h2 {
-  margin-bottom: 24px;
-  font-size: 24px;
-  font-weight: 600;
-  color: #2c3e50;
-}
-
-.connection-text {
-  font-size: 18px;
-  margin-bottom: 32px;
-  color: #34495e;
-  line-height: 1.5;
-}
-
-.person-name {
-  font-weight: 600;
-  color: #2c3e50;
-}
-
-.connection-buttons {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-.connection-btn {
-  padding: 12px 24px;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  min-width: 100px;
-}
-
-.connection-btn.mother {
-  background-color: #e91e63;
-  color: white;
-}
-
-.connection-btn.mother:hover {
-  background-color: #c2185b;
-  transform: translateY(-2px);
-}
-
-.connection-btn.father {
-  background-color: #2196f3;
-  color: white;
-}
-
-.connection-btn.father:hover {
-  background-color: #1976d2;
-  transform: translateY(-2px);
-}
-
-.connection-btn.child {
-  background-color: #4caf50;
-  color: white;
-}
-
-.connection-btn.child:hover {
-  background-color: #388e3c;
-  transform: translateY(-2px);
-}
-
-.connection-btn.spouse {
-  background-color: #ff9800;
-  color: white;
-}
-
-.connection-btn.spouse:hover {
-  background-color: #f57c00;
-  transform: translateY(-2px);
-}
-
-.connection-btn.cancel {
-  background-color: #6c757d;
-  color: white;
-}
-
-.connection-btn.cancel:hover {
-  background-color: #5a6268;
-  transform: translateY(-2px);
-}
-
-.connection-modal-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: transparent;
+/* Improved button labels for better UX */
+.floating-btn.secondary {
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
 /* Table View Styles */
@@ -520,6 +456,48 @@ html, body {
   font-size: 24px;
   font-weight: 600;
   color: #2c3e50;
+}
+
+/* Connection Modal Styles */
+.connection-content {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.connection-content p {
+  font-size: 18px;
+  margin-bottom: 20px;
+  color: #2c3e50;
+}
+
+.connection-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.connection-btn {
+  padding: 12px 20px;
+  font-size: 16px;
+  font-weight: 600;
+  border: 2px solid #3498db;
+  background-color: #fff;
+  color: #3498db;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.connection-btn:hover {
+  background-color: #3498db;
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+}
+
+.connection-btn:active {
+  transform: translateY(0);
 }
 
 .form-group { 
@@ -650,21 +628,27 @@ html, body {
   transition: all 0.2s ease;
 }
 
-.form-actions button#cancelModal { 
+.form-actions button#cancelModal,
+.form-actions button#cancelStyleModal,
+.form-actions button#cancelConnectionModal { 
   background: #6c757d; 
   color: #fff; 
 }
 
-.form-actions button#cancelModal:hover {
+.form-actions button#cancelModal:hover,
+.form-actions button#cancelStyleModal:hover,
+.form-actions button#cancelConnectionModal:hover {
   background: #5a6268;
 }
 
-.form-actions button#savePerson { 
+.form-actions button#savePerson,
+.form-actions button#applySelectedStyle { 
   background: #2ecc71; 
   color: #fff; 
 }
 
-.form-actions button#savePerson:hover {
+.form-actions button#savePerson:hover,
+.form-actions button#applySelectedStyle:hover {
   background: #27ae60;
 }
 
@@ -745,5 +729,15 @@ html, body {
   .modal-content {
     width: calc(100vw - 32px);
     margin: 16px;
+  }
+  
+  .floating-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .floating-buttons .main-buttons {
+    flex-direction: column;
+    gap: 16px;
   }
 }

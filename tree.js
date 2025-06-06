@@ -9,7 +9,7 @@ import { openModalForEdit, closeModal } from './modal.js';
 import { rebuildTableView } from './table.js';
 import { exportTree } from './exporter.js';
 
-let svg, addPersonBtn, connectBtn, styleBtn, undoStack = [], redoStack = [];
+let svg, addPersonBtn, connectBtn, styleBtn, undoBtn, undoStack = [], redoStack = [];
 let connectMode = false, connectFirst = null;
 let nodeRadius = 40, defaultColor = '#3498db';
 let fontFamily = 'Inter', fontSize = 14, nameColor = '#333333', dateColor = '#757575';
@@ -37,6 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
   addPersonBtn = document.getElementById('addPersonBtn');
   connectBtn = document.getElementById('connectBtn');
   styleBtn = document.getElementById('styleBtn');
+  undoBtn = document.getElementById('undoBtn');
 
   // Initialize pan/zoom, grid, etc.
   initializeSVGCanvas();
@@ -82,6 +83,15 @@ function setupButtonEventListeners() {
         console.log('Add person button clicked');
         openModalForEdit(); // no ID = "Add Person" mode
       }
+    });
+  }
+
+  // Undo button
+  if (undoBtn) {
+    undoBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      console.log('Undo button clicked');
+      undo();
     });
   }
 
@@ -1024,21 +1034,32 @@ export function pushUndoState() {
   }
   
   redoStack = [];
+  console.log(`Undo state pushed. Stack size: ${undoStack.length}`);
 }
 
 function undo() {
-  if (undoStack.length < 2) return;
+  if (undoStack.length < 2) {
+    console.log('Nothing to undo');
+    return;
+  }
+  
   const current = undoStack.pop();
   redoStack.push(current);
   const previous = undoStack[undoStack.length - 1];
   restoreState(previous);
+  console.log(`Undo performed. Stack size: ${undoStack.length}`);
 }
 
 function redo() {
-  if (redoStack.length === 0) return;
+  if (redoStack.length === 0) {
+    console.log('Nothing to redo');
+    return;
+  }
+  
   const next = redoStack.pop();
   undoStack.push(next);
   restoreState(next);
+  console.log(`Redo performed. Stack size: ${undoStack.length}`);
 }
 
 function restoreState(state) {

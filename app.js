@@ -139,6 +139,15 @@ function initializeKeyboardShortcuts() {
       }
     }
     
+    // Undo with 'U' key (in addition to Ctrl+Z handled in tree.js)
+    else if (e.key === 'u' || e.key === 'U') {
+      if (!e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        const undoBtn = document.getElementById('undoBtn');
+        if (undoBtn) undoBtn.click();
+      }
+    }
+    
     // Connect selected circles with 'C' key
     else if (e.key === 'c' || e.key === 'C') {
       if (!e.ctrlKey && !e.altKey) {
@@ -167,6 +176,7 @@ function initializeKeyboardShortcuts() {
     else if (e.key === 'Escape') {
       const personModal = document.getElementById('personModal');
       const styleModal = document.getElementById('styleModal');
+      const connectionModal = document.getElementById('connectionModal');
       const settingsPanel = document.getElementById('settingsPanel');
       
       if (personModal && !personModal.classList.contains('hidden')) {
@@ -178,6 +188,9 @@ function initializeKeyboardShortcuts() {
       } else if (styleModal && !styleModal.classList.contains('hidden')) {
         styleModal.classList.add('hidden');
         styleModal.style.display = 'none';
+      } else if (connectionModal && !connectionModal.classList.contains('hidden')) {
+        connectionModal.classList.add('hidden');
+        connectionModal.style.display = 'none';
       } else if (settingsPanel && !settingsPanel.classList.contains('hidden')) {
         settingsPanel.classList.add('hidden');
       }
