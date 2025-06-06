@@ -156,6 +156,25 @@
     <button id="connectBtn" class="floating-btn secondary hidden">Link</button>
   </div>
 
+  <!-- Connection Modal -->
+  <div id="connectionModal" class="modal hidden" style="display: none;">
+    <div class="modal-content">
+      <h2 id="connectionModalTitle">Connect People</h2>
+      <div class="connection-content">
+        <p id="connectionText">Person A is __ to Person B</p>
+        <div class="connection-buttons">
+          <button type="button" id="motherBtn" class="connection-btn">Mother</button>
+          <button type="button" id="fatherBtn" class="connection-btn">Father</button>
+          <button type="button" id="childBtn" class="connection-btn">Child</button>
+          <button type="button" id="spouseBtn" class="connection-btn">Spouse</button>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="button" id="cancelConnectionModal">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Style Modal for Selected Circles -->
   <div id="styleModal" class="modal hidden" style="display: none;">
     <div class="modal-content">

@@ -27,6 +27,9 @@ let selectedCircles = new Set();
 // Grid settings
 const gridSize = 50;
 
+// Connection modal variables
+let connectionPersonA = null, connectionPersonB = null;
+
 document.addEventListener('DOMContentLoaded', () => {
   console.log('Tree.js initializing...');
   
@@ -56,6 +59,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Style modal events
   setupStyleModalListeners();
+
+  // Connection modal events
+  setupConnectionModalListeners();
 
   // Push initial undo state
   pushUndoState();
@@ -133,6 +139,44 @@ function setupStyleModalListeners() {
   }
 }
 
+function setupConnectionModalListeners() {
+  const connectionModal = document.getElementById('connectionModal');
+  const cancelConnectionBtn = document.getElementById('cancelConnectionModal');
+  const motherBtn = document.getElementById('motherBtn');
+  const fatherBtn = document.getElementById('fatherBtn');
+  const childBtn = document.getElementById('childBtn');
+  const spouseBtn = document.getElementById('spouseBtn');
+
+  if (cancelConnectionBtn) {
+    cancelConnectionBtn.addEventListener('click', closeConnectionModal);
+  }
+
+  if (motherBtn) {
+    motherBtn.addEventListener('click', () => handleConnectionChoice('mother'));
+  }
+
+  if (fatherBtn) {
+    fatherBtn.addEventListener('click', () => handleConnectionChoice('father'));
+  }
+
+  if (childBtn) {
+    childBtn.addEventListener('click', () => handleConnectionChoice('child'));
+  }
+
+  if (spouseBtn) {
+    spouseBtn.addEventListener('click', () => handleConnectionChoice('spouse'));
+  }
+
+  // Close modal when clicking outside
+  if (connectionModal) {
+    connectionModal.addEventListener('click', (e) => {
+      if (e.target === connectionModal) {
+        closeConnectionModal();
+      }
+    });
+  }
+}
+
 // -----------------------------------------------------------------------------
 // SVG Canvas Initialization with Pan/Zoom
 
@@ -164,6 +208,7 @@ function initializeSVGCanvas() {
       deleteSelectedCircles();
     } else if (e.key === 'Escape') {
       clearSelection();
+      closeConnectionModal();
     }
   });
 }
@@ -187,6 +232,9 @@ function setupPanZoom() {
       panY = mouseY - factor * (mouseY - panY);
       scale = newScale;
       updateTransform();
+      
+      // Redraw grid after zoom
+      drawGrid();
     }
   });
 
@@ -214,6 +262,8 @@ function setupPanZoom() {
     if (isPanning) {
       isPanning = false;
       svg.classList.remove('panning');
+      // Redraw grid after pan
+      drawGrid();
       e.preventDefault();
     }
   });
@@ -241,7 +291,7 @@ function setupSelectionHandling() {
 }
 
 // -----------------------------------------------------------------------------
-// Grid Drawing
+// Grid Drawing - EXPANDED TO COVER WHOLE AREA
 
 function drawGrid() {
   if (!svg) return;
@@ -249,34 +299,48 @@ function drawGrid() {
   // Remove existing grid
   svg.querySelectorAll('.grid-line').forEach(line => line.remove());
 
-  const viewBox = svg.viewBox.baseVal;
-  const width = viewBox.width;
-  const height = viewBox.height;
+  // Get the current viewport dimensions
+  const rect = svg.getBoundingClientRect();
+  const viewportWidth = rect.width;
+  const viewportHeight = rect.height;
+
+  // Calculate the visible area considering pan and zoom
+  const visibleLeft = -panX / scale;
+  const visibleTop = -panY / scale;
+  const visibleWidth = viewportWidth / scale;
+  const visibleHeight = viewportHeight / scale;
+
+  // Extend grid beyond visible area for smooth panning
+  const padding = gridSize * 10;
+  const gridLeft = Math.floor((visibleLeft - padding) / gridSize) * gridSize;
+  const gridTop = Math.floor((visibleTop - padding) / gridSize) * gridSize;
+  const gridRight = Math.ceil((visibleLeft + visibleWidth + padding) / gridSize) * gridSize;
+  const gridBottom = Math.ceil((visibleTop + visibleHeight + padding) / gridSize) * gridSize;
 
   // Create grid group
   const gridGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
   gridGroup.id = 'gridGroup';
 
   // Vertical lines
-  for (let x = 0; x <= width; x += gridSize) {
+  for (let x = gridLeft; x <= gridRight; x += gridSize) {
     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
     line.classList.add('grid-line');
     if (x % (gridSize * 4) === 0) line.classList.add('major');
     line.setAttribute('x1', x);
-    line.setAttribute('y1', 0);
+    line.setAttribute('y1', gridTop);
     line.setAttribute('x2', x);
-    line.setAttribute('y2', height);
+    line.setAttribute('y2', gridBottom);
     gridGroup.appendChild(line);
   }
 
   // Horizontal lines
-  for (let y = 0; y <= height; y += gridSize) {
+  for (let y = gridTop; y <= gridBottom; y += gridSize) {
     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
     line.classList.add('grid-line');
     if (y % (gridSize * 4) === 0) line.classList.add('major');
-    line.setAttribute('x1', 0);
+    line.setAttribute('x1', gridLeft);
     line.setAttribute('y1', y);
-    line.setAttribute('x2', width);
+    line.setAttribute('x2', gridRight);
     line.setAttribute('y2', y);
     gridGroup.appendChild(line);
   }
@@ -384,7 +448,7 @@ function deleteSelectedCircles() {
 }
 
 // -----------------------------------------------------------------------------
-// Connect Functionality
+// Connect Functionality - UPDATED TO USE MODAL
 
 function handleConnectSelected() {
   if (selectedCircles.size !== 2) {
@@ -393,57 +457,72 @@ function handleConnectSelected() {
   }
   
   const [personId1, personId2] = Array.from(selectedCircles);
-  const person1Name = getPersonDisplayName(personId1);
-  const person2Name = getPersonDisplayName(personId2);
+  connectionPersonA = personId1;
+  connectionPersonB = personId2;
   
-  // Create a more user-friendly dialog
-  const connectionOptions = [
-    'Cancel',
-    `${person1Name} is parent of ${person2Name}`,
-    `${person2Name} is parent of ${person1Name}`,
-    `${person1Name} and ${person2Name} are spouses`
-  ];
+  openConnectionModal();
+}
+
+function openConnectionModal() {
+  const connectionModal = document.getElementById('connectionModal');
+  const connectionText = document.getElementById('connectionText');
   
-  const choice = prompt(
-    `Connect ${person1Name} and ${person2Name}:\n\n` +
-    `1. ${connectionOptions[1]}\n` +
-    `2. ${connectionOptions[2]}\n` +
-    `3. ${connectionOptions[3]}\n\n` +
-    `Enter 1, 2, or 3 (or Cancel):`
-  );
+  if (!connectionModal || !connectionText) return;
   
-  if (choice === '1') {
-    // Person 1 is parent of Person 2
-    const parentGroup = svg.querySelector(`g[data-id="${personId1}"]`);
-    const parentGender = parentGroup?.getAttribute('data-gender');
-    
-    if (parentGender === 'male') {
-      setPersonAttribute(personId2, 'data-fatherId', personId1);
-    } else if (parentGender === 'female') {
-      setPersonAttribute(personId2, 'data-motherId', personId1);
-    } else {
-      alert('Parent gender must be specified to create parent-child relationship.');
-      return;
-    }
-  } else if (choice === '2') {
-    // Person 2 is parent of Person 1
-    const parentGroup = svg.querySelector(`g[data-id="${personId2}"]`);
-    const parentGender = parentGroup?.getAttribute('data-gender');
-    
-    if (parentGender === 'male') {
-      setPersonAttribute(personId1, 'data-fatherId', personId2);
-    } else if (parentGender === 'female') {
-      setPersonAttribute(personId1, 'data-motherId', personId2);
-    } else {
-      alert('Parent gender must be specified to create parent-child relationship.');
-      return;
-    }
-  } else if (choice === '3') {
-    // Spouse connection
-    setPersonAttribute(personId1, 'data-spouseId', personId2);
-    setPersonAttribute(personId2, 'data-spouseId', personId1);
-  } else {
-    return; // Cancelled or invalid input
+  const person1Name = getPersonDisplayName(connectionPersonA);
+  const person2Name = getPersonDisplayName(connectionPersonB);
+  
+  connectionText.textContent = `${person1Name} is __ to ${person2Name}`;
+  
+  connectionModal.classList.remove('hidden');
+  connectionModal.style.display = 'flex';
+}
+
+function closeConnectionModal() {
+  const connectionModal = document.getElementById('connectionModal');
+  if (connectionModal) {
+    connectionModal.classList.add('hidden');
+    connectionModal.style.display = 'none';
+  }
+  
+  connectionPersonA = null;
+  connectionPersonB = null;
+}
+
+function handleConnectionChoice(relationship) {
+  if (!connectionPersonA || !connectionPersonB) {
+    closeConnectionModal();
+    return;
+  }
+  
+  switch (relationship) {
+    case 'mother':
+      // Person A is mother of Person B
+      setPersonAttribute(connectionPersonB, 'data-motherId', connectionPersonA);
+      break;
+    case 'father':
+      // Person A is father of Person B
+      setPersonAttribute(connectionPersonB, 'data-fatherId', connectionPersonA);
+      break;
+    case 'child':
+      // Person A is child of Person B (so Person B is parent of Person A)
+      const parentGroup = svg.querySelector(`g[data-id="${connectionPersonB}"]`);
+      const parentGender = parentGroup?.getAttribute('data-gender');
+      
+      if (parentGender === 'male') {
+        setPersonAttribute(connectionPersonA, 'data-fatherId', connectionPersonB);
+      } else if (parentGender === 'female') {
+        setPersonAttribute(connectionPersonA, 'data-motherId', connectionPersonB);
+      } else {
+        alert('Parent gender must be specified to create parent-child relationship.');
+        return;
+      }
+      break;
+    case 'spouse':
+      // Mutual spouse relationship
+      setPersonAttribute(connectionPersonA, 'data-spouseId', connectionPersonB);
+      setPersonAttribute(connectionPersonB, 'data-spouseId', connectionPersonA);
+      break;
   }
   
   // Update the tree
@@ -452,9 +531,12 @@ function handleConnectSelected() {
   pushUndoState();
   
   // Show success message
-  console.log(`Connected ${person1Name} and ${person2Name}`);
+  const person1Name = getPersonDisplayName(connectionPersonA);
+  const person2Name = getPersonDisplayName(connectionPersonB);
+  console.log(`Connected ${person1Name} and ${person2Name} as ${relationship}`);
   
-  // Clear selection after connecting
+  // Close modal and clear selection
+  closeConnectionModal();
   clearSelection();
 }
 
