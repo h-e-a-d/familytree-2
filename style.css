@@ -722,10 +722,22 @@ html, body {
   -khtml-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
+  /* Improve rendering performance on mobile */
+  will-change: transform;
+  transform-origin: 0 0;
 }
 
 #svgArea.panning {
   cursor: grabbing;
+}
+
+/* Performance optimizations for mobile */
+.person-group {
+  will-change: transform;
+}
+
+.person-group circle {
+  will-change: transform;
 }
 
 /* Responsive Design */

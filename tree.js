@@ -21,11 +21,35 @@ let scale = 1, panX = 0, panY = 0;
 const minScale = 0.1, maxScale = 5;
 let isDragging = false; // Global drag state
 
+// Performance optimization variables
+let gridRedrawTimeout = null;
+let lastGridRedraw = 0;
+const GRID_REDRAW_THROTTLE = 100; // milliseconds
+
 // Selection management
 let selectedCircles = new Set();
 
 // Grid settings
 const gridSize = 50;
+
+// Throttled grid redraw for better performance
+function throttledGridRedraw() {
+  const now = Date.now();
+  
+  if (gridRedrawTimeout) {
+    clearTimeout(gridRedrawTimeout);
+  }
+  
+  if (now - lastGridRedraw > GRID_REDRAW_THROTTLE) {
+    drawGrid();
+    lastGridRedraw = now;
+  } else {
+    gridRedrawTimeout = setTimeout(() => {
+      drawGrid();
+      lastGridRedraw = Date.now();
+    }, GRID_REDRAW_THROTTLE);
+  }
+}
 
 // Connection modal variables
 let connectionPersonA = null, connectionPersonB = null;
@@ -234,6 +258,7 @@ function setupPanZoom() {
   let initialTouchDistance = 0;
   let initialScale = 1;
   let initialPan = { x: 0, y: 0 };
+  let lastTouchPos = { x: 0, y: 0 };
 
   // Helper function to get touch distance
   function getTouchDistance(touches) {
@@ -268,7 +293,7 @@ function setupPanZoom() {
       updateTransform();
       
       // Redraw grid after zoom
-      drawGrid();
+      throttledGridRedraw();
     }
   }, { passive: false });
 
@@ -283,12 +308,10 @@ function setupPanZoom() {
     if (e.touches.length === 1) {
       // Single finger - prepare for panning
       const touch = e.touches[0];
+      lastTouchPos = { x: touch.clientX, y: touch.clientY };
+      
       if (e.target === svg || e.target.classList.contains('grid-line')) {
         isPanning = true;
-        startPoint = { 
-          x: touch.clientX - panX, 
-          y: touch.clientY - panY 
-        };
         svg.classList.add('panning');
       }
     } else if (e.touches.length === 2) {
@@ -311,10 +334,18 @@ function setupPanZoom() {
     if (!isTouching) return;
     
     if (e.touches.length === 1 && isPanning) {
-      // Single finger panning
+      // Single finger panning - much more responsive
       const touch = e.touches[0];
-      panX = touch.clientX - startPoint.x;
-      panY = touch.clientY - startPoint.y;
+      const deltaX = touch.clientX - lastTouchPos.x;
+      const deltaY = touch.clientY - lastTouchPos.y;
+      
+      // Direct pan calculation for better responsiveness
+      panX += deltaX;
+      panY += deltaY;
+      
+      // Update last touch position
+      lastTouchPos = { x: touch.clientX, y: touch.clientY };
+      
       updateTransform();
     } else if (e.touches.length === 2) {
       // Two finger pinch zoom
@@ -358,7 +389,7 @@ function setupPanZoom() {
       svg.classList.remove('panning');
       
       // Redraw grid after pan/zoom
-      drawGrid();
+      setTimeout(() => throttledGridRedraw(), 50); // Small delay for better performance
       
       // Reset touch variables
       lastTouchDistance = 0;
@@ -367,12 +398,10 @@ function setupPanZoom() {
     } else if (e.touches.length === 1) {
       // One finger still down, switch back to pan mode
       const touch = e.touches[0];
+      lastTouchPos = { x: touch.clientX, y: touch.clientY };
+      
       if (e.target === svg || e.target.classList.contains('grid-line')) {
         isPanning = true;
-        startPoint = { 
-          x: touch.clientX - panX, 
-          y: touch.clientY - panY 
-        };
         svg.classList.add('panning');
       }
     }
@@ -408,7 +437,7 @@ function setupPanZoom() {
       isPanning = false;
       svg.classList.remove('panning');
       // Redraw grid after pan
-      drawGrid();
+      throttledGridRedraw();
       e.preventDefault();
     }
   });
@@ -444,48 +473,55 @@ function drawGrid() {
   // Remove existing grid
   svg.querySelectorAll('.grid-line').forEach(line => line.remove());
 
-  // Get the current viewport dimensions
+  // Get the actual viewport dimensions more accurately
   const rect = svg.getBoundingClientRect();
   const viewportWidth = rect.width;
   const viewportHeight = rect.height;
 
-  // Calculate the visible area considering pan and zoom
-  const visibleLeft = -panX / scale;
-  const visibleTop = -panY / scale;
+  // Calculate the visible area considering pan and zoom with extra padding
+  const visibleLeft = (-panX) / scale;
+  const visibleTop = (-panY) / scale;
   const visibleWidth = viewportWidth / scale;
   const visibleHeight = viewportHeight / scale;
 
-  // Extend grid beyond visible area for smooth panning
-  const padding = gridSize * 10;
+  // Extend grid well beyond visible area for smooth panning and full coverage
+  const padding = gridSize * 20; // Increased padding
   const gridLeft = Math.floor((visibleLeft - padding) / gridSize) * gridSize;
   const gridTop = Math.floor((visibleTop - padding) / gridSize) * gridSize;
   const gridRight = Math.ceil((visibleLeft + visibleWidth + padding) / gridSize) * gridSize;
   const gridBottom = Math.ceil((visibleTop + visibleHeight + padding) / gridSize) * gridSize;
+
+  // Ensure minimum grid coverage
+  const minGridWidth = Math.max(gridRight - gridLeft, viewportWidth * 3 / scale);
+  const minGridHeight = Math.max(gridBottom - gridTop, viewportHeight * 3 / scale);
+  
+  const finalGridRight = Math.max(gridRight, gridLeft + minGridWidth);
+  const finalGridBottom = Math.max(gridBottom, gridTop + minGridHeight);
 
   // Create grid group
   const gridGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
   gridGroup.id = 'gridGroup';
 
   // Vertical lines
-  for (let x = gridLeft; x <= gridRight; x += gridSize) {
+  for (let x = gridLeft; x <= finalGridRight; x += gridSize) {
     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
     line.classList.add('grid-line');
     if (x % (gridSize * 4) === 0) line.classList.add('major');
     line.setAttribute('x1', x);
     line.setAttribute('y1', gridTop);
     line.setAttribute('x2', x);
-    line.setAttribute('y2', gridBottom);
+    line.setAttribute('y2', finalGridBottom);
     gridGroup.appendChild(line);
   }
 
   // Horizontal lines
-  for (let y = gridTop; y <= gridBottom; y += gridSize) {
+  for (let y = gridTop; y <= finalGridBottom; y += gridSize) {
     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
     line.classList.add('grid-line');
     if (y % (gridSize * 4) === 0) line.classList.add('major');
     line.setAttribute('x1', gridLeft);
     line.setAttribute('y1', y);
-    line.setAttribute('x2', gridRight);
+    line.setAttribute('x2', finalGridRight);
     line.setAttribute('y2', y);
     gridGroup.appendChild(line);
   }
