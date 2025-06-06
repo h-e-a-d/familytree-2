@@ -1110,8 +1110,6 @@ function setupCircleInteractions(group, circle, personId) {
   let clickTimeout;
   let tapCount = 0;
   let lastTapTime = 0;
-  let touchStartPos = null;
-  let touchMoved = false;
 
   // Mouse events for desktop
   circle.addEventListener('click', (e) => {
@@ -1147,79 +1145,6 @@ function setupCircleInteractions(group, circle, personId) {
     clearSelection(); // Clear selection when editing
     openModalForEdit(personId);
   });
-
-  // Touch events for mobile
-  circle.addEventListener('touchstart', (e) => {
-    if (e.touches.length === 1) {
-      const touch = e.touches[0];
-      touchStartPos = { x: touch.clientX, y: touch.clientY };
-      touchMoved = false;
-      
-      const currentTime = Date.now();
-      const timeDiff = currentTime - lastTapTime;
-      
-      if (timeDiff < 300 && timeDiff > 0) {
-        tapCount++;
-      } else {
-        tapCount = 1;
-      }
-      
-      lastTapTime = currentTime;
-    }
-  }, { passive: true, capture: false });
-
-  circle.addEventListener('touchmove', (e) => {
-    if (!touchStartPos || e.touches.length !== 1) return;
-    
-    const touch = e.touches[0];
-    const dx = Math.abs(touch.clientX - touchStartPos.x);
-    const dy = Math.abs(touch.clientY - touchStartPos.y);
-    
-    // If moved more than 10px, consider it a drag
-    if (dx > 10 || dy > 10) {
-      touchMoved = true;
-    }
-  }, { passive: true, capture: false });
-
-  circle.addEventListener('touchend', (e) => {
-    // Check if event is cancelable before preventing default
-    if (e.cancelable) {
-      e.preventDefault();
-    }
-    e.stopPropagation();
-    
-    if (!touchMoved && touchStartPos) {
-      if (tapCount === 1) {
-        // Single tap - select/deselect with delay to detect double tap
-        if (clickTimeout) {
-          clearTimeout(clickTimeout);
-          clickTimeout = null;
-        }
-        
-        clickTimeout = setTimeout(() => {
-          if (tapCount === 1) { // Still single tap after delay
-            toggleCircleSelection(personId, circle, group);
-          }
-        }, 300);
-      } else if (tapCount === 2) {
-        // Double tap - edit
-        console.log('Double-tapped on circle:', personId);
-        
-        if (clickTimeout) {
-          clearTimeout(clickTimeout);
-          clickTimeout = null;
-        }
-        
-        clearSelection(); // Clear selection when editing
-        openModalForEdit(personId);
-        tapCount = 0; // Reset tap count
-      }
-    }
-    
-    // Reset touch tracking
-    touchStartPos = null;
-    touchMoved = false;
-  }, { passive: false, capture: true });
 }
 
 // Make circle draggable
