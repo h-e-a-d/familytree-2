@@ -226,7 +226,31 @@ function initializeSVGCanvas() {
 function setupPanZoom() {
   if (!svg) return;
 
-  // Mouse wheel zoom
+  // Touch handling variables
+  let lastTouchDistance = 0;
+  let lastTouchCenter = { x: 0, y: 0 };
+  let isTouching = false;
+  let touchStartTime = 0;
+  let initialTouchDistance = 0;
+  let initialScale = 1;
+  let initialPan = { x: 0, y: 0 };
+
+  // Helper function to get touch distance
+  function getTouchDistance(touches) {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  // Helper function to get touch center
+  function getTouchCenter(touches) {
+    return {
+      x: (touches[0].clientX + touches[1].clientX) / 2,
+      y: (touches[0].clientY + touches[1].clientY) / 2
+    };
+  }
+
+  // Mouse wheel zoom (desktop)
   svg.addEventListener('wheel', (e) => {
     e.preventDefault();
     const rect = svg.getBoundingClientRect();
@@ -246,9 +270,120 @@ function setupPanZoom() {
       // Redraw grid after zoom
       drawGrid();
     }
+  }, { passive: false });
+
+  // Touch events for mobile
+  svg.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    isTouching = true;
+    touchStartTime = Date.now();
+    
+    if (e.touches.length === 1) {
+      // Single finger - prepare for panning
+      const touch = e.touches[0];
+      if (e.target === svg || e.target.classList.contains('grid-line')) {
+        isPanning = true;
+        startPoint = { 
+          x: touch.clientX - panX, 
+          y: touch.clientY - panY 
+        };
+        svg.classList.add('panning');
+      }
+    } else if (e.touches.length === 2) {
+      // Two fingers - prepare for pinch zoom
+      isPanning = false;
+      svg.classList.remove('panning');
+      
+      initialTouchDistance = getTouchDistance(e.touches);
+      lastTouchDistance = initialTouchDistance;
+      lastTouchCenter = getTouchCenter(e.touches);
+      initialScale = scale;
+      initialPan = { x: panX, y: panY };
+    }
+  }, { passive: false });
+
+  svg.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!isTouching) return;
+    
+    if (e.touches.length === 1 && isPanning) {
+      // Single finger panning
+      const touch = e.touches[0];
+      panX = touch.clientX - startPoint.x;
+      panY = touch.clientY - startPoint.y;
+      updateTransform();
+    } else if (e.touches.length === 2) {
+      // Two finger pinch zoom
+      const currentDistance = getTouchDistance(e.touches);
+      const currentCenter = getTouchCenter(e.touches);
+      
+      if (initialTouchDistance > 0) {
+        // Calculate zoom
+        const scaleChange = currentDistance / initialTouchDistance;
+        const newScale = Math.max(minScale, Math.min(maxScale, initialScale * scaleChange));
+        
+        if (newScale !== scale) {
+          // Get SVG coordinates of the pinch center
+          const rect = svg.getBoundingClientRect();
+          const centerX = currentCenter.x - rect.left;
+          const centerY = currentCenter.y - rect.top;
+          
+          // Calculate new pan to keep zoom centered on pinch point
+          const factor = newScale / scale;
+          panX = centerX - factor * (centerX - panX);
+          panY = centerY - factor * (centerY - panY);
+          scale = newScale;
+          
+          updateTransform();
+        }
+      }
+      
+      lastTouchDistance = currentDistance;
+      lastTouchCenter = currentCenter;
+    }
+  }, { passive: false });
+
+  svg.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (e.touches.length === 0) {
+      // All fingers lifted
+      isTouching = false;
+      isPanning = false;
+      svg.classList.remove('panning');
+      
+      // Redraw grid after pan/zoom
+      drawGrid();
+      
+      // Reset touch variables
+      lastTouchDistance = 0;
+      initialTouchDistance = 0;
+      touchStartTime = 0;
+    } else if (e.touches.length === 1) {
+      // One finger still down, switch back to pan mode
+      const touch = e.touches[0];
+      if (e.target === svg || e.target.classList.contains('grid-line')) {
+        isPanning = true;
+        startPoint = { 
+          x: touch.clientX - panX, 
+          y: touch.clientY - panY 
+        };
+        svg.classList.add('panning');
+      }
+    }
+  }, { passive: false });
+
+  // Prevent context menu on long press
+  svg.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
   });
 
-  // Pan with mouse drag - only on empty space
+  // Mouse events for desktop (existing functionality)
   svg.addEventListener('mousedown', (e) => {
     if (e.target === svg || e.target.classList.contains('grid-line')) {
       isPanning = true;
@@ -260,7 +395,7 @@ function setupPanZoom() {
   });
 
   document.addEventListener('mousemove', (e) => {
-    if (isPanning) {
+    if (isPanning && !isTouching) { // Only handle mouse pan if not touching
       panX = e.clientX - startPoint.x;
       panY = e.clientY - startPoint.y;
       updateTransform();
@@ -269,7 +404,7 @@ function setupPanZoom() {
   });
 
   document.addEventListener('mouseup', (e) => {
-    if (isPanning) {
+    if (isPanning && !isTouching) { // Only handle mouse release if not touching
       isPanning = false;
       svg.classList.remove('panning');
       // Redraw grid after pan
@@ -876,8 +1011,12 @@ function setupCircleInteractions(group, circle, personId) {
   makeCircleDraggable(group, circle);
   
   let clickTimeout;
-  
-  // Click to select/deselect
+  let tapCount = 0;
+  let lastTapTime = 0;
+  let touchStartPos = null;
+  let touchMoved = false;
+
+  // Mouse events for desktop
   circle.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -896,7 +1035,7 @@ function setupCircleInteractions(group, circle, personId) {
     }, 200);
   });
   
-  // Double-click to edit
+  // Double-click to edit (desktop)
   circle.addEventListener('dblclick', (e) => {
     console.log('Double-clicked on circle:', personId);
     e.preventDefault();
@@ -911,15 +1050,88 @@ function setupCircleInteractions(group, circle, personId) {
     clearSelection(); // Clear selection when editing
     openModalForEdit(personId);
   });
+
+  // Touch events for mobile
+  circle.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 1) {
+      const touch = e.touches[0];
+      touchStartPos = { x: touch.clientX, y: touch.clientY };
+      touchMoved = false;
+      
+      const currentTime = Date.now();
+      const timeDiff = currentTime - lastTapTime;
+      
+      if (timeDiff < 300 && timeDiff > 0) {
+        tapCount++;
+      } else {
+        tapCount = 1;
+      }
+      
+      lastTapTime = currentTime;
+    }
+  }, { passive: true });
+
+  circle.addEventListener('touchmove', (e) => {
+    if (!touchStartPos || e.touches.length !== 1) return;
+    
+    const touch = e.touches[0];
+    const dx = Math.abs(touch.clientX - touchStartPos.x);
+    const dy = Math.abs(touch.clientY - touchStartPos.y);
+    
+    // If moved more than 10px, consider it a drag
+    if (dx > 10 || dy > 10) {
+      touchMoved = true;
+    }
+  }, { passive: true });
+
+  circle.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!touchMoved && touchStartPos) {
+      if (tapCount === 1) {
+        // Single tap - select/deselect with delay to detect double tap
+        if (clickTimeout) {
+          clearTimeout(clickTimeout);
+          clickTimeout = null;
+        }
+        
+        clickTimeout = setTimeout(() => {
+          if (tapCount === 1) { // Still single tap after delay
+            toggleCircleSelection(personId, circle, group);
+          }
+        }, 300);
+      } else if (tapCount === 2) {
+        // Double tap - edit
+        console.log('Double-tapped on circle:', personId);
+        
+        if (clickTimeout) {
+          clearTimeout(clickTimeout);
+          clickTimeout = null;
+        }
+        
+        clearSelection(); // Clear selection when editing
+        openModalForEdit(personId);
+        tapCount = 0; // Reset tap count
+      }
+    }
+    
+    // Reset touch tracking
+    touchStartPos = null;
+    touchMoved = false;
+  }, { passive: false });
 }
 
 // Make circle draggable
 function makeCircleDraggable(group, circle) {
   let offsetX, offsetY, isDragging = false;
+  let isCircleTouching = false;
 
+  // Mouse events for desktop
   circle.addEventListener('mousedown', (e) => {
     if (e.detail === 1) { // Single click
       e.preventDefault();
+      e.stopPropagation();
       isDragging = true;
       
       // Get current circle position
@@ -942,8 +1154,93 @@ function makeCircleDraggable(group, circle) {
     }
   });
 
+  // Touch events for mobile
+  circle.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (e.touches.length === 1) {
+      isCircleTouching = true;
+      isDragging = true;
+      
+      // Get current circle position
+      const currentCx = parseFloat(circle.getAttribute('cx')) || 0;
+      const currentCy = parseFloat(circle.getAttribute('cy')) || 0;
+      
+      // Get touch position in SVG coordinates
+      const rect = svg.getBoundingClientRect();
+      const touch = e.touches[0];
+      const touchX = touch.clientX - rect.left;
+      const touchY = touch.clientY - rect.top;
+      
+      // Calculate offset considering current pan/zoom
+      const svgX = (touchX - panX) / scale;
+      const svgY = (touchY - panY) / scale;
+      
+      offsetX = svgX - currentCx;
+      offsetY = svgY - currentCy;
+    }
+  }, { passive: false });
+
+  circle.addEventListener('touchmove', (e) => {
+    if (!isCircleTouching || !isDragging || e.touches.length !== 1) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Get touch position in SVG coordinates
+    const rect = svg.getBoundingClientRect();
+    const touch = e.touches[0];
+    const touchX = touch.clientX - rect.left;
+    const touchY = touch.clientY - rect.top;
+    
+    // Convert to SVG coordinates considering pan/zoom
+    const svgX = (touchX - panX) / scale;
+    const svgY = (touchY - panY) / scale;
+    
+    const newCx = svgX - offsetX;
+    const newCy = svgY - offsetY;
+    
+    // Ensure coordinates are valid numbers
+    if (!isNaN(newCx) && !isNaN(newCy)) {
+      circle.setAttribute('cx', newCx);
+      circle.setAttribute('cy', newCy);
+      
+      const nameText = group.querySelector('text.name');
+      const dobText = group.querySelector('text.dob');
+      const radius = parseFloat(circle.getAttribute('r')) || nodeRadius;
+      
+      if (nameText) {
+        nameText.setAttribute('x', newCx);
+        nameText.setAttribute('y', newCy - radius - 8);
+      }
+      
+      if (dobText) {
+        dobText.setAttribute('x', newCx);
+        dobText.setAttribute('y', newCy + radius + 16);
+      }
+
+      generateAllConnections();
+    }
+  }, { passive: false });
+
+  circle.addEventListener('touchend', (e) => {
+    if (!isCircleTouching) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+    
+    isCircleTouching = false;
+    
+    if (isDragging) {
+      isDragging = false;
+      pushUndoState();
+    }
+  }, { passive: false });
+
+  // Mouse move and up events (for desktop)
   document.addEventListener('mousemove', (e) => {
-    if (!isDragging) return;
+    if (!isDragging || isCircleTouching) return;
     
     // Get mouse position in SVG coordinates
     const rect = svg.getBoundingClientRect();
@@ -981,7 +1278,7 @@ function makeCircleDraggable(group, circle) {
   });
 
   document.addEventListener('mouseup', () => {
-    if (!isDragging) return;
+    if (!isDragging || isCircleTouching) return;
     isDragging = false;
     circle.style.cursor = 'grab';
     pushUndoState();
