@@ -1,813 +1,116 @@
-/* style.css - Updated with font color support and DOB formatting */
-
-/* ————— Load Ardeco from TTF in same folder ————— */
-@font-face {
-  font-family: 'Ardeco';
-  src: url('Ardeco.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-
-/* ————— Base Styles ————— */
-body {
+/* Basic Reset */
+* {
   margin: 0;
-  font-family: 'Ardeco', Inter, Arial, sans-serif;
-  overscroll-behavior: none;
+  padding: 0;
+  box-sizing: border-box;
 }
-
-#controls {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  padding: 8px;
-  background: #f4f4f4;
-  border-bottom: 1px solid #ccc;
-}
-
-#controls label {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-family: 'Ardeco', Inter, Arial, sans-serif;
-}
-
-#controls input[type="number"],
-#controls input[type="color"],
-#controls input[type="text"],
-#controls button,
-#controls input[type="file"],
-#controls select {
-  padding: 6px 8px;
-  font-size: 14px;
-  font-family: 'Ardeco', Inter, Arial, sans-serif;
-}
-
-#controls input[type="number"] {
-  width: 60px;
-}
-
-/* Style for color pickers */
-#controls input[type="color"] {
-  width: 40px;
-  height: 32px;
-  padding: 2px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-#controls input[type="color"]:hover {
-  border-color: #3498db;
-}
-
-#controls select {
-  min-width: 120px;
-}
-
-/* People counter styling */
-.counter-display {
-  background-color: #34495e;
-  color: white;
-  padding: 6px 12px;
-  border-radius: 4px;
-  font-weight: bold;
-  font-size: 14px;
-  min-width: 80px;
-  text-align: center;
-}
-
-/* ————— View Toggle Switch ————— */
-.view-toggle {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.toggle-switch {
-  position: relative;
-  display: inline-block;
-  width: 120px;
-  height: 32px;
-  cursor: pointer;
-}
-
-.toggle-switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.slider {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #3498db;
-  border-radius: 16px;
-  transition: 0.3s;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 2px;
-  overflow: hidden;
-}
-
-.toggle-switch input:checked + .slider {
-  background-color: #27ae60;
-}
-
-.toggle-label {
-  flex: 1;
-  text-align: center;
-  font-size: 11px;
-  font-weight: bold;
-  color: white;
-  z-index: 2;
-  transition: all 0.3s ease;
-  padding: 6px 4px;
-  border-radius: 14px;
-}
-
-.toggle-switch input:not(:checked) + .slider .toggle-label.graphic {
-  background-color: white;
-  color: #3498db;
-}
-
-.toggle-switch input:checked + .slider .toggle-label.table {
-  background-color: white;
-  color: #27ae60;
-}
-
-/* ————— View Containers ————— */
-.view-container {
-  width: 100%;
-  flex: 1;
-  overflow: hidden;
-}
-
-#graphicView {
-  height: calc(100vh - 56px);
-}
-
-#tableView {
-  height: calc(100vh - 56px);
-  background: white;
-}
-
-.table-container {
+html, body {
   height: 100%;
-  display: flex;
-  flex-direction: column;
-  padding: 16px;
-}
-
-.table-controls {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 16px;
-  align-items: center;
-}
-
-.search-input, .sort-select {
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-family: 'Ardeco', Inter, Arial, sans-serif;
-}
-
-.search-input {
-  flex: 1;
-  max-width: 300px;
-}
-
-.sort-select {
-  min-width: 160px;
-}
-
-.table-wrapper {
-  flex: 1;
-  overflow: auto;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-}
-
-/* ————— Table Styling ————— */
-#familyTable {
-  width: 100%;
-  border-collapse: collapse;
-  font-family: 'Ardeco', Inter, Arial, sans-serif;
-  background: white;
-}
-
-#familyTable th {
-  background-color: #34495e;
-  color: white;
-  padding: 12px 8px;
-  text-align: left;
-  font-weight: bold;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  border-bottom: 2px solid #2c3e50;
-}
-
-#familyTable td {
-  padding: 10px 8px;
-  border-bottom: 1px solid #ecf0f1;
-  vertical-align: top;
-}
-
-#familyTable tbody tr:hover {
-  background-color: #f8f9fa;
-}
-
-#familyTable tbody tr:nth-child(even) {
+  font-family: 'Inter', sans-serif;
   background-color: #f4f4f4;
 }
-
-#familyTable tbody tr:nth-child(even):hover {
-  background-color: #e8e8e8;
-}
-
-.table-actions {
+#mainContainer {
   display: flex;
-  gap: 4px;
+  height: 100vh;
+  overflow: hidden;
 }
-
-.table-btn {
-  padding: 4px 8px;
-  border: none;
-  border-radius: 3px;
-  cursor: pointer;
-  font-size: 12px;
-  font-family: 'Ardeco', Inter, Arial, sans-serif;
-}
-
-.edit-btn {
-  background-color: #3498db;
-  color: white;
-}
-
-.edit-btn:hover {
-  background-color: #2980b9;
-}
-
-.delete-btn {
-  background-color: #e74c3c;
-  color: white;
-}
-
-.delete-btn:hover {
-  background-color: #c0392b;
-}
-
-.gender-male {
-  color: #3498db;
-  font-weight: bold;
-}
-
-.gender-female {
-  color: #e91e63;
-  font-weight: bold;
-}
-
-/* DOB input styling */
-#modalDob {
+/* Graphic View & Table View */
+#graphicView, #tableView {
+  flex: 1;
   position: relative;
+  height: 100%;
 }
-
-#modalDob::placeholder {
-  color: #999;
-  font-style: italic;
-}
-
-.dob-help {
-  font-size: 11px;
-  color: #666;
-  margin-top: 2px;
-  font-style: italic;
-}
-
 #svgArea {
   width: 100%;
   height: 100%;
-  background: #f0f0f0;
-  touch-action: none;
-  user-select: none;
-}
-
-circle.person {
+  background-color: #fff;
   cursor: grab;
-  transition: stroke-width 0.2s ease;
-  stroke: none !important;
 }
-
-circle.person.selected {
-  stroke: #e74c3c !important;
-  stroke-width: 4px !important;
-}
-
-/* ————— Text Styling (Default values - will be overridden by dynamic CSS) ————— */
-text {
-  font-family: 'Ardeco', Inter, sans-serif;
-  font-size: 12px;
-  pointer-events: none;
-  user-select: none;
-}
-
-text.name {
-  font-weight: bold;
-  fill: #333; /* Default name color */
-}
-
-text.dob {
-  font-size: 10px;
-  fill: #666; /* Default date color */
-}
-
-/* ————— Connector Lines ————— */
-line.relation {
-  stroke: #555;
-  stroke-width: 3;
-  stroke-linecap: round;
-  pointer-events: all;
-  cursor: pointer;
-}
-
-line.relation:hover {
-  stroke: #e74c3c;
-  stroke-width: 4;
-}
-
-/* Spouse relationship lines */
-line.relation.spouse {
-  stroke: #e74c3c;
-  stroke-dasharray: 5,5;
-}
-
-line.relation.spouse:hover {
-  stroke: #c0392b;
-  stroke-width: 4;
-}
-
-/* ————— Button Styling ————— */
-button {
-  background-color: #3498db;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  font-family: 'Ardeco', Inter, Arial, sans-serif;
-}
-
-button:hover {
-  background-color: #2980b9;
-}
-
-button:disabled {
-  background-color: #bdc3c7;
-  cursor: not-allowed;
-}
-
-/* Export button styling */
-#exportSvgBtn, #exportPngBtn, #exportPdfBtn {
-  background-color: #27ae60;
-}
-
-#exportSvgBtn:hover, #exportPngBtn:hover, #exportPdfBtn:hover {
-  background-color: #219a52;
-}
-
-#connectBtn.active {
-  background-color: #e74c3c;
-}
-
-#centerBtn {
-  background-color: #2ecc71;
-}
-
-#centerBtn:hover {
-  background-color: #27ae60;
-}
-
-#generateConnectionsBtn {
-  background-color: #f39c12;
-}
-
-#generateConnectionsBtn:hover {
-  background-color: #e67e22;
-}
-
-#saveBtn {
-  background-color: #9b59b6;
-}
-
-#saveBtn:hover {
-  background-color: #8e44ad;
-}
-
-/* ————— Message Styling ————— */
-.error-message {
-  background-color: #e74c3c;
-  color: white;
-  padding: 8px;
-  margin: 4px;
-  border-radius: 4px;
-  display: none;
-}
-
-.success-message {
-  background-color: #27ae60;
-  color: white;
-  padding: 8px;
-  margin: 4px;
-  border-radius: 4px;
-  display: none;
-}
-
-/* ————— Modal Styles ————— */
-.modal {
+.hidden { display: none; }
+/* Floating Add Person Button */
+.floating-btn {
   position: fixed;
-  top: 0;
-  left: 0;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background-color: #2ecc71;
+  color: #fff;
+  font-size: 36px;
+  line-height: 0;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  transition: background-color 0.2s ease;
+}
+.floating-btn:hover { background-color: #27ae60; }
+/* Settings Toggle (Cog Icon) */
+.icon-button {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+}
+.icon.cog {
   width: 100%;
   height: 100%;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0,0,0,0.5);
-  z-index: 1000;
+  fill: #333;
+  transition: fill 0.2s ease;
 }
-
-.modal-content {
-  background: white;
-  padding: 20px;
+.icon-button:hover .cog { fill: #000; }
+/* Settings Panel */
+#settingsPanel {
+  position: fixed;
+  top: 60px;
+  right: 16px;
+  width: 280px;
+  background-color: #fff;
+  border: 1px solid #ddd;
   border-radius: 8px;
-  width: 300px;
-  max-width: 90%;
-  font-family: 'Ardeco', Inter, Arial, sans-serif;
-}
-
-.modal-content h2 {
-  margin-top: 0;
-  color: #333;
-}
-
-.modal-content label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-  color: #555;
-}
-
-.modal-content input,
-.modal-content select {
-  width: 100%;
-  padding: 8px;
-  margin-top: 4px;
-  margin-bottom: 12px;
-  box-sizing: border-box;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-family: 'Ardeco', Inter, Arial, sans-serif;
-}
-
-/* ————— Searchable Select Styling ————— */
-.searchable-select {
-  position: relative;
-  width: 100%;
-}
-
-.select-display {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background-color: white;
-  cursor: pointer;
-  font-family: 'Ardeco', Inter, Arial, sans-serif;
-  min-height: 20px;
-}
-
-.select-display:hover {
-  border-color: #bbb;
-}
-
-.select-display:focus-within,
-.searchable-select.open .select-display {
-  border-color: #3498db;
-  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
-}
-
-.select-text {
-  flex: 1;
-  font-size: 14px;
-  color: #333;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.select-text.placeholder {
-  color: #999;
-}
-
-.select-arrow {
-  font-size: 12px;
-  color: #666;
-  margin-left: 8px;
-  transition: transform 0.2s ease;
-}
-
-.searchable-select.open .select-arrow {
-  transform: rotate(180deg);
-}
-
-.select-dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  background: white;
-  border: 1px solid #3498db;
-  border-top: none;
-  border-radius: 0 0 4px 4px;
-  max-height: 250px;
-  overflow: hidden;
-  z-index: 1000;
-  display: none;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-.searchable-select.open .select-dropdown {
-  display: flex;
-  flex-direction: column;
-}
-
-.dropdown-search-container {
-  border-bottom: 1px solid #eee;
-  background: #f8f9fa;
-  padding: 8px;
-}
-
-.dropdown-search {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-family: 'Ardeco', Inter, Arial, sans-serif;
-  font-size: 14px;
-  box-sizing: border-box;
-}
-
-.dropdown-search:focus {
-  outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
-}
-
-.select-options {
-  flex: 1;
-  overflow-y: auto;
-  max-height: 200px;
-}
-
-.select-option {
-  padding: 10px 12px;
-  cursor: pointer;
-  border-bottom: 1px solid #f0f0f0;
-  font-family: 'Ardeco', Inter, Arial, sans-serif;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.select-option:hover {
-  background-color: #f8f9fa;
-}
-
-.select-option.selected {
-  background-color: #3498db;
-  color: white;
-}
-
-.select-option.hidden {
-  display: none;
-}
-
-.select-option:last-child {
-  border-bottom: none;
-}
-
-.select-option .gender-indicator {
-  font-size: 12px;
-  color: #666;
-  margin-left: 8px;
-}
-
-.select-option.selected .gender-indicator {
-  color: #bde4ff;
-}
-
-/* Scrollbar styling for better UX */
-.select-options::-webkit-scrollbar {
-  width: 6px;
-}
-
-.select-options::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
-.select-options::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
-}
-
-.select-options::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
-}
-
-.modal-content input:focus,
-.modal-content select:focus {
-  outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
-}
-
-.modal-buttons {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 20px;
-}
-
-.modal-buttons button {
-  padding: 8px 16px;
-  border-radius: 4px;
-  font-family: 'Ardeco', Inter, Arial, sans-serif;
-}
-
-#modalCancel {
-  background-color: #95a5a6;
-}
-
-#modalCancel:hover {
-  background-color: #7f8c8d;
-}
-
-/* ————— Mobile View: 2-Column Grid ————— */
-@media (max-width: 600px) {
-  html, body {
-    width: 100%;
-    overflow-x: hidden;
-  }
-  
-  #controls {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4px;
-    padding: 4px;
-    width: 100%;
-    box-sizing: border-box;
-  }
-  
-  #controls > * {
-    box-sizing: border-box;
-    min-width: 0;
-    width: 100%;
-    margin: 0;
-    padding: 6px 4px;
-    font-size: 14px;
-  }
-  
-  #controls label { 
-    gap: 2px; 
-  }
-  
-  #controls input[type="number"] { 
-    width: 50px; 
-  }
-  
-  #controls input[type="color"] { 
-    width: 30px;
-    height: 28px;
-    padding: 2px; 
-  }
-  
-  #controls > .full-span { 
-    grid-column: 1 / -1; 
-  }
-  
-  #graphicView {
-    height: calc(100vh - 80px);
-  }
-  
-  #tableView {
-    height: calc(100vh - 80px);
-  }
-  
-  circle.person { 
-    stroke-width: 3px; 
-  }
-  
-  text { 
-    font-size: 12px; 
-  }
-  
-  text.dob { 
-    font-size: 10px; 
-  }
-  
-  line.relation { 
-    stroke-width: 3px; 
-  }
-  
-  line.relation:hover { 
-    stroke-width: 5px; 
-  }
-
-  .modal-content {
-    width: 280px;
-    padding: 16px;
-  }
-  
-  .table-container {
-    padding: 8px;
-  }
-  
-  .table-controls {
-    flex-direction: column;
-    gap: 8px;
-  }
-  
-  .search-input {
-    max-width: 100%;
-  }
-  
-  #familyTable {
-    font-size: 12px;
-  }
-  
-  #familyTable th,
-  #familyTable td {
-    padding: 6px 4px;
-  }
-  
-  .table-btn {
-    padding: 2px 6px;
-    font-size: 10px;
-  }
-
-  .modal-content input,
-  .modal-content select {
-    padding: 6px;
-  }
-}
-
-/* ————— Font Preview Styles ————— */
-.font-preview {
-  font-size: 14px;
-  padding: 2px 0;
-}
-
-/* ————— Color Picker Labels for Better UX ————— */
-label[for="nameColorPicker"],
-label[for="dateColorPicker"] {
-  position: relative;
-}
-
-label[for="nameColorPicker"]:hover::after {
-  content: "Choose color for person names";
-  position: absolute;
-  bottom: -25px;
-  left: 0;
-  background: rgba(0,0,0,0.8);
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  padding: 16px;
   z-index: 1000;
 }
-
-label[for="dateColorPicker"]:hover::after {
-  content: "Choose color for birth dates";
-  position: absolute;
-  bottom: -25px;
-  left: 0;
-  background: rgba(0,0,0,0.8);
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  white-space: nowrap;
-  z-index: 1000;
-}
+#settingsPanel h3 { margin-bottom: 12px; font-size: 18px; }
+.setting-group { margin-bottom: 12px; display: flex; align-items: center; }
+.setting-group label { flex: 1; font-size: 14px; }
+.setting-group input,
+.setting-group select,
+.setting-group button { flex: 2; font-size: 14px; padding: 4px 8px; }
+.export-group { display: flex; justify-content: space-between; }
+#settingsPanel button { background-color: #3498db; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+#settingsPanel button:hover { background-color: #2980b9; }
+/* Table View Styles */
+#tableControls { padding: 8px; background-color: #fff; display: flex; gap: 8px; border-bottom: 1px solid #ddd; }
+#tableControls input, #tableControls select { padding: 6px; font-size: 14px; }
+#familyTable { width: 100%; border-collapse: collapse; }
+#familyTable th, #familyTable td { padding: 8px; text-align: left; border-bottom: 1px solid #eee; }
+#familyTable tbody tr:hover { background-color: #f9f9f9; }
+/* Modal Styles */
+.modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1001; }
+.modal-content { background: #fff; padding: 24px; border-radius: 8px; width: 400px; max-width: 90%; }
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; margin-bottom: 4px; font-weight: 500; }
+.form-group input, .form-group select { width: 100%; padding: 8px; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; }
+.help-text { font-size: 12px; color: #777; }
+.required { color: red; }
+.searchable-select { position: relative; }
+.searchable-select .select-input { width: 100%; padding: 8px; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; }
+.searchable-select .options { position: absolute; top: 100%; left: 0; right: 0; max-height: 160px; overflow-y: auto; background: #fff; border: 1px solid #ccc; border-radius: 4px; z-index: 1002; }
+.searchable-select .options.hidden { display: none; }
+.searchable-select .option { padding: 8px; cursor: pointer; }
+.searchable-select .option:hover, .searchable-select .option.active { background-color: #f0f0f0; }
+.form-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.form-actions button { padding: 8px 16px; border: none; border-radius: 4px; font-size: 14px; cursor: pointer; }
+.form-actions button#cancelModal { background: #ccc; color: #fff; }
+.form-actions button#savePerson { background: #2ecc71; color: #fff; }
+/* Shared Export Styles */
+/* These styles were previously duplicated in exporter.js; now centralized */
+.tree-node circle { stroke: #2c3e50; stroke-width: 2px; }
+.tree-node text.name { font-weight: 600; }
+.tree-node text.dob { font-size: 12px; fill: #757575; }
+.relation { stroke: #7f8c8d; stroke-width: 2px; }
+.relation.spouse { stroke-dasharray: 4 2; }

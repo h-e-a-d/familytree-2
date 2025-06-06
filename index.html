@@ -1,449 +1,179 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Family Tree Builder</title>
-  
-  <!-- Load Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&family=Lato:wght@400;700&family=Montserrat:wght@400;700&family=Source+Sans+Pro:wght@400;700&family=Merriweather:wght@400;700&family=PT+Serif:wght@400;700&family=Poppins:wght@400;700&family=Fira+Code:wght@400;700&display=swap" rel="stylesheet">
-  
-  <!-- Load CSS -->
-  <link rel="stylesheet" href="style.css">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Roboto:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="errorContainer">
-    <div id="errorMessage" class="error-message"></div>
-    <div id="successMessage" class="success-message"></div>
+  <!-- Cog Icon for Settings -->
+  <div id="settingsToggle" class="icon-button">
+    <svg xmlns="http://www.w3.org/2000/svg" class="icon cog" viewBox="0 0 24 24">
+      <path d="M12 8a4 4 0 100 8 4 4 0 000-8zm8.94 4a6.96 6.96 0 00-.6-2.64l2.03-1.58-2-3.46-2.36.96a6.97 6.97 0 00-1.56-0.9l-.36-2.52h-4l-.36 2.52c-.56.2-1.08.5-1.56.9l-2.36-.96-2 3.46 2.03 1.58A6.96 6.96 0 003.06 12c0 .94.2 1.84.6 2.64l-2.03 1.58 2 3.46 2.36-.96a6.97 6.97 0 001.56.9l.36 2.52h4l.36-2.52c.56-.2 1.08-.5 1.56-.9l2.36.96 2-3.46-2.03-1.58c.4-.8.6-1.7.6-2.64z"/>
+    </svg>
   </div>
 
-  <div id="controls">
-    <button id="addPersonBtn">Add Person</button>
-    <button id="connectBtn">Connect</button>
-    <button id="generateConnectionsBtn" title="Generate family connections automatically">Generate Connections</button>
-    <button id="centerBtn">Center</button>
-    <div id="peopleCounter" class="counter-display">People: 0</div>
-    
-    <!-- View Toggle Switch -->
-    <div class="view-toggle">
-      <label class="toggle-switch">
-        <input type="checkbox" id="viewModeToggle">
-        <span class="slider">
-          <span class="toggle-label graphic">Graphic</span>
-          <span class="toggle-label table">Table</span>
-        </span>
-      </label>
+  <!-- Settings Panel (hidden by default) -->
+  <div id="settingsPanel" class="panel hidden">
+    <h3>Global Settings</h3>
+    <div class="setting-group">
+      <label for="nodeColorPicker">Node Color:</label>
+      <input type="color" id="nodeColorPicker" value="#3498db" />
     </div>
-    
-    <label>
-      Color:
-      <input type="color" id="colorPicker" disabled>
-    </label>
-    <label>
-      Size:
-      <input type="number" id="sizeInput" min="20" max="100" value="40" disabled>
-    </label>
-    <button id="applyBtn" disabled>Apply</button>
-    <button id="bringToFrontBtn" disabled>Bring To Front</button>
-    <button id="undoBtn" disabled>Undo</button>
-
-    <!-- Enhanced font controls with professional fonts -->
-    <label>
-      Font:
+    <div class="setting-group">
+      <label for="nodeSizeInput">Node Size:</label>
+      <input type="number" id="nodeSizeInput" min="10" max="100" value="40" />
+      <button id="applyNodeStyle">Apply</button>
+    </div>
+    <div class="setting-group">
+      <label for="fontSelect">Font:</label>
       <select id="fontSelect">
         <optgroup label="Modern Sans-Serif">
-          <option value="Inter, sans-serif">Inter</option>
-          <option value="Roboto, sans-serif">Roboto</option>
-          <option value="Open Sans, sans-serif">Open Sans</option>
-          <option value="Lato, sans-serif">Lato</option>
-          <option value="Montserrat, sans-serif">Montserrat</option>
-          <option value="Source Sans Pro, sans-serif">Source Sans Pro</option>
-          <option value="Poppins, sans-serif">Poppins</option>
+          <option value="Inter">Inter</option>
+          <option value="Roboto">Roboto</option>
+          <option value="Lato">Lato</option>
+          <option value="Montserrat">Montserrat</option>
+          <option value="Poppins">Poppins</option>
+          <option value="Open Sans">Open Sans</option>
         </optgroup>
-        <optgroup label="Serif Fonts">
-          <option value="Merriweather, serif">Merriweather</option>
-          <option value="PT Serif, serif">PT Serif</option>
+        <optgroup label="Serif">
+          <option value="Merriweather">Merriweather</option>
+          <option value="Playfair Display">Playfair Display</option>
+          <option value="Roboto Slab">Roboto Slab</option>
         </optgroup>
         <optgroup label="Monospace">
-          <option value="Fira Code, monospace">Fira Code</option>
-        </optgroup>
-        <optgroup label="System Fonts">
-          <option value="-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif">SF Pro (Apple)</option>
-          <option value="Arial, sans-serif">Arial</option>
-          <option value="Times New Roman, serif">Times New Roman</option>
-          <option value="Courier New, monospace">Courier New</option>
-        </optgroup>
-        <optgroup label="Custom">
-          <option value="Ardeco, sans-serif">Ardeco (if available)</option>
+          <option value="Courier New">Courier New</option>
+          <option value="Roboto Mono">Roboto Mono</option>
         </optgroup>
       </select>
-    </label>
-    <label>
-      Font size:
-      <input type="number" id="fontSizeInput" min="6" max="72" value="12">
-    </label>
-
-    <!-- NEW: Font color controls -->
-    <label>
-      Name color:
-      <input type="color" id="nameColorPicker" value="#333333" title="Color for names">
-    </label>
-    <label>
-      Date color:
-      <input type="color" id="dateColorPicker" value="#666666" title="Color for birth dates">
-    </label>
-
-    <!-- Export buttons -->
-    <button id="exportSvgBtn" title="Export as SVG vector file">Export SVG</button>
-    <button id="exportPngBtn" title="Export as PNG image">Export PNG</button>
-    <button id="exportPdfBtn" title="Export as PDF document">Export PDF</button>
-    
-    <!-- Save/Load -->
-    <button id="saveBtn">Save</button>
-    <label class="full-span">
-      Load:
-      <input type="file" id="loadInput" accept=".json">
-    </label>
-  </div>
-
-  <!-- Graphic View (SVG) -->
-  <div id="graphicView" class="view-container">
-    <svg id="svgArea" xmlns="http://www.w3.org/2000/svg"></svg>
-  </div>
-
-  <!-- Table View -->
-  <div id="tableView" class="view-container" style="display: none;">
-    <div class="table-container">
-      <div class="table-controls">
-        <input type="text" id="tableSearch" placeholder="Search people..." class="search-input">
-        <select id="tableSortBy" class="sort-select">
-          <option value="name">Sort by Name</option>
-          <option value="surname">Sort by Surname</option>
-          <option value="dob">Sort by Date of Birth</option>
-          <option value="gender">Sort by Gender</option>
-        </select>
-      </div>
-      <div class="table-wrapper">
-        <table id="familyTable">
-          <thead>
-            <tr>
-              <th>Given Name</th>
-              <th>Father's Name</th>
-              <th>Surname</th>
-              <th>Birth Name</th>
-              <th>Date of Birth</th>
-              <th>Gender</th>
-              <th>Mother</th>
-              <th>Father</th>
-              <th>Spouse</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="familyTableBody">
-            <!-- Table rows will be populated dynamically -->
-          </tbody>
-        </table>
-      </div>
+    </div>
+    <div class="setting-group">
+      <label for="fontSizeInput">Font Size:</label>
+      <input type="number" id="fontSizeInput" min="6" max="72" value="14" />
+    </div>
+    <div class="setting-group">
+      <label for="nameColorPicker">Name Color:</label>
+      <input type="color" id="nameColorPicker" value="#333333" />
+    </div>
+    <div class="setting-group">
+      <label for="dateColorPicker">Date Color:</label>
+      <input type="color" id="dateColorPicker" value="#757575" />
+    </div>
+    <div class="setting-group export-group">
+      <button id="exportSvg">Export SVG</button>
+      <button id="exportPng">Export PNG</button>
+      <button id="exportPdf">Export PDF</button>
+    </div>
+    <div class="setting-group">
+      <button id="saveData">Save</button>
+      <input type="file" id="loadData" accept=".json" />
     </div>
   </div>
 
+  <!-- Main Container -->
+  <div id="mainContainer">
+    <!-- Graphic View -->
+    <div id="graphicView">
+      <svg id="svgArea"></svg>
+    </div>
+
+    <!-- Table View (initially hidden) -->
+    <div id="tableView" class="hidden">
+      <div id="tableControls">
+        <input type="text" id="searchInput" placeholder="Search..." />
+        <select id="sortSelect">
+          <option value="name">Name</option>
+          <option value="surname">Surname</option>
+          <option value="dob">Date of Birth</option>
+          <option value="gender">Gender</option>
+        </select>
+      </div>
+      <table id="familyTable">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Father</th>
+            <th>Surname</th>
+            <th>Birth Name</th>
+            <th>Date of Birth</th>
+            <th>Gender</th>
+            <th>Mother</th>
+            <th>Father</th>
+            <th>Spouse</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="familyTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Floating Add Person Button -->
+  <button id="addPersonBtn" class="floating-btn">+</button>
+
   <!-- Person Modal -->
-  <div id="personModal" class="modal">
+  <div id="personModal" class="modal hidden">
     <div class="modal-content">
       <h2 id="modalTitle">Add Person</h2>
       <form id="personForm">
-        <label>
-          Given Name:
-          <input type="text" id="modalName" required>
-        </label>
-        <label>
-          Father's Name:
-          <input type="text" id="modalFather">
-        </label>
-        <label>
-          Surname:
-          <input type="text" id="modalSurname">
-        </label>
-        <label>
-          DOB:
-          <input type="text" id="modalDob" placeholder="dd.mm.yyyy or yyyy" maxlength="10">
-          <div class="dob-help">Enter full date (dd.mm.yyyy) or just year (yyyy)</div>
-        </label>
-        <label>
-          Birth Name:
-          <input type="text" id="modalBirth">
-        </label>
-        <label>
-          Gender:
-          <select id="modalGender" required>
-            <option value="">Select Gender</option>
+        <div class="form-group">
+          <label for="personName">Given Name <span class="required">*</span></label>
+          <input type="text" id="personName" required />
+        </div>
+        <div class="form-group">
+          <label for="personSurname">Surname</label>
+          <input type="text" id="personSurname" />
+        </div>
+        <div class="form-group">
+          <label for="personBirthName">Birth Name</label>
+          <input type="text" id="personBirthName" />
+        </div>
+        <div class="form-group">
+          <label for="personDob">Date of Birth</label>
+          <input type="text" id="personDob" placeholder="dd.mm.yyyy or yyyy" />
+          <small class="help-text">Enter full date dd.mm.yyyy or just year yyyy</small>
+        </div>
+        <div class="form-group">
+          <label for="personGender">Gender <span class="required">*</span></label>
+          <select id="personGender" required>
+            <option value="">Select</option>
             <option value="male">Male</option>
             <option value="female">Female</option>
           </select>
-        </label>
-        <label>
-          Mother:
-          <div class="searchable-select" id="modalMotherContainer">
-            <div class="select-display" id="modalMotherDisplay">
-              <span class="select-text">No Mother Selected</span>
-              <span class="select-arrow">▼</span>
-            </div>
-            <div class="select-dropdown" id="modalMotherDropdown">
-              <div class="dropdown-search-container">
-                <input type="text" class="dropdown-search" placeholder="Search mothers...">
-              </div>
-              <div class="select-options" id="modalMotherOptions">
-                <div class="select-option" data-value="">No Mother Selected</div>
-              </div>
-            </div>
-            <input type="hidden" id="modalMother" name="mother">
-          </div>
-        </label>
-        <label>
-          Father:
-          <div class="searchable-select" id="modalFatherContainer">
-            <div class="select-display" id="modalFatherDisplay">
-              <span class="select-text">No Father Selected</span>
-              <span class="select-arrow">▼</span>
-            </div>
-            <div class="select-dropdown" id="modalFatherDropdown">
-              <div class="dropdown-search-container">
-                <input type="text" class="dropdown-search" placeholder="Search fathers...">
-              </div>
-              <div class="select-options" id="modalFatherOptions">
-                <div class="select-option" data-value="">No Father Selected</div>
-              </div>
-            </div>
-            <input type="hidden" id="modalFatherSelect" name="father">
-          </div>
-        </label>
-        <label>
-          Spouse:
-          <div class="searchable-select" id="modalSpouseContainer">
-            <div class="select-display" id="modalSpouseDisplay">
-              <span class="select-text">No Spouse Selected</span>
-              <span class="select-arrow">▼</span>
-            </div>
-            <div class="select-dropdown" id="modalSpouseDropdown">
-              <div class="dropdown-search-container">
-                <input type="text" class="dropdown-search" placeholder="Search people...">
-              </div>
-              <div class="select-options" id="modalSpouseOptions">
-                <div class="select-option" data-value="">No Spouse Selected</div>
-              </div>
-            </div>
-            <input type="hidden" id="modalSpouse" name="spouse">
-          </div>
-        </label>
-        <div class="modal-buttons">
-          <button type="button" id="modalCancel">Cancel</button>
-          <button type="submit" id="modalSave">Save</button>
+        </div>
+        <div class="form-group">
+          <label>Mother</label>
+          <div class="searchable-select" id="motherSelect"></div>
+        </div>
+        <div class="form-group">
+          <label>Father</label>
+          <div class="searchable-select" id="fatherSelect"></div>
+        </div>
+        <div class="form-group">
+          <label>Spouse</label>
+          <div class="searchable-select" id="spouseSelect"></div>
+        </div>
+        <div class="form-actions">
+          <button type="button" id="cancelModal">Cancel</button>
+          <button type="submit" id="savePerson">Save</button>
         </div>
       </form>
     </div>
   </div>
 
-  <script>
-    // Add error handling and loading feedback
-    window.showMessage = function(message, type = 'error') {
-      const container = document.getElementById(type + 'Message');
-      if (container) {
-        container.textContent = message;
-        container.style.display = 'block';
-        setTimeout(() => {
-          container.style.display = 'none';
-        }, 5000);
-      }
-    };
-
-    window.addEventListener('error', function(e) {
-      console.error('Global error:', e.error);
-      showMessage('An error occurred: ' + e.message);
-    });
-
-    // Check for required features
-    if (!window.SVGElement) {
-      showMessage('SVG not supported in this browser');
-    }
-
-    // Font loading check
-    function checkFontLoading() {
-      if (document.fonts && document.fonts.ready) {
-        document.fonts.ready.then(() => {
-          console.log('Google Fonts loaded successfully');
-          showMessage('Fonts loaded successfully!', 'success');
-        }).catch((error) => {
-          console.warn('Font loading issue:', error);
-        });
-      }
-    }
-
-    // Enhanced font preview functionality
-    function addFontPreview() {
-      const fontSelect = document.getElementById('fontSelect');
-      if (fontSelect) {
-        // Style options with their respective fonts
-        fontSelect.querySelectorAll('option').forEach(option => {
-          const fontFamily = option.value;
-          if (fontFamily !== 'Ardeco, sans-serif') { // Skip custom font
-            option.style.fontFamily = fontFamily;
-          }
-        });
-
-        // Show font preview when hovering over select
-        fontSelect.addEventListener('change', function() {
-          const selectedFont = this.value;
-          console.log('Font changed to:', selectedFont);
-        });
-      }
-    }
-
-    // Load PDF library with error handling
-    function loadJsPDF() {
-      return new Promise((resolve, reject) => {
-        if (window.jspdf) {
-          resolve();
-          return;
-        }
-        
-        const script = document.createElement('script');
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-        script.onload = () => {
-          if (window.jspdf) {
-            console.log('jsPDF loaded successfully');
-            resolve();
-          } else {
-            reject(new Error('jsPDF failed to load properly'));
-          }
-        };
-        script.onerror = () => reject(new Error('Failed to load jsPDF library'));
-        document.head.appendChild(script);
-      });
-    }
-
-    // Load libraries and scripts
-    Promise.all([
-      loadJsPDF().catch(err => {
-        console.warn('PDF export will not be available:', err);
-        const pdfBtn = document.getElementById('exportPdfBtn');
-        if (pdfBtn) {
-          pdfBtn.disabled = true;
-          pdfBtn.title = 'PDF export unavailable - library failed to load';
-        }
-      })
-    ]).then(() => {
-      console.log('Libraries loaded, initializing application...');
-      checkFontLoading();
-      addFontPreview();
-    });
-
-    // Debug function to test font availability
-    window.testFonts = function() {
-      const fonts = [
-        'Inter',
-        'Roboto', 
-        'Open Sans',
-        'Lato',
-        'Montserrat',
-        'Source Sans Pro',
-        'Merriweather',
-        'PT Serif',
-        'Poppins',
-        'Fira Code'
-      ];
-      
-      console.log('=== Font Availability Test ===');
-      fonts.forEach(font => {
-        if (document.fonts && document.fonts.check) {
-          const available = document.fonts.check(`12px "${font}"`);
-          console.log(`${font}: ${available ? '✓ Available' : '✗ Not loaded'}`);
-        }
-      });
-    };
-
-    // DOB Input validation and formatting
-    function setupDOBInput() {
-      const dobInput = document.getElementById('modalDob');
-      if (!dobInput) return;
-
-      // Validate DOB format
-      function validateDOB(value) {
-        if (!value) return true; // Empty is OK
-        
-        // Allow just year (4 digits)
-        if (/^\d{4}$/.test(value)) {
-          const year = parseInt(value);
-          const currentYear = new Date().getFullYear();
-          return year >= 1800 && year <= currentYear + 50;
-        }
-        
-        // Allow full date dd.mm.yyyy
-        if (/^\d{1,2}\.\d{1,2}\.\d{4}$/.test(value)) {
-          const parts = value.split('.');
-          const day = parseInt(parts[0]);
-          const month = parseInt(parts[1]);
-          const year = parseInt(parts[2]);
-          
-          // Basic validation
-          const currentYear = new Date().getFullYear();
-          if (year < 1800 || year > currentYear + 50) return false;
-          if (month < 1 || month > 12) return false;
-          if (day < 1 || day > 31) return false;
-          
-          // Check if date is valid
-          const date = new Date(year, month - 1, day);
-          return date.getFullYear() === year && 
-                 date.getMonth() === month - 1 && 
-                 date.getDate() === day;
-        }
-        
-        return false;
-      }
-
-      // Format input as user types
-      dobInput.addEventListener('input', function(e) {
-        let value = e.target.value.replace(/[^\d.]/g, ''); // Remove non-digits and non-dots
-        
-        // If it's just digits and length is appropriate for date, auto-format
-        if (/^\d+$/.test(value) && value.length > 4) {
-          // Auto-add dots for date formatting
-          if (value.length >= 2 && value.length <= 4) {
-            value = value.substring(0, 2) + '.' + value.substring(2);
-          } else if (value.length >= 4 && value.length <= 8) {
-            value = value.substring(0, 2) + '.' + value.substring(2, 4) + '.' + value.substring(4);
-          }
-        }
-        
-        e.target.value = value;
-        
-        // Visual feedback for validation
-        if (value && !validateDOB(value)) {
-          e.target.style.borderColor = '#e74c3c';
-        } else {
-          e.target.style.borderColor = '#ddd';
-        }
-      });
-
-      // Validation on blur
-      dobInput.addEventListener('blur', function(e) {
-        const value = e.target.value.trim();
-        if (value && !validateDOB(value)) {
-          showMessage('Please enter a valid date in format dd.mm.yyyy or just the year (yyyy)', 'error');
-          e.target.focus();
-        }
-      });
-    }
-
-    // Initialize DOB input when DOM is ready
-    document.addEventListener('DOMContentLoaded', setupDOBInput);
-  </script>
-
-  <!-- Load main application script -->
-  <script src="script.js"></script>
-  
-  <!-- Load export functionality -->
-  <script src="export.js"></script>
+  <!-- Scripts as ES modules -->
+  <script type="module" src="searchableSelect.js"></script>
+  <script type="module" src="modal.js"></script>
+  <script type="module" src="tree.js"></script>
+  <script type="module" src="table.js"></script>
+  <script type="module" src="exporter.js"></script>
 </body>
 </html>
