@@ -122,17 +122,11 @@ export function rebuildTableView() {
     deleteBtn.textContent = 'Delete';
     deleteBtn.addEventListener('click', () => {
       if (!confirm(`Delete ${r.name} ${r.surname || ''}?`)) return;
-      // Remove the SVG node and any related lines
+      // Remove the SVG node
       const g = svg.querySelector(`g[data-id="${r.id}"]`);
       if (g) g.remove();
-      // Also remove any lines referencing this ID
-      Array.from(svg.querySelectorAll('line.relation')).forEach(line => {
-        const x1 = line.getAttribute('x1');
-        // We’ll regenerate all connections instead of trying to remove specific lines
-      });
       // After removal, rebuild connections and table
       rebuildTableView();
-      // Let tree.js regenerate connections if it listens to table changes
       const rebuildEvent = new Event('tableRebuilt');
       document.dispatchEvent(rebuildEvent);
     });
@@ -140,7 +134,6 @@ export function rebuildTableView() {
     actionsTd.appendChild(deleteBtn);
 
     tr.appendChild(actionsTd);
-
     tbody.appendChild(tr);
   });
 }
@@ -153,16 +146,17 @@ document.getElementById('sortSelect').addEventListener('change', () => {
   rebuildTableView();
 });
 
-// Listen for `editPerson` from this module's buttons and call tree.js’s openModalForEdit
+// Listen for `editPerson` from this module's buttons and call modal.openModalForEdit
 document.addEventListener('editPerson', (e) => {
-  // Expect tree.js to export a function `openModalForEdit`
-  const { openModalForEdit } = await import('./modal.js');
-  openModalForEdit(e.detail.id);
+  import('./modal.js').then(mod => {
+    if (typeof mod.openModalForEdit === 'function') {
+      mod.openModalForEdit(e.detail.id);
+    }
+  });
 });
 
 // If table got rebuilt via the delete button, trigger regenerating connections and undo push
 document.addEventListener('tableRebuilt', () => {
-  // Regenerate all connections in tree.js:
   import('./tree.js').then(mod => {
     if (typeof mod.generateAllConnections === 'function') {
       mod.generateAllConnections();
