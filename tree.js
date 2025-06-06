@@ -1239,6 +1239,40 @@ function setupCircleInteractions(group, circle, personId) {
 function makeCircleDraggable(group, circle) {
   let offsetX, offsetY, isDragging = false;
   let isCircleTouching = false;
+  let connectionUpdateTimeout = null;
+
+  // Helper function to update circle position
+  function updateCirclePosition(newCx, newCy) {
+    if (isNaN(newCx) || isNaN(newCy)) return;
+    
+    circle.setAttribute('cx', newCx);
+    circle.setAttribute('cy', newCy);
+    
+    const nameText = group.querySelector('text.name');
+    const dobText = group.querySelector('text.dob');
+    const radius = parseFloat(circle.getAttribute('r')) || nodeRadius;
+    
+    if (nameText) {
+      nameText.setAttribute('x', newCx);
+      nameText.setAttribute('y', newCy - radius - 8);
+    }
+    
+    if (dobText) {
+      dobText.setAttribute('x', newCx);
+      dobText.setAttribute('y', newCy + radius + 16);
+    }
+  }
+
+  // Throttled connection update - only update connections every 16ms during drag
+  function throttledConnectionUpdate() {
+    if (connectionUpdateTimeout) {
+      cancelAnimationFrame(connectionUpdateTimeout);
+    }
+    connectionUpdateTimeout = requestAnimationFrame(() => {
+      generateAllConnections();
+      connectionUpdateTimeout = null;
+    });
+  }
 
   // Mouse events for desktop
   circle.addEventListener('mousedown', (e) => {
@@ -1267,11 +1301,13 @@ function makeCircleDraggable(group, circle) {
     }
   });
 
-  // Touch events for mobile - FIXED: Separate dragging from tap detection
+  // Touch events for mobile - OPTIMIZED: Reduced calculations and smoother movement
   let dragStarted = false;
-  let dragThreshold = 15; // pixels
+  let dragThreshold = 10; // Reduced threshold for more responsive dragging
   let touchStartPos = { x: 0, y: 0 };
   let initialTouchTime = 0;
+  let lastUpdateTime = 0;
+  const updateThrottle = 16; // ~60fps
 
   circle.addEventListener('touchstart', (e) => {
     if (e.touches.length === 1) {
@@ -1320,7 +1356,14 @@ function makeCircleDraggable(group, circle) {
       e.preventDefault();
       e.stopPropagation();
       
-      // Get touch position in SVG coordinates
+      // Throttle updates for better performance
+      const now = Date.now();
+      if (now - lastUpdateTime < updateThrottle) {
+        return;
+      }
+      lastUpdateTime = now;
+      
+      // Get touch position in SVG coordinates (cached rect for performance)
       const rect = svg.getBoundingClientRect();
       const touchX = touch.clientX - rect.left;
       const touchY = touch.clientY - rect.top;
@@ -1332,27 +1375,11 @@ function makeCircleDraggable(group, circle) {
       const newCx = svgX - offsetX;
       const newCy = svgY - offsetY;
       
-      // Ensure coordinates are valid numbers
-      if (!isNaN(newCx) && !isNaN(newCy)) {
-        circle.setAttribute('cx', newCx);
-        circle.setAttribute('cy', newCy);
-        
-        const nameText = group.querySelector('text.name');
-        const dobText = group.querySelector('text.dob');
-        const radius = parseFloat(circle.getAttribute('r')) || nodeRadius;
-        
-        if (nameText) {
-          nameText.setAttribute('x', newCx);
-          nameText.setAttribute('y', newCy - radius - 8);
-        }
-        
-        if (dobText) {
-          dobText.setAttribute('x', newCx);
-          dobText.setAttribute('y', newCy + radius + 16);
-        }
-
-        generateAllConnections();
-      }
+      // Update position immediately for smooth visual feedback
+      updateCirclePosition(newCx, newCy);
+      
+      // Throttle connection updates to avoid performance issues
+      throttledConnectionUpdate();
     }
   }, { passive: false });
 
@@ -1367,11 +1394,14 @@ function makeCircleDraggable(group, circle) {
       
       isDragging = false;
       dragStarted = false;
+      
+      // Final connection update and undo state
+      generateAllConnections();
       pushUndoState();
     }
   }, { passive: false });
 
-  // Mouse move and up events (for desktop)
+  // Mouse move and up events (for desktop) - OPTIMIZED
   document.addEventListener('mousemove', (e) => {
     if (!isDragging || isCircleTouching) return;
     
@@ -1387,33 +1417,20 @@ function makeCircleDraggable(group, circle) {
     const newCx = svgX - offsetX;
     const newCy = svgY - offsetY;
     
-    // Ensure coordinates are valid numbers
-    if (!isNaN(newCx) && !isNaN(newCy)) {
-      circle.setAttribute('cx', newCx);
-      circle.setAttribute('cy', newCy);
-      
-      const nameText = group.querySelector('text.name');
-      const dobText = group.querySelector('text.dob');
-      const radius = parseFloat(circle.getAttribute('r')) || nodeRadius;
-      
-      if (nameText) {
-        nameText.setAttribute('x', newCx);
-        nameText.setAttribute('y', newCy - radius - 8);
-      }
-      
-      if (dobText) {
-        dobText.setAttribute('x', newCx);
-        dobText.setAttribute('y', newCy + radius + 16);
-      }
-
-      generateAllConnections();
-    }
+    // Update position immediately
+    updateCirclePosition(newCx, newCy);
+    
+    // Throttle connection updates
+    throttledConnectionUpdate();
   });
 
   document.addEventListener('mouseup', () => {
     if (!isDragging || isCircleTouching) return;
     isDragging = false;
     circle.style.cursor = 'grab';
+    
+    // Final connection update and undo state
+    generateAllConnections();
     pushUndoState();
   });
 }
