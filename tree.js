@@ -228,6 +228,7 @@ function initializeSVGCanvas() {
     
     setupPanZoom();
     setupSelectionHandling();
+    setupGlobalTouchPrevention();
   }
   
   // Add keyboard shortcuts
@@ -247,6 +248,50 @@ function initializeSVGCanvas() {
   });
 }
 
+// Prevent default touch behaviors globally
+function setupGlobalTouchPrevention() {
+  // Prevent touch scrolling on the document
+  document.addEventListener('touchstart', (e) => {
+    // Allow touch events on form elements, buttons, and UI elements
+    const allowedElements = ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'];
+    const allowedClasses = ['icon-button', 'floating-btn', 'table-btn', 'connection-btn'];
+    const allowedIds = ['settingsPanel', 'tableView', 'personModal', 'styleModal', 'connectionModal'];
+    
+    // Check if target or its parent has allowed classes or IDs
+    let isAllowed = allowedElements.includes(e.target.tagName) ||
+                   allowedClasses.some(cls => e.target.classList.contains(cls)) ||
+                   allowedIds.some(id => e.target.id === id || e.target.closest(`#${id}`));
+    
+    if (!isAllowed) {
+      // Check if the touch is within our app area but not on UI elements
+      const svgArea = document.getElementById('svgArea');
+      if (svgArea && svgArea.contains(e.target)) {
+        if (e.cancelable) {
+          e.preventDefault();
+        }
+      }
+    }
+  }, { passive: false, capture: true });
+
+  document.addEventListener('touchmove', (e) => {
+    // Allow touch events on form elements and UI components
+    const allowedElements = ['INPUT', 'TEXTAREA', 'SELECT'];
+    const allowedIds = ['settingsPanel', 'tableView', 'personModal', 'styleModal', 'connectionModal'];
+    
+    let isAllowed = allowedElements.includes(e.target.tagName) ||
+                   allowedIds.some(id => e.target.id === id || e.target.closest(`#${id}`));
+    
+    if (!isAllowed) {
+      const svgArea = document.getElementById('svgArea');
+      if (svgArea && svgArea.contains(e.target)) {
+        if (e.cancelable) {
+          e.preventDefault();
+        }
+      }
+    }
+  }, { passive: false, capture: true });
+}
+
 function setupPanZoom() {
   if (!svg) return;
 
@@ -259,6 +304,7 @@ function setupPanZoom() {
   let initialScale = 1;
   let initialPan = { x: 0, y: 0 };
   let lastTouchPos = { x: 0, y: 0 };
+  let touchMoved = false;
 
   // Helper function to get touch distance
   function getTouchDistance(touches) {
@@ -297,13 +343,17 @@ function setupPanZoom() {
     }
   }, { passive: false });
 
-  // Touch events for mobile
+  // Touch events for mobile - Fixed passive event handling
   svg.addEventListener('touchstart', (e) => {
-    e.preventDefault();
+    // Always prevent default to avoid browser intervention
+    if (e.cancelable) {
+      e.preventDefault();
+    }
     e.stopPropagation();
     
     isTouching = true;
     touchStartTime = Date.now();
+    touchMoved = false;
     
     if (e.touches.length === 1) {
       // Single finger - prepare for panning
@@ -325,13 +375,18 @@ function setupPanZoom() {
       initialScale = scale;
       initialPan = { x: panX, y: panY };
     }
-  }, { passive: false });
+  }, { passive: false, capture: true });
 
   svg.addEventListener('touchmove', (e) => {
-    e.preventDefault();
+    // Always prevent default to avoid browser intervention
+    if (e.cancelable) {
+      e.preventDefault();
+    }
     e.stopPropagation();
     
     if (!isTouching) return;
+    
+    touchMoved = true;
     
     if (e.touches.length === 1 && isPanning) {
       // Single finger panning - much more responsive
@@ -376,10 +431,13 @@ function setupPanZoom() {
       lastTouchDistance = currentDistance;
       lastTouchCenter = currentCenter;
     }
-  }, { passive: false });
+  }, { passive: false, capture: true });
 
   svg.addEventListener('touchend', (e) => {
-    e.preventDefault();
+    // Always prevent default to avoid browser intervention
+    if (e.cancelable) {
+      e.preventDefault();
+    }
     e.stopPropagation();
     
     if (e.touches.length === 0) {
@@ -388,13 +446,16 @@ function setupPanZoom() {
       isPanning = false;
       svg.classList.remove('panning');
       
-      // Redraw grid after pan/zoom
-      setTimeout(() => throttledGridRedraw(), 50); // Small delay for better performance
+      // Redraw grid after pan/zoom if we actually moved
+      if (touchMoved) {
+        setTimeout(() => throttledGridRedraw(), 50);
+      }
       
       // Reset touch variables
       lastTouchDistance = 0;
       initialTouchDistance = 0;
       touchStartTime = 0;
+      touchMoved = false;
     } else if (e.touches.length === 1) {
       // One finger still down, switch back to pan mode
       const touch = e.touches[0];
@@ -405,12 +466,12 @@ function setupPanZoom() {
         svg.classList.add('panning');
       }
     }
-  }, { passive: false });
+  }, { passive: false, capture: true });
 
   // Prevent context menu on long press
   svg.addEventListener('contextmenu', (e) => {
     e.preventDefault();
-  });
+  }, { passive: false });
 
   // Mouse events for desktop (existing functionality)
   svg.addEventListener('mousedown', (e) => {
@@ -1105,7 +1166,7 @@ function setupCircleInteractions(group, circle, personId) {
       
       lastTapTime = currentTime;
     }
-  }, { passive: true });
+  }, { passive: true, capture: false });
 
   circle.addEventListener('touchmove', (e) => {
     if (!touchStartPos || e.touches.length !== 1) return;
@@ -1118,10 +1179,13 @@ function setupCircleInteractions(group, circle, personId) {
     if (dx > 10 || dy > 10) {
       touchMoved = true;
     }
-  }, { passive: true });
+  }, { passive: true, capture: false });
 
   circle.addEventListener('touchend', (e) => {
-    e.preventDefault();
+    // Check if event is cancelable before preventing default
+    if (e.cancelable) {
+      e.preventDefault();
+    }
     e.stopPropagation();
     
     if (!touchMoved && touchStartPos) {
@@ -1155,7 +1219,7 @@ function setupCircleInteractions(group, circle, personId) {
     // Reset touch tracking
     touchStartPos = null;
     touchMoved = false;
-  }, { passive: false });
+  }, { passive: false, capture: true });
 }
 
 // Make circle draggable

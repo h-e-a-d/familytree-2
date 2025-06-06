@@ -11,18 +11,25 @@ html, body {
   overflow: hidden; /* Prevent page scrolling */
   touch-action: manipulation; /* Allow only basic touch actions */
   -webkit-overflow-scrolling: touch;
+  /* Prevent iOS bounce/rubber band effect */
+  position: fixed;
+  width: 100%;
 }
 #mainContainer {
   display: flex;
   height: 100vh;
   overflow: hidden;
   touch-action: none; /* Disable default touch behaviors */
+  position: relative;
 }
 /* Graphic View & Table View */
 #graphicView, #tableView {
   flex: 1;
   position: relative;
   height: 100%;
+  /* Allow normal touch behavior for table scrolling */
+  touch-action: auto;
+  overflow-y: auto;
 }
 #svgArea {
   width: 100%;
@@ -46,6 +53,8 @@ html, body {
   justify-content: center;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   transition: all 0.2s ease;
+  /* Allow normal touch behavior for buttons */
+  touch-action: auto;
 }
 
 .icon-button:hover {
@@ -90,6 +99,8 @@ html, body {
   box-shadow: 0 8px 32px rgba(0,0,0,0.1);
   padding: 20px;
   z-index: 999;
+  /* Allow normal touch behavior in settings */
+  touch-action: auto;
 }
 
 #settingsPanel h3 { 
@@ -195,6 +206,8 @@ html, body {
   align-items: flex-end;
   z-index: 998;
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  /* Allow normal touch behavior for buttons */
+  touch-action: auto;
 }
 
 /* Main button row (undo and add buttons) */
@@ -241,6 +254,8 @@ html, body {
   margin-bottom: 0;
   outline: none;
   user-select: none;
+  /* Allow normal touch behavior for buttons */
+  touch-action: auto;
 }
 
 .floating-btn:active {
@@ -441,7 +456,9 @@ html, body {
   display: flex; 
   align-items: center; 
   justify-content: center; 
-  z-index: 1001; 
+  z-index: 1001;
+  /* Allow normal touch behavior in modals */
+  touch-action: auto;
 }
 
 .modal-content { 
@@ -453,6 +470,8 @@ html, body {
   max-height: 90%;
   overflow-y: auto;
   box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  /* Allow normal touch behavior in modal content */
+  touch-action: auto;
 }
 
 .modal-content h2 {
