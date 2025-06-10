@@ -125,6 +125,7 @@
         <input type="text" id="searchInput" placeholder="Search..." />
         <select id="sortSelect">
           <option value="name">Name</option>
+          <option value="fatherName">Father's Name</option>
           <option value="surname">Surname</option>
           <option value="dob">Date of Birth</option>
           <option value="gender">Gender</option>
@@ -134,6 +135,7 @@
         <thead>
           <tr>
             <th>Name</th>
+            <th>Father's Name</th>
             <th>Surname</th>
             <th>Birth Name</th>
             <th>Date of Birth</th>
@@ -248,7 +250,7 @@
     </div>
   </div>
 
-  <!-- Person Modal (ALWAYS starts hidden) -->
+<!-- Person Modal (ALWAYS starts hidden) -->
   <div id="personModal" class="modal hidden" style="display: none;">
     <div class="modal-content">
       <h2 id="modalTitle">Add Person</h2>
@@ -256,6 +258,11 @@
         <div class="form-group">
           <label for="personName">Given Name <span class="required">*</span></label>
           <input type="text" id="personName" required />
+        </div>
+        <div class="form-group">
+          <label for="personFatherName">Father's Name</label>
+          <input type="text" id="personFatherName" placeholder="Father's given name" />
+          <small class="help-text">Father's given name (not surname)</small>
         </div>
         <div class="form-group">
           <label for="personSurname">Surname</label>

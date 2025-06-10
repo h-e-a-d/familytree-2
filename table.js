@@ -20,6 +20,7 @@ export function rebuildTableView() {
     return {
       id: g.getAttribute('data-id'),
       name: g.getAttribute('data-name') || '',
+      fatherName: g.getAttribute('data-fatherName') || '',
       surname: g.getAttribute('data-surname') || '',
       birthName: g.getAttribute('data-birthName') || '',
       dob: g.getAttribute('data-dob') || '',
@@ -30,11 +31,12 @@ export function rebuildTableView() {
     };
   });
 
-  // Filter by search term (search in name, surname, birthName, dob)
+  // Filter by search term (search in name, fatherName, surname, birthName, dob)
   if (searchTerm) {
     rowsData = rowsData.filter(r => {
       return (
         r.name.toLowerCase().includes(searchTerm) ||
+        r.fatherName.toLowerCase().includes(searchTerm) ||
         r.surname.toLowerCase().includes(searchTerm) ||
         r.birthName.toLowerCase().includes(searchTerm) ||
         r.dob.toLowerCase().includes(searchTerm)
@@ -78,6 +80,11 @@ export function rebuildTableView() {
     const nameTd = document.createElement('td');
     nameTd.textContent = r.name;
     tr.appendChild(nameTd);
+
+    // Father's Name
+    const fatherNameTd = document.createElement('td');
+    fatherNameTd.textContent = r.fatherName;
+    tr.appendChild(fatherNameTd);
 
     // Surname
     const surnameTd = document.createElement('td');

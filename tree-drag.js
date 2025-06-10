@@ -1,5 +1,5 @@
 // tree-drag.js
-// Handles ultra-smooth circle dragging with zero lag
+// Handles ultra-smooth circle dragging with zero lag - MOBILE OPTIMIZED
 
 export class DragManager {
   constructor(svg, panZoom, connections, selection) {
@@ -10,10 +10,15 @@ export class DragManager {
     
     // Drag state
     this.isDragging = false;
-    this.dragThreshold = 8; // pixels
+    this.dragThreshold = 5; // Reduced threshold for better responsiveness
     
     // Active drags
     this.activeDrags = new Map();
+    
+    // Mobile optimization - cache frequently accessed elements
+    this.cachedSvgRect = null;
+    this.lastRectUpdate = 0;
+    this.rectCacheTimeout = 1000; // 1 second cache
   }
 
   setupCircleDrag(group, circle, personId) {
@@ -22,48 +27,73 @@ export class DragManager {
       offsetY: 0,
       isDragging: false,
       isCircleTouching: false,
-      cachedRect: null,
       dragStarted: false,
-      touchStartPos: { x: 0, y: 0 }
+      touchStartPos: { x: 0, y: 0 },
+      lastUpdateTime: 0,
+      animationFrame: null
     };
 
     this.activeDrags.set(personId, dragState);
 
-    // Cache SVG rect for better performance during drag
+    // Optimized rect caching for mobile
     const getCachedRect = () => {
-      if (!dragState.cachedRect) {
-        dragState.cachedRect = this.svg.getBoundingClientRect();
+      const now = Date.now();
+      if (!this.cachedSvgRect || (now - this.lastRectUpdate) > this.rectCacheTimeout) {
+        this.cachedSvgRect = this.svg.getBoundingClientRect();
+        this.lastRectUpdate = now;
       }
-      return dragState.cachedRect;
+      return this.cachedSvgRect;
     };
 
     const invalidateRectCache = () => {
-      dragState.cachedRect = null;
+      this.cachedSvgRect = null;
     };
 
-    // Ultra-fast position update - no expensive operations during drag
+    // Ultra-fast position update with RAF optimization for mobile
     const updateCirclePosition = (newCx, newCy) => {
       if (isNaN(newCx) || isNaN(newCy)) return;
       
-      circle.setAttribute('cx', newCx);
-      circle.setAttribute('cy', newCy);
-      
-      const nameText = group.querySelector('text.name');
-      const dobText = group.querySelector('text.dob');
-      const radius = parseFloat(circle.getAttribute('r')) || 40;
-      
-      if (nameText) {
-        nameText.setAttribute('x', newCx);
-        nameText.setAttribute('y', newCy - radius - 8);
+      // Cancel any pending animation frame
+      if (dragState.animationFrame) {
+        cancelAnimationFrame(dragState.animationFrame);
       }
       
-      if (dobText) {
-        dobText.setAttribute('x', newCx);
-        dobText.setAttribute('y', newCy + radius + 16);
-      }
+      // Use requestAnimationFrame for smooth 60fps updates on mobile
+      dragState.animationFrame = requestAnimationFrame(() => {
+        circle.setAttribute('cx', newCx);
+        circle.setAttribute('cy', newCy);
+        
+        // Update text positions inside circle
+        const nameText = group.querySelector('text.name');
+        const surnameText = group.querySelector('text.surname');
+        const birthNameText = group.querySelector('text.birth-name');
+        const dobText = group.querySelector('text.dob');
+        
+        if (nameText) {
+          nameText.setAttribute('x', newCx);
+          nameText.setAttribute('y', newCx - 15); // Above center
+        }
+        
+        if (surnameText) {
+          surnameText.setAttribute('x', newCx);
+          surnameText.setAttribute('y', newCy - 5); // Just above center
+        }
+        
+        if (birthNameText) {
+          birthNameText.setAttribute('x', newCx);
+          birthNameText.setAttribute('y', newCy + 5); // Just below center
+        }
+        
+        if (dobText) {
+          dobText.setAttribute('x', newCx);
+          dobText.setAttribute('y', newCy + 20); // Below center
+        }
+        
+        dragState.animationFrame = null;
+      });
     };
 
-    // Mouse events for desktop
+    // Mouse events for desktop (unchanged)
     circle.addEventListener('mousedown', (e) => {
       if (e.detail === 1) {
         e.preventDefault();
@@ -76,10 +106,6 @@ export class DragManager {
         const currentCx = parseFloat(circle.getAttribute('cx')) || 0;
         const currentCy = parseFloat(circle.getAttribute('cy')) || 0;
         
-        const rect = getCachedRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
-        
         const svgCoords = this.panZoom.screenToSVG(e.clientX, e.clientY);
         dragState.offsetX = svgCoords.x - currentCx;
         dragState.offsetY = svgCoords.y - currentCy;
@@ -88,9 +114,13 @@ export class DragManager {
       }
     });
 
-    // Touch events for mobile
+    // OPTIMIZED Touch events for mobile
     circle.addEventListener('touchstart', (e) => {
       if (e.touches.length === 1) {
+        // Prevent default to avoid scroll/zoom conflicts
+        e.preventDefault();
+        e.stopPropagation();
+        
         dragState.isCircleTouching = true;
         dragState.dragStarted = false;
         
@@ -105,6 +135,11 @@ export class DragManager {
         const svgCoords = this.panZoom.screenToSVG(touch.clientX, touch.clientY);
         dragState.offsetX = svgCoords.x - currentCx;
         dragState.offsetY = svgCoords.y - currentCy;
+        
+        // Add haptic feedback on supported devices
+        if (navigator.vibrate) {
+          navigator.vibrate(10);
+        }
       }
     }, { passive: false });
 
@@ -124,14 +159,24 @@ export class DragManager {
           dragState.dragStarted = true;
           dragState.isDragging = true;
           this.isDragging = true;
+          
+          // Prevent browser scrolling/zooming during drag
+          e.preventDefault();
+          e.stopPropagation();
         } else {
           return;
         }
       }
       
       if (dragState.dragStarted) {
+        // Always prevent default once dragging starts
         e.preventDefault();
         e.stopPropagation();
+        
+        // Throttle updates to 60fps for performance
+        const now = Date.now();
+        if (now - dragState.lastUpdateTime < 16) return; // ~60fps
+        dragState.lastUpdateTime = now;
         
         const svgCoords = this.panZoom.screenToSVG(touch.clientX, touch.clientY);
         const newCx = svgCoords.x - dragState.offsetX;
@@ -154,14 +199,20 @@ export class DragManager {
         dragState.dragStarted = false;
         this.isDragging = false;
         
+        // Generate connections after drag ends (not during)
         this.connections.generateAll();
         this.onDragEnd?.(personId);
+        
+        // Haptic feedback on drag end
+        if (navigator.vibrate) {
+          navigator.vibrate(5);
+        }
       }
       
       invalidateRectCache();
     }, { passive: false });
 
-    // Global mouse events for desktop
+    // Global mouse events for desktop (unchanged)
     const handleMouseMove = (e) => {
       if (!dragState.isDragging || dragState.isCircleTouching) return;
       
@@ -197,6 +248,11 @@ export class DragManager {
   removeDrag(personId) {
     const dragState = this.activeDrags.get(personId);
     if (dragState) {
+      // Cancel any pending animation frames
+      if (dragState.animationFrame) {
+        cancelAnimationFrame(dragState.animationFrame);
+      }
+      
       // Remove global listeners
       if (dragState.handleMouseMove) {
         document.removeEventListener('mousemove', dragState.handleMouseMove);
@@ -218,6 +274,9 @@ export class DragManager {
     for (const personId of this.activeDrags.keys()) {
       this.removeDrag(personId);
     }
+    
+    // Clear cache
+    this.cachedSvgRect = null;
   }
 
   // Event callback

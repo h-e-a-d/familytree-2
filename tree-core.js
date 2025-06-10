@@ -17,12 +17,12 @@ class TreeCore {
   constructor() {
     // Core state
     this.svg = null;
-    this.nodeRadius = 40;
+    this.nodeRadius = 50; // Increased for text inside
     this.defaultColor = '#3498db';
     this.fontFamily = 'Inter';
-    this.fontSize = 14;
-    this.nameColor = '#333333';
-    this.dateColor = '#757575';
+    this.fontSize = 11; // Smaller for inside circle
+    this.nameColor = '#ffffff'; // White for visibility on colored background
+    this.dateColor = '#f0f0f0'; // Light gray for DOB
     
     // UI elements
     this.addPersonBtn = null;
@@ -229,6 +229,7 @@ class TreeCore {
   // Person management
   savePersonFromModal() {
     const nameInput = document.getElementById('personName').value.trim();
+    const fatherNameInput = document.getElementById('personFatherName').value.trim();
     const surnameInput = document.getElementById('personSurname').value.trim();
     const birthNameInput = document.getElementById('personBirthName').value.trim();
     const dobInput = document.getElementById('personDob').value.trim();
@@ -249,12 +250,12 @@ class TreeCore {
     try {
       if (editingId) {
         this.updateExistingPerson(editingId, { 
-          name: nameInput, surname: surnameInput, birthName: birthNameInput, 
+          name: nameInput, fatherName: fatherNameInput, surname: surnameInput, birthName: birthNameInput, 
           dob: dobInput, gender: genderInput, motherId, fatherId, spouseId 
         });
       } else {
         this.createNewPerson({ 
-          name: nameInput, surname: surnameInput, birthName: birthNameInput, 
+          name: nameInput, fatherName: fatherNameInput, surname: surnameInput, birthName: birthNameInput, 
           dob: dobInput, gender: genderInput, motherId, fatherId, spouseId 
         });
       }
@@ -280,6 +281,7 @@ class TreeCore {
     const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     group.setAttribute('data-id', nextId);
     group.setAttribute('data-name', data.name);
+    group.setAttribute('data-fatherName', data.fatherName);
     group.setAttribute('data-surname', data.surname);
     group.setAttribute('data-birthName', data.birthName);
     group.setAttribute('data-dob', data.dob);
@@ -300,31 +302,12 @@ class TreeCore {
     circle.setAttribute('cy', cy);
     circle.setAttribute('r', this.nodeRadius);
     circle.setAttribute('fill', this.defaultColor);
+    circle.setAttribute('stroke', '#2c3e50');
+    circle.setAttribute('stroke-width', '2');
     group.appendChild(circle);
 
-    // Create name text
-    const nameText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    nameText.classList.add('name');
-    nameText.textContent = data.name;
-    nameText.setAttribute('x', cx);
-    nameText.setAttribute('y', cy - this.nodeRadius - 8);
-    nameText.setAttribute('text-anchor', 'middle');
-    nameText.setAttribute('font-family', this.fontFamily);
-    nameText.setAttribute('font-size', `${this.fontSize}px`);
-    nameText.setAttribute('fill', this.nameColor);
-    group.appendChild(nameText);
-
-    // Create DOB text
-    const dobText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    dobText.classList.add('dob');
-    dobText.textContent = data.dob;
-    dobText.setAttribute('x', cx);
-    dobText.setAttribute('y', cy + this.nodeRadius + 16);
-    dobText.setAttribute('text-anchor', 'middle');
-    dobText.setAttribute('font-family', this.fontFamily);
-    dobText.setAttribute('font-size', `${this.fontSize - 2}px`);
-    dobText.setAttribute('fill', this.dateColor);
-    group.appendChild(dobText);
+    // Create text elements inside the circle
+    this.createPersonTexts(group, cx, cy, data);
 
     // Setup interactions
     this.interactions.setupCircleInteractions(group, circle, nextId);
@@ -338,11 +321,112 @@ class TreeCore {
     }
   }
 
+  createPersonTexts(group, cx, cy, data) {
+    // Format the main name line: "Name + Father's Name + Surname"
+    let mainName = data.name;
+    if (data.fatherName) {
+      mainName += ` ${data.fatherName}`;
+    }
+    if (data.surname) {
+      mainName += ` ${data.surname}`;
+    }
+
+    // Split name into lines if too long
+    const maxCharsPerLine = 15;
+    const nameLines = this.splitTextIntoLines(mainName, maxCharsPerLine);
+
+    // Create name text elements
+    nameLines.forEach((line, index) => {
+      const nameText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      nameText.classList.add('name');
+      if (index === 0) nameText.classList.add('name-first');
+      if (index === nameLines.length - 1) nameText.classList.add('name-last');
+      nameText.textContent = line;
+      nameText.setAttribute('x', cx);
+      nameText.setAttribute('y', cy - 20 + (index * 12)); // Stacked above center
+      nameText.setAttribute('text-anchor', 'middle');
+      nameText.setAttribute('font-family', this.fontFamily);
+      nameText.setAttribute('font-size', `${this.fontSize}px`);
+      nameText.setAttribute('font-weight', '600');
+      nameText.setAttribute('fill', this.nameColor);
+      nameText.setAttribute('pointer-events', 'none');
+      group.appendChild(nameText);
+    });
+
+    // Create birth name if different and exists
+    if (data.birthName && data.birthName !== data.surname) {
+      const birthNameLines = this.splitTextIntoLines(`(${data.birthName})`, maxCharsPerLine);
+      birthNameLines.forEach((line, index) => {
+        const birthNameText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        birthNameText.classList.add('birth-name');
+        birthNameText.textContent = line;
+        birthNameText.setAttribute('x', cx);
+        birthNameText.setAttribute('y', cy + 5 + (index * 10)); // Below center
+        birthNameText.setAttribute('text-anchor', 'middle');
+        birthNameText.setAttribute('font-family', this.fontFamily);
+        birthNameText.setAttribute('font-size', `${this.fontSize - 1}px`);
+        birthNameText.setAttribute('font-style', 'italic');
+        birthNameText.setAttribute('fill', this.nameColor);
+        birthNameText.setAttribute('opacity', '0.9');
+        birthNameText.setAttribute('pointer-events', 'none');
+        group.appendChild(birthNameText);
+      });
+    }
+
+    // Create DOB text
+    if (data.dob) {
+      const dobText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      dobText.classList.add('dob');
+      dobText.textContent = data.dob;
+      dobText.setAttribute('x', cx);
+      dobText.setAttribute('y', cy + 25); // Well below center
+      dobText.setAttribute('text-anchor', 'middle');
+      dobText.setAttribute('font-family', this.fontFamily);
+      dobText.setAttribute('font-size', `${this.fontSize - 1}px`);
+      dobText.setAttribute('fill', this.dateColor);
+      dobText.setAttribute('pointer-events', 'none');
+      group.appendChild(dobText);
+    }
+  }
+
+  splitTextIntoLines(text, maxChars) {
+    if (text.length <= maxChars) {
+      return [text];
+    }
+
+    const words = text.split(' ');
+    const lines = [];
+    let currentLine = '';
+
+    for (const word of words) {
+      if ((currentLine + ' ' + word).trim().length <= maxChars) {
+        currentLine = currentLine ? currentLine + ' ' + word : word;
+      } else {
+        if (currentLine) {
+          lines.push(currentLine);
+          currentLine = word;
+        } else {
+          // Word is too long, split it
+          lines.push(word.substring(0, maxChars));
+          currentLine = word.substring(maxChars);
+        }
+      }
+    }
+
+    if (currentLine) {
+      lines.push(currentLine);
+    }
+
+    return lines;
+  }
+
   updateExistingPerson(id, data) {
     const group = this.svg.querySelector(`g[data-id="${id}"]`);
     if (!group) return;
 
+    // Update attributes
     group.setAttribute('data-name', data.name);
+    group.setAttribute('data-fatherName', data.fatherName);
     group.setAttribute('data-surname', data.surname);
     group.setAttribute('data-birthName', data.birthName);
     group.setAttribute('data-dob', data.dob);
@@ -351,11 +435,16 @@ class TreeCore {
     group.setAttribute('data-fatherId', data.fatherId);
     group.setAttribute('data-spouseId', data.spouseId);
 
-    const nameText = group.querySelector('text.name');
-    if (nameText) nameText.textContent = data.name;
-    
-    const dobText = group.querySelector('text.dob');
-    if (dobText) dobText.textContent = data.dob;
+    // Remove old text elements
+    group.querySelectorAll('text').forEach(t => t.remove());
+
+    // Get circle position
+    const circle = group.querySelector('circle.person');
+    const cx = parseFloat(circle.getAttribute('cx'));
+    const cy = parseFloat(circle.getAttribute('cy'));
+
+    // Create new text elements
+    this.createPersonTexts(group, cx, cy, data);
   }
 
   // Style management
@@ -401,9 +490,15 @@ class TreeCore {
       t.setAttribute('fill', this.nameColor);
     });
     
+    this.svg.querySelectorAll('text.birth-name').forEach(t => {
+      t.setAttribute('font-family', this.fontFamily);
+      t.setAttribute('font-size', `${this.fontSize - 1}px`);
+      t.setAttribute('fill', this.nameColor);
+    });
+    
     this.svg.querySelectorAll('text.dob').forEach(t => {
       t.setAttribute('font-family', this.fontFamily);
-      t.setAttribute('font-size', `${this.fontSize - 2}px`);
+      t.setAttribute('font-size', `${this.fontSize - 1}px`);
       t.setAttribute('fill', this.dateColor);
     });
   }

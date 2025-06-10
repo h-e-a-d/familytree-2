@@ -675,45 +675,140 @@ html, body {
   background: #27ae60;
 }
 
-/* SVG Styles */
+/* SVG Styles - Updated for text inside circles */
 .person-group circle { 
   stroke: #2c3e50; 
   stroke-width: 2px; 
   cursor: grab;
   transition: all 0.2s ease;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
 }
 
 .person-group circle:hover {
   stroke-width: 3px;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
 }
 
 .person-group.selected circle {
   stroke: #e74c3c;
   stroke-width: 4px;
-  filter: drop-shadow(0 0 8px rgba(231, 76, 60, 0.4));
+  filter: drop-shadow(0 0 12px rgba(231, 76, 60, 0.6));
 }
 
+/* Text inside circles */
 .person-group text.name { 
   font-weight: 600; 
   font-family: 'Inter', sans-serif;
   pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  dominant-baseline: middle;
+}
+
+.person-group text.birth-name { 
+  font-family: 'Inter', sans-serif;
+  pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  font-style: italic;
+  opacity: 0.9;
+  dominant-baseline: middle;
 }
 
 .person-group text.dob { 
-  font-size: 12px; 
-  fill: #757575; 
   font-family: 'Inter', sans-serif;
   pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  dominant-baseline: middle;
 }
 
+/* Ensure text is readable on colored backgrounds */
+.person-group text {
+  text-rendering: optimizeLegibility;
+  shape-rendering: geometricPrecision;
+}
+
+/* Mobile optimizations for text inside circles */
+@media (max-width: 768px) {
+  .person-group text.name {
+    font-size: 10px !important;
+  }
+  
+  .person-group text.birth-name {
+    font-size: 9px !important;
+  }
+  
+  .person-group text.dob {
+    font-size: 9px !important;
+  }
+  
+  .person-group circle {
+    /* Slightly larger circles on mobile for better touch targets */
+    r: 55;
+  }
+}
+
+/* Ensure circles are large enough for text content */
+.person-group circle {
+  min-width: 100px;
+  min-height: 100px;
+}
+
+/* Additional visual improvements */
+.person-group {
+  will-change: transform;
+  /* Allow all touch actions on circles */
+  touch-action: auto;
+}
+
+.person-group circle {
+  will-change: transform;
+  /* Ensure circles can receive all touch events */
+  touch-action: auto;
+  pointer-events: all;
+  /* Improved gradient for depth */
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
+.person-group circle:active {
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
+  transform: scale(0.98);
+}
+
+/* Improved selection state */
+.person-group.selected {
+  transform: scale(1.05);
+  transition: transform 0.2s ease;
+}
+
+.person-group.selected circle {
+  stroke: #e74c3c;
+  stroke-width: 4px;
+  filter: drop-shadow(0 0 12px rgba(231, 76, 60, 0.6));
+}
+
+/* Relation lines updated for new circle sizes */
 .relation { 
   stroke: #7f8c8d; 
   stroke-width: 2px; 
   pointer-events: none;
+  opacity: 0.8;
 }
 
 .relation.spouse { 
   stroke-dasharray: 4 2; 
+  stroke: #e74c3c;
+  opacity: 0.9;
+}
+
+/* Grid lines remain the same */
+.grid-line {
+  stroke: #f0f0f0;
+  stroke-width: 1px;
+  pointer-events: none;
+}
+
+.grid-line.major {
+  stroke: #e0e0e0;
+  stroke-width: 1px;
 }
 
 /* Grid Styles */

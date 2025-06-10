@@ -119,19 +119,28 @@ export class UndoManager {
           circle.setAttribute('cx', cx);
           circle.setAttribute('cy', cy);
           
-          // Fix text positions too
-          const nameText = group.querySelector('text.name');
+          // Fix text positions for new format (inside circle)
+          const nameTexts = group.querySelectorAll('text.name');
+          const birthNameTexts = group.querySelectorAll('text.birth-name');
           const dobText = group.querySelector('text.dob');
-          const radius = parseFloat(circle.getAttribute('r')) || 40;
+          const radius = parseFloat(circle.getAttribute('r')) || 50;
           
-          if (nameText) {
+          // Update all name text elements
+          nameTexts.forEach((nameText, index) => {
             nameText.setAttribute('x', cx);
-            nameText.setAttribute('y', cy - radius - 8);
-          }
+            nameText.setAttribute('y', cy - 20 + (index * 12));
+          });
           
+          // Update birth name texts
+          birthNameTexts.forEach((birthNameText, index) => {
+            birthNameText.setAttribute('x', cx);
+            birthNameText.setAttribute('y', cy + 5 + (index * 10));
+          });
+          
+          // Update DOB text
           if (dobText) {
             dobText.setAttribute('x', cx);
-            dobText.setAttribute('y', cy + radius + 16);
+            dobText.setAttribute('y', cy + 25);
           }
         }
         

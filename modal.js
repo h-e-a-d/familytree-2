@@ -32,6 +32,7 @@ export function openModalForEdit(personId) {
 
     // Populate the text inputs
     document.getElementById('personName').value = group.getAttribute('data-name') || '';
+    document.getElementById('personFatherName').value = group.getAttribute('data-fatherName') || '';
     document.getElementById('personSurname').value = group.getAttribute('data-surname') || '';
     document.getElementById('personBirthName').value = group.getAttribute('data-birthName') || '';
     document.getElementById('personDob').value = group.getAttribute('data-dob') || '';
@@ -105,7 +106,7 @@ function clearForm() {
   }
 
   // Clear individual inputs manually as well
-  const inputs = ['personName', 'personSurname', 'personBirthName', 'personDob', 'personGender'];
+  const inputs = ['personName', 'personFatherName', 'personSurname', 'personBirthName', 'personDob', 'personGender'];
   inputs.forEach(inputId => {
     const input = document.getElementById(inputId);
     if (input) input.value = '';

@@ -12,7 +12,7 @@ export class DataManager {
     
     const allGroups = Array.from(this.svg.querySelectorAll('g[data-id]'));
     const data = {
-      version: '1.0',
+      version: '1.1', // Updated version for new father's name field
       settings: this.treeCore.getState(),
       view: this.treeCore.panZoom.getTransform(),
       selection: this.treeCore.selection.getSelectionData(),
@@ -21,6 +21,7 @@ export class DataManager {
         return {
           id: g.getAttribute('data-id'),
           name: g.getAttribute('data-name') || '',
+          fatherName: g.getAttribute('data-fatherName') || '',
           surname: g.getAttribute('data-surname') || '',
           birthName: g.getAttribute('data-birthName') || '',
           dob: g.getAttribute('data-dob') || '',
@@ -136,6 +137,7 @@ export class DataManager {
     const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     group.setAttribute('data-id', personData.id);
     group.setAttribute('data-name', personData.name);
+    group.setAttribute('data-fatherName', personData.fatherName || ''); // Support old data without fatherName
     group.setAttribute('data-surname', personData.surname);
     group.setAttribute('data-birthName', personData.birthName);
     group.setAttribute('data-dob', personData.dob);
@@ -163,31 +165,18 @@ export class DataManager {
     circle.setAttribute('cy', cy);
     circle.setAttribute('r', personData.nodeSize || coreState.nodeRadius);
     circle.setAttribute('fill', personData.nodeColor || coreState.defaultColor);
+    circle.setAttribute('stroke', '#2c3e50');
+    circle.setAttribute('stroke-width', '2');
     group.appendChild(circle);
 
-    // Create name text
-    const nameText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    nameText.classList.add('name');
-    nameText.textContent = personData.name;
-    nameText.setAttribute('x', cx);
-    nameText.setAttribute('y', cy - (personData.nodeSize || coreState.nodeRadius) - 8);
-    nameText.setAttribute('text-anchor', 'middle');
-    nameText.setAttribute('font-family', coreState.fontFamily);
-    nameText.setAttribute('font-size', `${coreState.fontSize}px`);
-    nameText.setAttribute('fill', coreState.nameColor);
-    group.appendChild(nameText);
-
-    // Create DOB text
-    const dobText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    dobText.classList.add('dob');
-    dobText.textContent = personData.dob;
-    dobText.setAttribute('x', cx);
-    dobText.setAttribute('y', cy + (personData.nodeSize || coreState.nodeRadius) + 16);
-    dobText.setAttribute('text-anchor', 'middle');
-    dobText.setAttribute('font-family', coreState.fontFamily);
-    dobText.setAttribute('font-size', `${coreState.fontSize - 2}px`);
-    dobText.setAttribute('fill', coreState.dateColor);
-    group.appendChild(dobText);
+    // Create text elements inside the circle
+    this.treeCore.createPersonTexts(group, cx, cy, {
+      name: personData.name,
+      fatherName: personData.fatherName || '',
+      surname: personData.surname,
+      birthName: personData.birthName,
+      dob: personData.dob
+    });
 
     // Setup interactions
     this.treeCore.interactions.setupCircleInteractions(group, circle, personData.id);
@@ -202,7 +191,7 @@ export class DataManager {
     
     const allGroups = Array.from(this.svg.querySelectorAll('g[data-id]'));
     return {
-      version: '1.0',
+      version: '1.1',
       settings: this.treeCore.getState(),
       view: this.treeCore.panZoom.getTransform(),
       selection: this.treeCore.selection.getSelectionData(),
@@ -211,6 +200,7 @@ export class DataManager {
         return {
           id: g.getAttribute('data-id'),
           name: g.getAttribute('data-name') || '',
+          fatherName: g.getAttribute('data-fatherName') || '',
           surname: g.getAttribute('data-surname') || '',
           birthName: g.getAttribute('data-birthName') || '',
           dob: g.getAttribute('data-dob') || '',
