@@ -37,14 +37,14 @@ export class PanZoomManager {
     // Prevent touch scrolling on the document while allowing interaction with UI elements
     document.addEventListener('touchstart', (e) => {
       const allowedElements = ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'];
-      const allowedClasses = ['icon-button', 'floating-btn', 'table-btn', 'connection-btn', 'select-option', 'select-input'];
+      const allowedClasses = ['icon-button', 'floating-btn', 'table-btn', 'connection-btn', 'select-option', 'select-input', 'person'];
       const allowedIds = ['settingsPanel', 'tableView', 'personModal', 'styleModal', 'connectionModal'];
       
       let isAllowed = allowedElements.includes(e.target.tagName) ||
                      allowedClasses.some(cls => e.target.classList.contains(cls)) ||
                      allowedIds.some(id => e.target.id === id || e.target.closest(`#${id}`)) ||
                      e.target.closest('.searchable-select') ||
-                     e.target.classList.contains('person');
+                     e.target.closest('.person-group'); // Allow all person group interactions
       
       if (!isAllowed) {
         const svgArea = document.getElementById('svgArea');
@@ -62,7 +62,8 @@ export class PanZoomManager {
       
       let isAllowed = allowedElements.includes(e.target.tagName) ||
                      allowedIds.some(id => e.target.id === id || e.target.closest(`#${id}`)) ||
-                     e.target.closest('.searchable-select');
+                     e.target.closest('.searchable-select') ||
+                     e.target.closest('.person-group'); // Allow all person group interactions
       
       if (!isAllowed) {
         const svgArea = document.getElementById('svgArea');
@@ -100,8 +101,13 @@ export class PanZoomManager {
 
     // Touch events - HEAVILY OPTIMIZED FOR MOBILE PERFORMANCE
     this.svg.addEventListener('touchstart', (e) => {
-      // Only handle SVG background touches, not circles
+      // Only handle SVG background touches, not circles or person groups
       if (e.target !== this.svg && !e.target.classList.contains('grid-line')) {
+        return;
+      }
+      
+      // Don't interfere with circle dragging
+      if (e.target.closest('.person-group')) {
         return;
       }
       
@@ -132,8 +138,13 @@ export class PanZoomManager {
     }, { passive: false });
 
     this.svg.addEventListener('touchmove', (e) => {
-      // Only handle SVG background touches, not circles
+      // Only handle SVG background touches, not circles or person groups
       if (e.target !== this.svg && !e.target.classList.contains('grid-line')) {
+        return;
+      }
+      
+      // Don't interfere with circle dragging
+      if (e.target.closest('.person-group')) {
         return;
       }
       
