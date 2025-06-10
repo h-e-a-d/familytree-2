@@ -9,11 +9,11 @@ export class InteractionManager {
     this.selection = selection;
     this.drag = drag;
     
-    // Double-tap detection constants
-    this.DOUBLE_TAP_DELAY = 300; // milliseconds
-    this.DOUBLE_TAP_DISTANCE = 50; // pixels
+    // Double-tap detection constants - OPTIMIZED FOR MOBILE
+    this.DOUBLE_TAP_DELAY = 250; // Slightly reduced for better responsiveness
+    this.DOUBLE_TAP_DISTANCE = 40; // Reduced distance for easier double-tap
     
-    // Setup selection clearing
+    // Setup selection clearing on background click
     this.selection.onSelectionDeleted = () => {
       this.onSelectionChange?.();
     };
@@ -22,10 +22,24 @@ export class InteractionManager {
     this.drag.onDragEnd = () => {
       this.onDragEnd?.();
     };
+
+    // Setup background click clearing
+    this.setupBackgroundClearing();
+  }
+
+  setupBackgroundClearing() {
+    // Clear selection when clicking SVG background
+    if (this.svg) {
+      this.svg.addEventListener('click', (e) => {
+        if (e.target === this.svg || e.target.classList.contains('grid-line')) {
+          this.selection.clear();
+        }
+      });
+    }
   }
 
   setupCircleInteractions(group, circle, personId) {
-    // Setup dragging
+    // Setup dragging first
     this.drag.setupCircleDrag(group, circle, personId);
     
     // Setup click/tap interactions
@@ -43,6 +57,11 @@ export class InteractionManager {
       e.preventDefault();
       e.stopPropagation();
       
+      // Don't process clicks during drag
+      if (this.drag.isDragInProgress()) {
+        return;
+      }
+      
       // Clear any existing timeout
       if (clickTimeout) {
         clearTimeout(clickTimeout);
@@ -51,9 +70,8 @@ export class InteractionManager {
       
       // Delay the selection to allow for double-click detection
       clickTimeout = setTimeout(() => {
-        if (!this.drag.isDragInProgress()) {
-          this.selection.toggle(personId, circle, group);
-        }
+        this.selection.toggle(personId, circle, group);
+        this.onSelectionChange?.();
       }, 200);
     });
     
@@ -73,10 +91,11 @@ export class InteractionManager {
       openModalForEdit(personId);
     });
 
-    // Mobile touch events with proper double-tap detection
+    // Mobile touch events with optimized double-tap detection
     let touchStartTime = 0;
     let hasTouchMoved = false;
     let touchStartPos = { x: 0, y: 0 };
+    let isDragging = false;
 
     circle.addEventListener('touchstart', (e) => {
       e.preventDefault();
@@ -89,6 +108,7 @@ export class InteractionManager {
       touchStartTime = now;
       hasTouchMoved = false;
       touchStartPos = currentPos;
+      isDragging = false;
       
       // Check for double-tap
       const timeSinceLastTap = now - lastTapTime;
@@ -123,7 +143,7 @@ export class InteractionManager {
     }, { passive: false });
 
     circle.addEventListener('touchmove', (e) => {
-      // If the touch moves significantly, it's not a tap
+      // Track movement to distinguish between tap and drag
       const touch = e.touches[0];
       const currentPos = { x: touch.clientX, y: touch.clientY };
       const distance = Math.sqrt(
@@ -131,8 +151,9 @@ export class InteractionManager {
         Math.pow(currentPos.y - touchStartPos.y, 2)
       );
       
-      if (distance > 10) { // 10px threshold for considering it a move
+      if (distance > 8) { // 8px threshold for considering it a move/drag
         hasTouchMoved = true;
+        isDragging = true;
       }
     }, { passive: false });
 
@@ -143,18 +164,27 @@ export class InteractionManager {
       const now = Date.now();
       const touchDuration = now - touchStartTime;
       
-      // If this was a short touch without movement and not part of a double-tap sequence
-      if (!hasTouchMoved && touchDuration < 500 && tapCount === 1) {
+      // Only process as tap if it wasn't a drag and was short duration
+      if (!hasTouchMoved && !isDragging && touchDuration < 500 && tapCount === 1) {
         // Set a timeout for single-tap action (selection)
         // This will be cancelled if a second tap comes within the double-tap delay
         clickTimeout = setTimeout(() => {
-          if (!this.drag.isDragInProgress() && tapCount === 1) {
+          if (tapCount === 1) {
             console.log('Single-tap on circle:', personId);
             this.selection.toggle(personId, circle, group);
+            this.onSelectionChange?.();
             tapCount = 0;
           }
         }, this.DOUBLE_TAP_DELAY);
+      } else if (isDragging || hasTouchMoved) {
+        // This was a drag, reset tap count
+        tapCount = 0;
+        lastTapTime = 0;
       }
+      
+      // Reset state
+      isDragging = false;
+      hasTouchMoved = false;
     }, { passive: false });
   }
 

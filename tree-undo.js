@@ -120,34 +120,47 @@ export class UndoManager {
           circle.setAttribute('cy', cy);
           
           // Fix text positions for new format (inside circle)
-          const nameTexts = group.querySelectorAll('text.name');
-          const birthNameTexts = group.querySelectorAll('text.birth-name');
-          const dobText = group.querySelector('text.dob');
-          const radius = parseFloat(circle.getAttribute('r')) || 50;
-          
-          // Update all name text elements
-          nameTexts.forEach((nameText, index) => {
-            nameText.setAttribute('x', cx);
-            nameText.setAttribute('y', cy - 20 + (index * 12));
-          });
-          
-          // Update birth name texts
-          birthNameTexts.forEach((birthNameText, index) => {
-            birthNameText.setAttribute('x', cx);
-            birthNameText.setAttribute('y', cy + 5 + (index * 10));
-          });
-          
-          // Update DOB text
-          if (dobText) {
-            dobText.setAttribute('x', cx);
-            dobText.setAttribute('y', cy + 25);
-          }
+          this.fixTextPositions(group, cx, cy);
         }
         
         // Setup interactions
         this.treeCore.interactions.setupCircleInteractions(group, circle, personId);
       }
     });
+  }
+
+  fixTextPositions(group, cx, cy) {
+    // Update all text elements to be positioned correctly inside the circle
+    const nameTexts = group.querySelectorAll('text.name');
+    const birthNameTexts = group.querySelectorAll('text.birth-name');
+    const dobText = group.querySelector('text.dob');
+    
+    // Update name text elements (stacked above center)
+    nameTexts.forEach((nameText, index) => {
+      nameText.setAttribute('x', cx);
+      nameText.setAttribute('y', cy - 20 + (index * 12));
+      nameText.setAttribute('text-anchor', 'middle');
+      nameText.setAttribute('dominant-baseline', 'middle');
+      nameText.setAttribute('pointer-events', 'none');
+    });
+    
+    // Update birth name texts (below center)
+    birthNameTexts.forEach((birthNameText, index) => {
+      birthNameText.setAttribute('x', cx);
+      birthNameText.setAttribute('y', cy + 5 + (index * 10));
+      birthNameText.setAttribute('text-anchor', 'middle');
+      birthNameText.setAttribute('dominant-baseline', 'middle');
+      birthNameText.setAttribute('pointer-events', 'none');
+    });
+    
+    // Update DOB text (well below center)
+    if (dobText) {
+      dobText.setAttribute('x', cx);
+      dobText.setAttribute('y', cy + 25);
+      dobText.setAttribute('text-anchor', 'middle');
+      dobText.setAttribute('dominant-baseline', 'middle');
+      dobText.setAttribute('pointer-events', 'none');
+    }
   }
 
   canUndo() {

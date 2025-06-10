@@ -13,6 +13,7 @@ export function updateSearchableSelects(existingModalData = {}) {
     return {
       id: g.getAttribute('data-id'),
       name: g.getAttribute('data-name') || '',
+      fatherName: g.getAttribute('data-fatherName') || '',
       surname: g.getAttribute('data-surname') || '',
       gender: g.getAttribute('data-gender'),
     };
@@ -27,9 +28,16 @@ export function updateSearchableSelects(existingModalData = {}) {
     let options = '<div class="select-option" data-id="">None</div>';
     options += filtered.map(p => {
       const isSelected = p.id === selectedId ? 'selected' : '';
-      const displayName = `${p.name} ${p.surname}`.trim();
+      // Build display name: Name + Father's Name + Surname
+      let displayName = p.name;
+      if (p.fatherName) {
+        displayName += ` ${p.fatherName}`;
+      }
+      if (p.surname) {
+        displayName += ` ${p.surname}`;
+      }
       return `<div class="select-option" data-id="${p.id}" ${isSelected}>
-                ${displayName}
+                ${displayName.trim()}
               </div>`;
     }).join('');
     return options;
@@ -54,7 +62,14 @@ export function updateSearchableSelects(existingModalData = {}) {
     if (existingId) {
       const selectedPerson = persons.find(p => p.id === existingId);
       if (selectedPerson) {
-        displayText = `${selectedPerson.name} ${selectedPerson.surname}`.trim();
+        let name = selectedPerson.name;
+        if (selectedPerson.fatherName) {
+          name += ` ${selectedPerson.fatherName}`;
+        }
+        if (selectedPerson.surname) {
+          name += ` ${selectedPerson.surname}`;
+        }
+        displayText = name.trim();
       }
     }
 

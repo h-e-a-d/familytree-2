@@ -1,5 +1,5 @@
 // tree-panzoom.js
-// Handles canvas panning and zooming functionality
+// Handles canvas panning and zooming functionality - MOBILE OPTIMIZED
 
 export class PanZoomManager {
   constructor(svg) {
@@ -14,7 +14,7 @@ export class PanZoomManager {
     this.isPanning = false;
     this.startPoint = { x: 0, y: 0 };
     
-    // Touch state
+    // Touch state - OPTIMIZED FOR MOBILE
     this.isTouching = false;
     this.lastTouchPos = { x: 0, y: 0 };
     this.lastTouchDistance = 0;
@@ -23,21 +23,28 @@ export class PanZoomManager {
     this.initialScale = 1;
     this.initialPan = { x: 0, y: 0 };
     this.touchMoved = false;
+    this.touchStartTime = 0;
+    
+    // Performance optimization
+    this.updateThrottle = null;
+    this.isUpdatingTransform = false;
     
     this.setupEventListeners();
     this.setupGlobalTouchPrevention();
   }
 
   setupGlobalTouchPrevention() {
-    // Prevent touch scrolling on the document
+    // Prevent touch scrolling on the document while allowing interaction with UI elements
     document.addEventListener('touchstart', (e) => {
       const allowedElements = ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'];
-      const allowedClasses = ['icon-button', 'floating-btn', 'table-btn', 'connection-btn'];
+      const allowedClasses = ['icon-button', 'floating-btn', 'table-btn', 'connection-btn', 'select-option', 'select-input'];
       const allowedIds = ['settingsPanel', 'tableView', 'personModal', 'styleModal', 'connectionModal'];
       
       let isAllowed = allowedElements.includes(e.target.tagName) ||
                      allowedClasses.some(cls => e.target.classList.contains(cls)) ||
-                     allowedIds.some(id => e.target.id === id || e.target.closest(`#${id}`));
+                     allowedIds.some(id => e.target.id === id || e.target.closest(`#${id}`)) ||
+                     e.target.closest('.searchable-select') ||
+                     e.target.classList.contains('person');
       
       if (!isAllowed) {
         const svgArea = document.getElementById('svgArea');
@@ -54,7 +61,8 @@ export class PanZoomManager {
       const allowedIds = ['settingsPanel', 'tableView', 'personModal', 'styleModal', 'connectionModal'];
       
       let isAllowed = allowedElements.includes(e.target.tagName) ||
-                     allowedIds.some(id => e.target.id === id || e.target.closest(`#${id}`));
+                     allowedIds.some(id => e.target.id === id || e.target.closest(`#${id}`)) ||
+                     e.target.closest('.searchable-select');
       
       if (!isAllowed) {
         const svgArea = document.getElementById('svgArea');
@@ -90,8 +98,9 @@ export class PanZoomManager {
       }
     }, { passive: false });
 
-    // Touch events
+    // Touch events - HEAVILY OPTIMIZED FOR MOBILE PERFORMANCE
     this.svg.addEventListener('touchstart', (e) => {
+      // Only handle SVG background touches, not circles
       if (e.target !== this.svg && !e.target.classList.contains('grid-line')) {
         return;
       }
@@ -101,13 +110,16 @@ export class PanZoomManager {
       
       this.isTouching = true;
       this.touchMoved = false;
+      this.touchStartTime = Date.now();
       
       if (e.touches.length === 1) {
+        // Single finger panning
         const touch = e.touches[0];
         this.lastTouchPos = { x: touch.clientX, y: touch.clientY };
         this.isPanning = true;
         this.svg.classList.add('panning');
       } else if (e.touches.length === 2) {
+        // Two finger pinch zoom
         this.isPanning = false;
         this.svg.classList.remove('panning');
         
@@ -120,6 +132,7 @@ export class PanZoomManager {
     }, { passive: false });
 
     this.svg.addEventListener('touchmove', (e) => {
+      // Only handle SVG background touches, not circles
       if (e.target !== this.svg && !e.target.classList.contains('grid-line')) {
         return;
       }
@@ -132,7 +145,7 @@ export class PanZoomManager {
       this.touchMoved = true;
       
       if (e.touches.length === 1 && this.isPanning) {
-        // Single finger panning
+        // Single finger panning - OPTIMIZED
         const touch = e.touches[0];
         const deltaX = touch.clientX - this.lastTouchPos.x;
         const deltaY = touch.clientY - this.lastTouchPos.y;
@@ -141,9 +154,11 @@ export class PanZoomManager {
         this.panY += deltaY;
         
         this.lastTouchPos = { x: touch.clientX, y: touch.clientY };
-        this.updateTransform();
+        
+        // Use throttled update for better performance
+        this.throttledUpdateTransform();
       } else if (e.touches.length === 2) {
-        // Two finger pinch zoom
+        // Two finger pinch zoom - OPTIMIZED
         const currentDistance = this.getTouchDistance(e.touches);
         const currentCenter = this.getTouchCenter(e.touches);
         
@@ -151,7 +166,7 @@ export class PanZoomManager {
           const scaleChange = currentDistance / this.initialTouchDistance;
           const newScale = Math.max(this.minScale, Math.min(this.maxScale, this.initialScale * scaleChange));
           
-          if (newScale !== this.scale) {
+          if (Math.abs(newScale - this.scale) > 0.01) { // Threshold to prevent micro-updates
             const rect = this.svg.getBoundingClientRect();
             const centerX = currentCenter.x - rect.left;
             const centerY = currentCenter.y - rect.top;
@@ -161,7 +176,7 @@ export class PanZoomManager {
             this.panY = centerY - factor * (centerY - this.panY);
             this.scale = newScale;
             
-            this.updateTransform();
+            this.throttledUpdateTransform();
           }
         }
         
@@ -179,7 +194,9 @@ export class PanZoomManager {
         this.isPanning = false;
         this.svg.classList.remove('panning');
         
+        // Final transform update
         if (this.touchMoved) {
+          this.updateTransform();
           setTimeout(() => this.onPanZoomChange?.(), 50);
         }
         
@@ -187,6 +204,7 @@ export class PanZoomManager {
         this.initialTouchDistance = 0;
         this.touchMoved = false;
       } else if (e.touches.length === 1) {
+        // Switch from pinch to pan
         const touch = e.touches[0];
         this.lastTouchPos = { x: touch.clientX, y: touch.clientY };
         this.isPanning = true;
@@ -199,7 +217,7 @@ export class PanZoomManager {
       e.preventDefault();
     }, { passive: false });
 
-    // Mouse events
+    // Mouse events for desktop
     this.svg.addEventListener('mousedown', (e) => {
       if (e.target === this.svg || e.target.classList.contains('grid-line')) {
         this.isPanning = true;
@@ -236,6 +254,17 @@ export class PanZoomManager {
         }
       }
     });
+  }
+
+  // Throttled transform update for better mobile performance
+  throttledUpdateTransform() {
+    if (!this.isUpdatingTransform) {
+      this.isUpdatingTransform = true;
+      requestAnimationFrame(() => {
+        this.updateTransform();
+        this.isUpdatingTransform = false;
+      });
+    }
   }
 
   getTouchDistance(touches) {
