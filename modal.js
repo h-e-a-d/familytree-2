@@ -1,7 +1,5 @@
 // modal.js
-// --------
-// Manages opening/closing the Add/Edit Person modal, pre‐populating fields when editing,
-// and invoking updateSearchableSelects() so Mother/Father/Spouse dropdowns are rebuilt.
+// Updated to work with Canvas-based tree implementation
 
 import { updateSearchableSelects } from './searchableSelect.js';
 
@@ -18,58 +16,62 @@ export function openModalForEdit(personId) {
     return;
   }
 
-  // If personId is provided, we are in "Edit" mode; otherwise "Add" mode
-  if (personId) {
-    titleEl.textContent = 'Edit Person';
-    modal.dataset.editingId = personId;
+  // Import tree core to access person data
+  import('./tree-core-canvas.js').then(({ treeCore }) => {
+    if (personId) {
+      titleEl.textContent = 'Edit Person';
+      modal.dataset.editingId = personId;
 
-    // Fetch the existing <g data-id="…"> element
-    const group = document.querySelector(`svg#svgArea g[data-id="${personId}"]`);
-    if (!group) {
-      console.warn(`No <g> found for id="${personId}"`);
-      return;
+      // Get person data from canvas implementation
+      const personData = treeCore.getPersonData(personId);
+      const node = treeCore.renderer?.nodes.get(personId);
+      
+      if (!personData && !node) {
+        console.warn(`No data found for id="${personId}"`);
+        return;
+      }
+
+      // Populate the text inputs
+      document.getElementById('personName').value = node?.name || personData?.name || '';
+      document.getElementById('personFatherName').value = node?.fatherName || personData?.fatherName || '';
+      document.getElementById('personSurname').value = node?.surname || personData?.surname || '';
+      document.getElementById('personBirthName').value = node?.birthName || personData?.birthName || '';
+      document.getElementById('personDob').value = node?.dob || personData?.dob || '';
+      document.getElementById('personGender').value = node?.gender || personData?.gender || '';
+
+      // Extract existing mother/father/spouse IDs
+      const existingData = {
+        motherId: personData?.motherId || '',
+        fatherId: personData?.fatherId || '',
+        spouseId: personData?.spouseId || ''
+      };
+
+      // Rebuild searchable selects, passing in existing IDs
+      setTimeout(() => updateSearchableSelects(existingData), 100);
+    } else {
+      titleEl.textContent = 'Add Person';
+      delete modal.dataset.editingId;
+
+      // Clear all form fields
+      clearForm();
+
+      // No existing relationships
+      setTimeout(() => updateSearchableSelects({}), 100);
     }
 
-    // Populate the text inputs
-    document.getElementById('personName').value = group.getAttribute('data-name') || '';
-    document.getElementById('personFatherName').value = group.getAttribute('data-fatherName') || '';
-    document.getElementById('personSurname').value = group.getAttribute('data-surname') || '';
-    document.getElementById('personBirthName').value = group.getAttribute('data-birthName') || '';
-    document.getElementById('personDob').value = group.getAttribute('data-dob') || '';
-    document.getElementById('personGender').value = group.getAttribute('data-gender') || '';
-
-    // Extract existing mother/father/spouse IDs
-    const existingData = {
-      motherId: group.getAttribute('data-motherId') || '',
-      fatherId: group.getAttribute('data-fatherId') || '',
-      spouseId: group.getAttribute('data-spouseId') || ''
-    };
-
-    // Rebuild searchable selects, passing in existing IDs
-    setTimeout(() => updateSearchableSelects(existingData), 100);
-  } else {
-    titleEl.textContent = 'Add Person';
-    delete modal.dataset.editingId;
-
-    // Clear all form fields
-    clearForm();
-
-    // No existing relationships
-    setTimeout(() => updateSearchableSelects({}), 100);
-  }
-
-  // Show the modal
-  modal.classList.remove('hidden');
-  modal.style.display = 'flex';
-  isModalOpen = true;
-  
-  // Focus on the first input
-  setTimeout(() => {
-    const firstInput = document.getElementById('personName');
-    if (firstInput) firstInput.focus();
-  }, 150);
-  
-  console.log('Modal opened successfully');
+    // Show the modal
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+    isModalOpen = true;
+    
+    // Focus on the first input
+    setTimeout(() => {
+      const firstInput = document.getElementById('personName');
+      if (firstInput) firstInput.focus();
+    }, 150);
+    
+    console.log('Modal opened successfully');
+  });
 }
 
 export function closeModal() {
@@ -153,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
     form.addEventListener('submit', (e) => {
       console.log('Form submitted');
       e.preventDefault();
-      // The form submission will be handled by tree.js
+      // The form submission will be handled by tree-core-canvas.js
       // Modal will be closed from there after successful save
     });
   }

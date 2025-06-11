@@ -1,16 +1,11 @@
 // tree.js
-// New modular entry point - imports and coordinates all tree functionality
+// Entry point - now using Canvas-based implementation
 
-import { treeCore } from './tree-core.js';
+// Import the canvas-based tree core instead of the SVG-based one
+import { treeCore, pushUndoState, generateAllConnections } from './tree-core-canvas.js';
 
 // Re-export functions that other modules expect
-export function pushUndoState() {
-  treeCore.undo?.pushState();
-}
+export { pushUndoState, generateAllConnections };
 
-export function generateAllConnections() {
-  treeCore.connections?.generateAll();
-}
-
-// The tree-core.js module handles all initialization via DOMContentLoaded
+// The tree-core-canvas.js module handles all initialization via DOMContentLoaded
 // No additional initialization needed here
