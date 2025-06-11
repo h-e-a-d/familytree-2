@@ -1,5 +1,5 @@
 // tree-drag.js
-// Simplified drag implementation - direct SVG updates with RAF throttling
+// Fixed drag implementation with proper offset handling
 
 export class DragManager {
   constructor(svg, panZoom, connections, selection) {
@@ -21,12 +21,14 @@ export class DragManager {
       isDragging: false,
       isCircleTouching: false,
       dragStarted: false,
+      startOffset: { x: 0, y: 0 },
+      touchStartPos: { x: 0, y: 0 },
       rafId: null
     };
 
     this.activeDrags.set(personId, dragState);
 
-    // Direct position update with RAF throttling
+    // Update position maintaining offset
     const updatePosition = (clientX, clientY) => {
       if (dragState.rafId) {
         cancelAnimationFrame(dragState.rafId);
@@ -34,8 +36,8 @@ export class DragManager {
       
       dragState.rafId = requestAnimationFrame(() => {
         const svgCoords = this.panZoom.screenToSVG(clientX, clientY);
-        const newCx = svgCoords.x;
-        const newCy = svgCoords.y;
+        const newCx = svgCoords.x - dragState.startOffset.x;
+        const newCy = svgCoords.y - dragState.startOffset.y;
         
         if (!isNaN(newCx) && !isNaN(newCy)) {
           // Update circle
@@ -58,11 +60,6 @@ export class DragManager {
             dobText.setAttribute('x', newCx);
             dobText.setAttribute('y', newCy + 25);
           }
-          
-          // Update connections in real-time for better visual feedback
-          if (this.connections.updatePersonConnections) {
-            this.connections.updatePersonConnections(personId);
-          }
         }
         
         dragState.rafId = null;
@@ -75,6 +72,17 @@ export class DragManager {
       
       e.preventDefault();
       e.stopPropagation();
+      
+      // Calculate offset between mouse and circle center
+      const currentCx = parseFloat(circle.getAttribute('cx')) || 0;
+      const currentCy = parseFloat(circle.getAttribute('cy')) || 0;
+      const mousePos = this.panZoom.screenToSVG(e.clientX, e.clientY);
+      
+      dragState.startOffset = {
+        x: mousePos.x - currentCx,
+        y: mousePos.y - currentCy
+      };
+      
       dragState.isDragging = true;
       this.isDragging = true;
       
@@ -83,8 +91,6 @@ export class DragManager {
     });
 
     // Touch events for mobile
-    let touchStartPos = null;
-    
     circle.addEventListener('touchstart', (e) => {
       if (e.touches.length !== 1) return;
       
@@ -92,9 +98,19 @@ export class DragManager {
       e.stopPropagation();
       
       const touch = e.touches[0];
-      touchStartPos = { x: touch.clientX, y: touch.clientY };
+      dragState.touchStartPos = { x: touch.clientX, y: touch.clientY };
       dragState.isCircleTouching = true;
       dragState.dragStarted = false;
+      
+      // Calculate offset between touch and circle center
+      const currentCx = parseFloat(circle.getAttribute('cx')) || 0;
+      const currentCy = parseFloat(circle.getAttribute('cy')) || 0;
+      const touchPos = this.panZoom.screenToSVG(touch.clientX, touch.clientY);
+      
+      dragState.startOffset = {
+        x: touchPos.x - currentCx,
+        y: touchPos.y - currentCy
+      };
       
       // Visual feedback
       group.style.opacity = '0.9';
@@ -112,10 +128,10 @@ export class DragManager {
       
       const touch = e.touches[0];
       
-      if (!dragState.dragStarted && touchStartPos) {
+      if (!dragState.dragStarted) {
         const distance = Math.sqrt(
-          Math.pow(touch.clientX - touchStartPos.x, 2) + 
-          Math.pow(touch.clientY - touchStartPos.y, 2)
+          Math.pow(touch.clientX - dragState.touchStartPos.x, 2) + 
+          Math.pow(touch.clientY - dragState.touchStartPos.y, 2)
         );
         
         if (distance > this.dragThreshold) {
@@ -140,7 +156,6 @@ export class DragManager {
       dragState.isDragging = false;
       dragState.dragStarted = false;
       this.isDragging = false;
-      touchStartPos = null;
       
       // Reset visual feedback
       group.style.opacity = '';
@@ -151,12 +166,15 @@ export class DragManager {
         dragState.rafId = null;
       }
       
-      // Final connection update
-      if (this.connections.generateAll) {
-        this.connections.generateAll();
-      }
-      
-      this.onDragEnd?.(personId);
+      // Update connections once at the end
+      setTimeout(() => {
+        if (this.connections.updatePersonConnections) {
+          this.connections.updatePersonConnections(personId);
+        } else {
+          this.connections.generateAll();
+        }
+        this.onDragEnd?.(personId);
+      }, 0);
       
       if (navigator.vibrate) {
         navigator.vibrate(5);
@@ -186,12 +204,15 @@ export class DragManager {
         dragState.rafId = null;
       }
       
-      // Final connection update
-      if (this.connections.generateAll) {
-        this.connections.generateAll();
-      }
-      
-      this.onDragEnd?.(personId);
+      // Update connections once at the end
+      setTimeout(() => {
+        if (this.connections.updatePersonConnections) {
+          this.connections.updatePersonConnections(personId);
+        } else {
+          this.connections.generateAll();
+        }
+        this.onDragEnd?.(personId);
+      }, 0);
     };
 
     // Store references for cleanup
