@@ -1,5 +1,5 @@
 // tree-drag.js
-// Fixed drag implementation with proper coordinate conversion
+// Simplified drag implementation - direct SVG updates with RAF throttling
 
 export class DragManager {
   constructor(svg, panZoom, connections, selection) {
@@ -17,227 +17,181 @@ export class DragManager {
   }
 
   setupCircleDrag(group, circle, personId) {
-    // Cache all element references at setup time
-    const nameTexts = Array.from(group.querySelectorAll('text.name'));
-    const birthNameTexts = Array.from(group.querySelectorAll('text.birth-name'));
-    const dobText = group.querySelector('text.dob');
-    
     const dragState = {
-      group: group,
-      circle: circle,
-      nameTexts: nameTexts,
-      birthNameTexts: birthNameTexts,
-      dobText: dobText,
       isDragging: false,
       isCircleTouching: false,
       dragStarted: false,
-      touchStartPos: { x: 0, y: 0 },
-      startScreenPos: { x: 0, y: 0 },
-      originalCircleSVG: { x: 0, y: 0 },
-      accumulatedDelta: { x: 0, y: 0 }
+      rafId: null
     };
 
     this.activeDrags.set(personId, dragState);
 
-    // Update transform directly in screen pixels
-    const updateTransform = (screenX, screenY) => {
-      // Calculate screen pixel delta from start
-      const deltaX = screenX - dragState.startScreenPos.x;
-      const deltaY = screenY - dragState.startScreenPos.y;
-      
-      // Apply transform in screen pixels
-      group.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
-      
-      // Store accumulated delta for final position calculation
-      dragState.accumulatedDelta = { x: deltaX, y: deltaY };
-    };
-
-    // Final position update when drag ends
-    const commitPosition = () => {
-      // Calculate the final SVG position based on screen delta
-      // We need to scale the pixel delta by the current zoom level
-      const transform = this.panZoom.getTransform();
-      const svgDeltaX = dragState.accumulatedDelta.x / transform.scale;
-      const svgDeltaY = dragState.accumulatedDelta.y / transform.scale;
-      
-      const newCx = dragState.originalCircleSVG.x + svgDeltaX;
-      const newCy = dragState.originalCircleSVG.y + svgDeltaY;
-      
-      if (!isNaN(newCx) && !isNaN(newCy)) {
-        // Update actual SVG attributes
-        circle.setAttribute('cx', newCx);
-        circle.setAttribute('cy', newCy);
-        
-        // Update text positions
-        dragState.nameTexts.forEach((text, index) => {
-          text.setAttribute('x', newCx);
-          text.setAttribute('y', newCy - 20 + (index * 12));
-        });
-        
-        dragState.birthNameTexts.forEach((text, index) => {
-          text.setAttribute('x', newCx);
-          text.setAttribute('y', newCy + 5 + (index * 10));
-        });
-        
-        if (dragState.dobText) {
-          dragState.dobText.setAttribute('x', newCx);
-          dragState.dobText.setAttribute('y', newCy + 25);
-        }
+    // Direct position update with RAF throttling
+    const updatePosition = (clientX, clientY) => {
+      if (dragState.rafId) {
+        cancelAnimationFrame(dragState.rafId);
       }
       
-      // Remove transform after updating positions
-      group.style.transform = '';
-      group.style.willChange = '';
-      
-      // Reset accumulated delta
-      dragState.accumulatedDelta = { x: 0, y: 0 };
+      dragState.rafId = requestAnimationFrame(() => {
+        const svgCoords = this.panZoom.screenToSVG(clientX, clientY);
+        const newCx = svgCoords.x;
+        const newCy = svgCoords.y;
+        
+        if (!isNaN(newCx) && !isNaN(newCy)) {
+          // Update circle
+          circle.setAttribute('cx', newCx);
+          circle.setAttribute('cy', newCy);
+          
+          // Update all texts
+          group.querySelectorAll('text.name').forEach((text, index) => {
+            text.setAttribute('x', newCx);
+            text.setAttribute('y', newCy - 20 + (index * 12));
+          });
+          
+          group.querySelectorAll('text.birth-name').forEach((text, index) => {
+            text.setAttribute('x', newCx);
+            text.setAttribute('y', newCy + 5 + (index * 10));
+          });
+          
+          const dobText = group.querySelector('text.dob');
+          if (dobText) {
+            dobText.setAttribute('x', newCx);
+            dobText.setAttribute('y', newCy + 25);
+          }
+          
+          // Update connections in real-time for better visual feedback
+          if (this.connections.updatePersonConnections) {
+            this.connections.updatePersonConnections(personId);
+          }
+        }
+        
+        dragState.rafId = null;
+      });
     };
 
     // Mouse events for desktop
     circle.addEventListener('mousedown', (e) => {
-      if (e.detail === 1) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        dragState.isDragging = true;
-        this.isDragging = true;
-        
-        // Store start screen position
-        dragState.startScreenPos = { x: e.clientX, y: e.clientY };
-        
-        // Store original circle SVG position
-        const cx = parseFloat(circle.getAttribute('cx')) || 0;
-        const cy = parseFloat(circle.getAttribute('cy')) || 0;
-        dragState.originalCircleSVG = { x: cx, y: cy };
-        
-        circle.style.cursor = 'grabbing';
-        group.style.willChange = 'transform';
-      }
+      if (e.button !== 0) return; // Only left click
+      
+      e.preventDefault();
+      e.stopPropagation();
+      dragState.isDragging = true;
+      this.isDragging = true;
+      
+      circle.style.cursor = 'grabbing';
+      group.style.opacity = '0.9'; // Visual feedback
     });
 
     // Touch events for mobile
+    let touchStartPos = null;
+    
     circle.addEventListener('touchstart', (e) => {
-      if (e.touches.length === 1) {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        
-        dragState.isCircleTouching = true;
-        dragState.dragStarted = false;
-        
-        const touch = e.touches[0];
-        dragState.touchStartPos = { x: touch.clientX, y: touch.clientY };
-        dragState.startScreenPos = { x: touch.clientX, y: touch.clientY };
-        
-        // Store original circle SVG position
-        const cx = parseFloat(circle.getAttribute('cx')) || 0;
-        const cy = parseFloat(circle.getAttribute('cy')) || 0;
-        dragState.originalCircleSVG = { x: cx, y: cy };
-        
-        // Visual feedback
-        circle.style.transform = 'scale(1.05)';
-        group.style.willChange = 'transform';
-        
-        // Haptic feedback
-        if (navigator.vibrate) {
-          navigator.vibrate(10);
-        }
+      if (e.touches.length !== 1) return;
+      
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const touch = e.touches[0];
+      touchStartPos = { x: touch.clientX, y: touch.clientY };
+      dragState.isCircleTouching = true;
+      dragState.dragStarted = false;
+      
+      // Visual feedback
+      group.style.opacity = '0.9';
+      
+      if (navigator.vibrate) {
+        navigator.vibrate(10);
       }
-    }, { passive: false, capture: true });
+    }, { passive: false });
 
     circle.addEventListener('touchmove', (e) => {
       if (!dragState.isCircleTouching || e.touches.length !== 1) return;
       
       e.preventDefault();
-      e.stopImmediatePropagation();
+      e.stopPropagation();
       
       const touch = e.touches[0];
-      const currentPos = { x: touch.clientX, y: touch.clientY };
       
-      if (!dragState.dragStarted) {
+      if (!dragState.dragStarted && touchStartPos) {
         const distance = Math.sqrt(
-          Math.pow(currentPos.x - dragState.touchStartPos.x, 2) + 
-          Math.pow(currentPos.y - dragState.touchStartPos.y, 2)
+          Math.pow(touch.clientX - touchStartPos.x, 2) + 
+          Math.pow(touch.clientY - touchStartPos.y, 2)
         );
         
         if (distance > this.dragThreshold) {
           dragState.dragStarted = true;
           dragState.isDragging = true;
           this.isDragging = true;
-          
-          // Enhanced visual feedback
-          circle.style.transform = 'scale(1.1)';
-        } else {
-          return;
         }
       }
       
       if (dragState.dragStarted) {
-        updateTransform(touch.clientX, touch.clientY);
+        updatePosition(touch.clientX, touch.clientY);
       }
-    }, { passive: false, capture: true });
+    }, { passive: false });
 
     circle.addEventListener('touchend', (e) => {
       if (!dragState.isCircleTouching) return;
       
+      e.preventDefault();
+      e.stopPropagation();
+      
       dragState.isCircleTouching = false;
+      dragState.isDragging = false;
+      dragState.dragStarted = false;
+      this.isDragging = false;
+      touchStartPos = null;
       
-      // Reset visual state
-      circle.style.transform = '';
+      // Reset visual feedback
+      group.style.opacity = '';
       
-      if (dragState.dragStarted) {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        
-        dragState.isDragging = false;
-        dragState.dragStarted = false;
-        this.isDragging = false;
-        
-        // Commit final position
-        commitPosition();
-        
-        // Update connections after a small delay to ensure DOM is updated
-        requestAnimationFrame(() => {
-          if (this.connections.updatePersonConnections) {
-            this.connections.updatePersonConnections(personId);
-          } else {
-            this.connections.generateAll();
-          }
-          this.onDragEnd?.(personId);
-        });
-        
-        // End haptic feedback
-        if (navigator.vibrate) {
-          navigator.vibrate(5);
-        }
+      // Cancel any pending RAF
+      if (dragState.rafId) {
+        cancelAnimationFrame(dragState.rafId);
+        dragState.rafId = null;
       }
-    }, { passive: false, capture: true });
+      
+      // Final connection update
+      if (this.connections.generateAll) {
+        this.connections.generateAll();
+      }
+      
+      this.onDragEnd?.(personId);
+      
+      if (navigator.vibrate) {
+        navigator.vibrate(5);
+      }
+    }, { passive: false });
 
     // Global mouse events for desktop
     const handleMouseMove = (e) => {
       if (!dragState.isDragging || dragState.isCircleTouching) return;
       
-      updateTransform(e.clientX, e.clientY);
+      e.preventDefault();
+      updatePosition(e.clientX, e.clientY);
     };
 
-    const handleMouseUp = () => {
+    const handleMouseUp = (e) => {
       if (!dragState.isDragging || dragState.isCircleTouching) return;
       
+      e.preventDefault();
       dragState.isDragging = false;
       this.isDragging = false;
       circle.style.cursor = 'grab';
+      group.style.opacity = '';
       
-      // Commit final position
-      commitPosition();
+      // Cancel any pending RAF
+      if (dragState.rafId) {
+        cancelAnimationFrame(dragState.rafId);
+        dragState.rafId = null;
+      }
       
-      // Update connections after a small delay
-      requestAnimationFrame(() => {
-        if (this.connections.updatePersonConnections) {
-          this.connections.updatePersonConnections(personId);
-        } else {
-          this.connections.generateAll();
-        }
-        this.onDragEnd?.(personId);
-      });
+      // Final connection update
+      if (this.connections.generateAll) {
+        this.connections.generateAll();
+      }
+      
+      this.onDragEnd?.(personId);
     };
 
     // Store references for cleanup
@@ -252,18 +206,17 @@ export class DragManager {
   removeDrag(personId) {
     const dragState = this.activeDrags.get(personId);
     if (dragState) {
+      // Cancel any pending RAF
+      if (dragState.rafId) {
+        cancelAnimationFrame(dragState.rafId);
+      }
+      
       // Remove global listeners
       if (dragState.handleMouseMove) {
         document.removeEventListener('mousemove', dragState.handleMouseMove);
       }
       if (dragState.handleMouseUp) {
         document.removeEventListener('mouseup', dragState.handleMouseUp);
-      }
-      
-      // Reset any transforms
-      if (dragState.group) {
-        dragState.group.style.transform = '';
-        dragState.group.style.willChange = '';
       }
       
       this.activeDrags.delete(personId);
