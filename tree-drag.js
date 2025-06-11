@@ -1,5 +1,5 @@
 // tree-drag.js
-// Optimized drag implementation using CSS transforms for smooth performance
+// Fixed drag implementation with proper coordinate handling
 
 export class DragManager {
   constructor(svg, panZoom, connections, selection) {
@@ -14,9 +14,6 @@ export class DragManager {
     
     // Active drags with cached references
     this.activeDrags = new Map();
-    
-    // RAF handle for smooth updates
-    this.rafHandle = null;
   }
 
   setupCircleDrag(group, circle, personId) {
@@ -31,46 +28,45 @@ export class DragManager {
       nameTexts: nameTexts,
       birthNameTexts: birthNameTexts,
       dobText: dobText,
-      offsetX: 0,
-      offsetY: 0,
       isDragging: false,
       isCircleTouching: false,
       dragStarted: false,
       touchStartPos: { x: 0, y: 0 },
-      originalCx: parseFloat(circle.getAttribute('cx')) || 0,
-      originalCy: parseFloat(circle.getAttribute('cy')) || 0,
-      currentX: 0,
-      currentY: 0,
-      transform: { x: 0, y: 0 }
+      startMouseSVG: { x: 0, y: 0 },
+      startCirclePos: { x: 0, y: 0 }
     };
 
     this.activeDrags.set(personId, dragState);
 
     // Optimized position update using transform
-    const updateTransform = () => {
-      const dx = dragState.currentX - dragState.originalCx;
-      const dy = dragState.currentY - dragState.originalCy;
+    const updateTransform = (svgX, svgY) => {
+      // Calculate the delta from the start position
+      const dx = svgX - dragState.startMouseSVG.x;
+      const dy = svgY - dragState.startMouseSVG.y;
       
-      // Use transform for smooth movement during drag
+      // Apply transform relative to start position
       group.style.transform = `translate(${dx}px, ${dy}px)`;
-      dragState.transform = { x: dx, y: dy };
+      
+      // Store the current position for final update
+      dragState.currentPos = {
+        x: dragState.startCirclePos.x + dx,
+        y: dragState.startCirclePos.y + dy
+      };
     };
 
     // Final position update when drag ends
     const commitPosition = () => {
-      // Remove transform
-      group.style.transform = '';
+      if (!dragState.currentPos) return;
       
-      // Update actual SVG attributes once
-      const newCx = dragState.currentX;
-      const newCy = dragState.currentY;
+      const newCx = dragState.currentPos.x;
+      const newCy = dragState.currentPos.y;
       
       if (!isNaN(newCx) && !isNaN(newCy)) {
-        // Update circle position
+        // Update actual SVG attributes BEFORE removing transform
         circle.setAttribute('cx', newCx);
         circle.setAttribute('cy', newCy);
         
-        // Update cached text positions
+        // Update text positions
         dragState.nameTexts.forEach((text, index) => {
           text.setAttribute('x', newCx);
           text.setAttribute('y', newCy - 20 + (index * 12));
@@ -85,11 +81,11 @@ export class DragManager {
           dragState.dobText.setAttribute('x', newCx);
           dragState.dobText.setAttribute('y', newCy + 25);
         }
-        
-        // Update stored original position for next drag
-        dragState.originalCx = newCx;
-        dragState.originalCy = newCy;
       }
+      
+      // Remove transform AFTER updating positions
+      group.style.transform = '';
+      group.style.willChange = '';
     };
 
     // Mouse events for desktop
@@ -97,14 +93,19 @@ export class DragManager {
       if (e.detail === 1) {
         e.preventDefault();
         e.stopPropagation();
+        
         dragState.isDragging = true;
         this.isDragging = true;
         
+        // Get current circle position
+        const currentCx = parseFloat(circle.getAttribute('cx')) || 0;
+        const currentCy = parseFloat(circle.getAttribute('cy')) || 0;
+        
+        // Store start positions
         const svgCoords = this.panZoom.screenToSVG(e.clientX, e.clientY);
-        dragState.offsetX = svgCoords.x - dragState.originalCx;
-        dragState.offsetY = svgCoords.y - dragState.originalCy;
-        dragState.currentX = dragState.originalCx;
-        dragState.currentY = dragState.originalCy;
+        dragState.startMouseSVG = svgCoords;
+        dragState.startCirclePos = { x: currentCx, y: currentCy };
+        dragState.currentPos = { x: currentCx, y: currentCy };
         
         circle.style.cursor = 'grabbing';
         group.style.willChange = 'transform';
@@ -123,11 +124,15 @@ export class DragManager {
         const touch = e.touches[0];
         dragState.touchStartPos = { x: touch.clientX, y: touch.clientY };
         
+        // Get current circle position
+        const currentCx = parseFloat(circle.getAttribute('cx')) || 0;
+        const currentCy = parseFloat(circle.getAttribute('cy')) || 0;
+        
+        // Store start positions
         const svgCoords = this.panZoom.screenToSVG(touch.clientX, touch.clientY);
-        dragState.offsetX = svgCoords.x - dragState.originalCx;
-        dragState.offsetY = svgCoords.y - dragState.originalCy;
-        dragState.currentX = dragState.originalCx;
-        dragState.currentY = dragState.originalCy;
+        dragState.startMouseSVG = svgCoords;
+        dragState.startCirclePos = { x: currentCx, y: currentCy };
+        dragState.currentPos = { x: currentCx, y: currentCy };
         
         // Visual feedback
         circle.style.transform = 'scale(1.05)';
@@ -169,16 +174,7 @@ export class DragManager {
       
       if (dragState.dragStarted) {
         const svgCoords = this.panZoom.screenToSVG(touch.clientX, touch.clientY);
-        dragState.currentX = svgCoords.x - dragState.offsetX;
-        dragState.currentY = svgCoords.y - dragState.offsetY;
-        
-        // Use RAF for smooth updates
-        if (!this.rafHandle) {
-          this.rafHandle = requestAnimationFrame(() => {
-            updateTransform();
-            this.rafHandle = null;
-          });
-        }
+        updateTransform(svgCoords.x, svgCoords.y);
       }
     }, { passive: false, capture: true });
 
@@ -189,7 +185,6 @@ export class DragManager {
       
       // Reset visual state
       circle.style.transform = '';
-      group.style.willChange = '';
       
       if (dragState.dragStarted) {
         e.preventDefault();
@@ -198,12 +193,6 @@ export class DragManager {
         dragState.isDragging = false;
         dragState.dragStarted = false;
         this.isDragging = false;
-        
-        // Cancel any pending RAF
-        if (this.rafHandle) {
-          cancelAnimationFrame(this.rafHandle);
-          this.rafHandle = null;
-        }
         
         // Commit final position
         commitPosition();
@@ -230,16 +219,7 @@ export class DragManager {
       if (!dragState.isDragging || dragState.isCircleTouching) return;
       
       const svgCoords = this.panZoom.screenToSVG(e.clientX, e.clientY);
-      dragState.currentX = svgCoords.x - dragState.offsetX;
-      dragState.currentY = svgCoords.y - dragState.offsetY;
-      
-      // Use RAF for smooth updates
-      if (!this.rafHandle) {
-        this.rafHandle = requestAnimationFrame(() => {
-          updateTransform();
-          this.rafHandle = null;
-        });
-      }
+      updateTransform(svgCoords.x, svgCoords.y);
     };
 
     const handleMouseUp = () => {
@@ -248,13 +228,6 @@ export class DragManager {
       dragState.isDragging = false;
       this.isDragging = false;
       circle.style.cursor = 'grab';
-      group.style.willChange = '';
-      
-      // Cancel any pending RAF
-      if (this.rafHandle) {
-        cancelAnimationFrame(this.rafHandle);
-        this.rafHandle = null;
-      }
       
       // Commit final position
       commitPosition();
@@ -303,12 +276,6 @@ export class DragManager {
   }
 
   cleanup() {
-    // Cancel any pending RAF
-    if (this.rafHandle) {
-      cancelAnimationFrame(this.rafHandle);
-      this.rafHandle = null;
-    }
-    
     // Remove all active drags
     for (const personId of this.activeDrags.keys()) {
       this.removeDrag(personId);
