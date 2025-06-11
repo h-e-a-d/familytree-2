@@ -976,3 +976,64 @@ html, body {
     gap: 12px;
   }
 }
+/* Add to style.css for optimized drag performance */
+
+/* Smooth transitions for person groups */
+.person-group {
+  will-change: transform;
+  transform-origin: center;
+  /* No transition during drag - applied via JS */
+}
+
+/* GPU acceleration for better performance */
+.person-group.dragging {
+  will-change: transform;
+  transform: translateZ(0); /* Force GPU layer */
+}
+
+/* Optimize SVG rendering */
+#svgArea {
+  shape-rendering: optimizeSpeed;
+  text-rendering: optimizeSpeed;
+}
+
+/* During drag, optimize for performance */
+#svgArea.dragging {
+  shape-rendering: crispEdges;
+  text-rendering: geometricPrecision;
+}
+
+/* Optimize connection lines */
+.relation {
+  shape-rendering: geometricPrecision;
+  vector-effect: non-scaling-stroke;
+}
+
+/* Prevent text selection during drag */
+.person-group text {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  pointer-events: none;
+}
+
+/* Hardware acceleration for circles */
+.person-group circle {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Mobile-specific optimizations */
+@media (max-width: 768px) {
+  .person-group {
+    /* Reduce visual complexity on mobile */
+    filter: none !important;
+  }
+  
+  .person-group.dragging circle {
+    stroke-width: 2px !important;
+    filter: none !important;
+  }
+}

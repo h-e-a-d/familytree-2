@@ -1,5 +1,5 @@
 // tree-drag.js
-// Pointer-based responsive dragging for circles
+// Optimized drag implementation using CSS transforms for smooth performance
 
 export class DragManager {
   constructor(svg, panZoom, connections, selection) {
@@ -7,147 +7,314 @@ export class DragManager {
     this.panZoom = panZoom;
     this.connections = connections;
     this.selection = selection;
-    // Store per-person drag state & handlers
+    
+    // Drag state
+    this.isDragging = false;
+    this.dragThreshold = 3;
+    
+    // Active drags with cached references
     this.activeDrags = new Map();
+    
+    // RAF handle for smooth updates
+    this.rafHandle = null;
   }
 
   setupCircleDrag(group, circle, personId) {
-    // Initialize state & store handlers for cleanup if needed
+    // Cache all element references at setup time
+    const nameTexts = Array.from(group.querySelectorAll('text.name'));
+    const birthNameTexts = Array.from(group.querySelectorAll('text.birth-name'));
+    const dobText = group.querySelector('text.dob');
+    
     const dragState = {
+      group: group,
+      circle: circle,
+      nameTexts: nameTexts,
+      birthNameTexts: birthNameTexts,
+      dobText: dobText,
       offsetX: 0,
       offsetY: 0,
       isDragging: false,
-      frameRequested: false,
-      handlers: {}
+      isCircleTouching: false,
+      dragStarted: false,
+      touchStartPos: { x: 0, y: 0 },
+      originalCx: parseFloat(circle.getAttribute('cx')) || 0,
+      originalCy: parseFloat(circle.getAttribute('cy')) || 0,
+      currentX: 0,
+      currentY: 0,
+      transform: { x: 0, y: 0 }
     };
+
     this.activeDrags.set(personId, dragState);
 
-    // Helper: update circle + all its text labels
-    const updateCirclePosition = (newCx, newCy) => {
-      if (isNaN(newCx) || isNaN(newCy)) return;
-      circle.setAttribute('cx', newCx);
-      circle.setAttribute('cy', newCy);
+    // Optimized position update using transform
+    const updateTransform = () => {
+      const dx = dragState.currentX - dragState.originalCx;
+      const dy = dragState.currentY - dragState.originalCy;
+      
+      // Use transform for smooth movement during drag
+      group.style.transform = `translate(${dx}px, ${dy}px)`;
+      dragState.transform = { x: dx, y: dy };
+    };
 
-      // Name lines
-      group.querySelectorAll('text.name').forEach((text, i) => {
-        text.setAttribute('x', newCx);
-        text.setAttribute('y', newCy - 20 + (i * 12));
-      });
-      // Birth-name lines
-      group.querySelectorAll('text.birth-name').forEach((text, i) => {
-        text.setAttribute('x', newCx);
-        text.setAttribute('y', newCy + 5 + (i * 10));
-      });
-      // DOB line
-      const dob = group.querySelector('text.dob');
-      if (dob) {
-        dob.setAttribute('x', newCx);
-        dob.setAttribute('y', newCy + 25);
+    // Final position update when drag ends
+    const commitPosition = () => {
+      // Remove transform
+      group.style.transform = '';
+      
+      // Update actual SVG attributes once
+      const newCx = dragState.currentX;
+      const newCy = dragState.currentY;
+      
+      if (!isNaN(newCx) && !isNaN(newCy)) {
+        // Update circle position
+        circle.setAttribute('cx', newCx);
+        circle.setAttribute('cy', newCy);
+        
+        // Update cached text positions
+        dragState.nameTexts.forEach((text, index) => {
+          text.setAttribute('x', newCx);
+          text.setAttribute('y', newCy - 20 + (index * 12));
+        });
+        
+        dragState.birthNameTexts.forEach((text, index) => {
+          text.setAttribute('x', newCx);
+          text.setAttribute('y', newCy + 5 + (index * 10));
+        });
+        
+        if (dragState.dobText) {
+          dragState.dobText.setAttribute('x', newCx);
+          dragState.dobText.setAttribute('y', newCy + 25);
+        }
+        
+        // Update stored original position for next drag
+        dragState.originalCx = newCx;
+        dragState.originalCy = newCy;
       }
     };
 
-    // ----- event handlers -----
-    const onDown = (e) => {
-      // Only left button for mouse
-      if (e.pointerType === 'mouse' && e.button !== 0) return;
+    // Mouse events for desktop
+    circle.addEventListener('mousedown', (e) => {
+      if (e.detail === 1) {
+        e.preventDefault();
+        e.stopPropagation();
+        dragState.isDragging = true;
+        this.isDragging = true;
+        
+        const svgCoords = this.panZoom.screenToSVG(e.clientX, e.clientY);
+        dragState.offsetX = svgCoords.x - dragState.originalCx;
+        dragState.offsetY = svgCoords.y - dragState.originalCy;
+        dragState.currentX = dragState.originalCx;
+        dragState.currentY = dragState.originalCy;
+        
+        circle.style.cursor = 'grabbing';
+        group.style.willChange = 'transform';
+      }
+    });
+
+    // Touch events for mobile
+    circle.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        
+        dragState.isCircleTouching = true;
+        dragState.dragStarted = false;
+        
+        const touch = e.touches[0];
+        dragState.touchStartPos = { x: touch.clientX, y: touch.clientY };
+        
+        const svgCoords = this.panZoom.screenToSVG(touch.clientX, touch.clientY);
+        dragState.offsetX = svgCoords.x - dragState.originalCx;
+        dragState.offsetY = svgCoords.y - dragState.originalCy;
+        dragState.currentX = dragState.originalCx;
+        dragState.currentY = dragState.originalCy;
+        
+        // Visual feedback
+        circle.style.transform = 'scale(1.05)';
+        group.style.willChange = 'transform';
+        
+        // Haptic feedback
+        if (navigator.vibrate) {
+          navigator.vibrate(10);
+        }
+      }
+    }, { passive: false, capture: true });
+
+    circle.addEventListener('touchmove', (e) => {
+      if (!dragState.isCircleTouching || e.touches.length !== 1) return;
+      
       e.preventDefault();
-      circle.setPointerCapture(e.pointerId);
-      dragState.isDragging = true;
+      e.stopImmediatePropagation();
+      
+      const touch = e.touches[0];
+      const currentPos = { x: touch.clientX, y: touch.clientY };
+      
+      if (!dragState.dragStarted) {
+        const distance = Math.sqrt(
+          Math.pow(currentPos.x - dragState.touchStartPos.x, 2) + 
+          Math.pow(currentPos.y - dragState.touchStartPos.y, 2)
+        );
+        
+        if (distance > this.dragThreshold) {
+          dragState.dragStarted = true;
+          dragState.isDragging = true;
+          this.isDragging = true;
+          
+          // Enhanced visual feedback
+          circle.style.transform = 'scale(1.1)';
+        } else {
+          return;
+        }
+      }
+      
+      if (dragState.dragStarted) {
+        const svgCoords = this.panZoom.screenToSVG(touch.clientX, touch.clientY);
+        dragState.currentX = svgCoords.x - dragState.offsetX;
+        dragState.currentY = svgCoords.y - dragState.offsetY;
+        
+        // Use RAF for smooth updates
+        if (!this.rafHandle) {
+          this.rafHandle = requestAnimationFrame(() => {
+            updateTransform();
+            this.rafHandle = null;
+          });
+        }
+      }
+    }, { passive: false, capture: true });
 
-      // compute offset from pointer to circle center
-      const cx = parseFloat(circle.getAttribute('cx')) || 0;
-      const cy = parseFloat(circle.getAttribute('cy')) || 0;
-      const svgPt = this.panZoom.screenToSVG(e.clientX, e.clientY);
-      dragState.offsetX = svgPt.x - cx;
-      dragState.offsetY = svgPt.y - cy;
+    circle.addEventListener('touchend', (e) => {
+      if (!dragState.isCircleTouching) return;
+      
+      dragState.isCircleTouching = false;
+      
+      // Reset visual state
+      circle.style.transform = '';
+      group.style.willChange = '';
+      
+      if (dragState.dragStarted) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        
+        dragState.isDragging = false;
+        dragState.dragStarted = false;
+        this.isDragging = false;
+        
+        // Cancel any pending RAF
+        if (this.rafHandle) {
+          cancelAnimationFrame(this.rafHandle);
+          this.rafHandle = null;
+        }
+        
+        // Commit final position
+        commitPosition();
+        
+        // Update only connections for this person (optimized)
+        setTimeout(() => {
+          if (this.connections.updatePersonConnections) {
+            this.connections.updatePersonConnections(personId);
+          } else {
+            this.connections.generateAll();
+          }
+          this.onDragEnd?.(personId);
+        }, 0);
+        
+        // End haptic feedback
+        if (navigator.vibrate) {
+          navigator.vibrate(5);
+        }
+      }
+    }, { passive: false, capture: true });
 
-      // visual feedback
-      circle.style.cursor = 'grabbing';
-      circle.style.transform = 'scale(1.1)';
-    };
-
-    const onMove = (e) => {
-      if (!dragState.isDragging) return;
-      e.preventDefault();
-      const svgPt = this.panZoom.screenToSVG(e.clientX, e.clientY);
-      const newCx = svgPt.x - dragState.offsetX;
-      const newCy = svgPt.y - dragState.offsetY;
-
-      // move immediately
-      updateCirclePosition(newCx, newCy);
-
-      // schedule connections redraw
-      if (!dragState.frameRequested) {
-        dragState.frameRequested = true;
-        requestAnimationFrame(() => {
-          this.connections.generateAll();
-          dragState.frameRequested = false;
+    // Global mouse events for desktop
+    const handleMouseMove = (e) => {
+      if (!dragState.isDragging || dragState.isCircleTouching) return;
+      
+      const svgCoords = this.panZoom.screenToSVG(e.clientX, e.clientY);
+      dragState.currentX = svgCoords.x - dragState.offsetX;
+      dragState.currentY = svgCoords.y - dragState.offsetY;
+      
+      // Use RAF for smooth updates
+      if (!this.rafHandle) {
+        this.rafHandle = requestAnimationFrame(() => {
+          updateTransform();
+          this.rafHandle = null;
         });
       }
     };
 
-    const onUp = (e) => {
-      if (!dragState.isDragging) return;
-      e.preventDefault();
-      circle.releasePointerCapture(e.pointerId);
+    const handleMouseUp = () => {
+      if (!dragState.isDragging || dragState.isCircleTouching) return;
+      
       dragState.isDragging = false;
-
-      // restore styles
+      this.isDragging = false;
       circle.style.cursor = 'grab';
-      circle.style.transform = '';
-
-      // final redraw & callback
-      this.connections.generateAll();
+      group.style.willChange = '';
+      
+      // Cancel any pending RAF
+      if (this.rafHandle) {
+        cancelAnimationFrame(this.rafHandle);
+        this.rafHandle = null;
+      }
+      
+      // Commit final position
+      commitPosition();
+      
+      // Update only connections for this person (optimized)
+      if (this.connections.updatePersonConnections) {
+        this.connections.updatePersonConnections(personId);
+      } else {
+        this.connections.generateAll();
+      }
       this.onDragEnd?.(personId);
     };
 
-    // attach & record
-    circle.addEventListener('pointerdown', onDown);
-    circle.addEventListener('pointermove', onMove);
-    circle.addEventListener('pointerup', onUp);
-    circle.addEventListener('pointerleave', onUp);
-    circle.style.cursor = 'grab';
+    // Store references for cleanup
+    dragState.handleMouseMove = handleMouseMove;
+    dragState.handleMouseUp = handleMouseUp;
 
-    dragState.handlers = { onDown, onMove, onUp };
+    // Add global listeners
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
   }
 
-  /** 
-   * Returns true if *any* circle is currently being dragged.
-   * This lets your tree-interactions.js `if (this.drag.isDragInProgress())`
-   * check work again. 
-   */
-  isDragInProgress() {
-    return Array.from(this.activeDrags.values())
-      .some(state => state.isDragging);
-  }
-
-  /**
-   * Remove all event listeners for a given person (called by your
-   * tree-interactions.js removeCircleInteractions)
-   */
   removeDrag(personId) {
     const dragState = this.activeDrags.get(personId);
-    if (!dragState) return;
-    const circle = this.svg.querySelector(`circle[data-person-id="${personId}"]`);
-    if (circle) {
-      const { onDown, onMove, onUp } = dragState.handlers;
-      circle.removeEventListener('pointerdown', onDown);
-      circle.removeEventListener('pointermove', onMove);
-      circle.removeEventListener('pointerup',   onUp);
-      circle.removeEventListener('pointerleave', onUp);
+    if (dragState) {
+      // Remove global listeners
+      if (dragState.handleMouseMove) {
+        document.removeEventListener('mousemove', dragState.handleMouseMove);
+      }
+      if (dragState.handleMouseUp) {
+        document.removeEventListener('mouseup', dragState.handleMouseUp);
+      }
+      
+      // Reset any transforms
+      if (dragState.group) {
+        dragState.group.style.transform = '';
+        dragState.group.style.willChange = '';
+      }
+      
+      this.activeDrags.delete(personId);
     }
-    this.activeDrags.delete(personId);
   }
 
-  /**
-   * Cleanup all drags (e.g. when you rebuild the tree)
-   */
+  isDragInProgress() {
+    return this.isDragging;
+  }
+
   cleanup() {
+    // Cancel any pending RAF
+    if (this.rafHandle) {
+      cancelAnimationFrame(this.rafHandle);
+      this.rafHandle = null;
+    }
+    
+    // Remove all active drags
     for (const personId of this.activeDrags.keys()) {
       this.removeDrag(personId);
     }
   }
 
-  // Drag-end hook you can assign to if you like
+  // Event callback
   onDragEnd = null;
 }

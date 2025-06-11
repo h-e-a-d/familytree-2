@@ -1,11 +1,14 @@
 // tree-connections.js
-// Handles relationship lines and connection modal
+// Optimized connection handling with selective updates
 
 export class ConnectionManager {
   constructor(svg) {
     this.svg = svg;
     this.connectionPersonA = null;
     this.connectionPersonB = null;
+    
+    // Cache connections for efficient updates
+    this.connectionCache = new Map(); // personId -> Set of line elements
     
     this.setupModalListeners();
   }
@@ -146,9 +149,70 @@ export class ConnectionManager {
     }
   }
 
+  // Optimized: Update only connections for a specific person
+  updatePersonConnections(personId) {
+    const mainGroup = document.getElementById('mainGroup');
+    const container = mainGroup || this.svg;
+    
+    // Remove existing connections for this person
+    const existingConnections = this.connectionCache.get(personId);
+    if (existingConnections) {
+      existingConnections.forEach(line => line.remove());
+      existingConnections.clear();
+    } else {
+      this.connectionCache.set(personId, new Set());
+    }
+    
+    // Get the person's group
+    const personGroup = container.querySelector(`g[data-id="${personId}"]`);
+    if (!personGroup) return;
+    
+    // Check if this person is connected to anyone
+    const motherId = personGroup.getAttribute('data-motherId');
+    const fatherId = personGroup.getAttribute('data-fatherId');
+    const spouseId = personGroup.getAttribute('data-spouseId');
+    
+    // Draw connections from this person
+    if (motherId) this.drawAndCacheLine(personId, motherId, false);
+    if (fatherId) this.drawAndCacheLine(personId, fatherId, false);
+    if (spouseId) this.drawAndCacheLine(personId, spouseId, true);
+    
+    // Find and draw connections TO this person
+    container.querySelectorAll('g[data-id]').forEach(otherGroup => {
+      const otherId = otherGroup.getAttribute('data-id');
+      if (otherId === personId) return;
+      
+      const otherMotherId = otherGroup.getAttribute('data-motherId');
+      const otherFatherId = otherGroup.getAttribute('data-fatherId');
+      const otherSpouseId = otherGroup.getAttribute('data-spouseId');
+      
+      if (otherMotherId === personId) {
+        this.drawAndCacheLine(otherId, personId, false);
+      }
+      if (otherFatherId === personId) {
+        this.drawAndCacheLine(otherId, personId, false);
+      }
+      if (otherSpouseId === personId) {
+        this.drawAndCacheLine(otherId, personId, true);
+      }
+    });
+  }
+
+  drawAndCacheLine(idA, idB, isSpouse = false) {
+    const line = this.drawLineBetween(idA, idB, isSpouse);
+    if (line) {
+      // Cache the line for both persons
+      this.connectionCache.get(idA)?.add(line) || this.connectionCache.set(idA, new Set([line]));
+      this.connectionCache.get(idB)?.add(line) || this.connectionCache.set(idB, new Set([line]));
+    }
+  }
+
   generateAll() {
     const mainGroup = document.getElementById('mainGroup');
     const container = mainGroup || this.svg;
+    
+    // Clear cache
+    this.connectionCache.clear();
     
     // Remove existing relation lines
     container.querySelectorAll('line.relation').forEach(l => l.remove());
@@ -159,9 +223,9 @@ export class ConnectionManager {
       const fatherId = childGroup.getAttribute('data-fatherId');
       const spouseId = childGroup.getAttribute('data-spouseId');
 
-      if (motherId) this.drawLineBetween(childId, motherId, false);
-      if (fatherId) this.drawLineBetween(childId, fatherId, false);
-      if (spouseId) this.drawLineBetween(childId, spouseId, true);
+      if (motherId) this.drawAndCacheLine(childId, motherId, false);
+      if (fatherId) this.drawAndCacheLine(childId, fatherId, false);
+      if (spouseId) this.drawAndCacheLine(childId, spouseId, true);
     });
   }
 
@@ -171,11 +235,11 @@ export class ConnectionManager {
     
     const gA = container.querySelector(`g[data-id="${idA}"]`);
     const gB = container.querySelector(`g[data-id="${idB}"]`);
-    if (!gA || !gB) return;
+    if (!gA || !gB) return null;
     
     const circleA = gA.querySelector('circle.person');
     const circleB = gB.querySelector('circle.person');
-    if (!circleA || !circleB) return;
+    if (!circleA || !circleB) return null;
     
     const x1 = parseFloat(circleA.getAttribute('cx'));
     const y1 = parseFloat(circleA.getAttribute('cy'));
@@ -193,6 +257,10 @@ export class ConnectionManager {
     line.setAttribute('stroke-width', '2');
     if (isSpouse) line.setAttribute('stroke-dasharray', '4 2');
     
+    // Store connection info for updates
+    line.dataset.personA = idA;
+    line.dataset.personB = idB;
+    
     // Insert before person groups so lines appear behind circles
     const firstPersonGroup = container.querySelector('g[data-id]');
     if (firstPersonGroup) {
@@ -200,6 +268,8 @@ export class ConnectionManager {
     } else {
       container.appendChild(line);
     }
+    
+    return line;
   }
 
   // Event callbacks
