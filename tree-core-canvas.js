@@ -1,5 +1,4 @@
-// tree-core-canvas.js
-// Adapter to use Canvas renderer with existing tree application
+// tree-core-canvas.js - Fixed style modal and button issues
 
 import { CanvasRenderer } from './canvas-renderer.js';
 import { openModalForEdit, closeModal } from './modal.js';
@@ -79,6 +78,7 @@ class TreeCoreCanvas {
     this.setupSettings();
     this.setupExport();
     this.setupKeyboard();
+    this.setupStyleModal(); // FIXED: Add style modal setup
     
     // Setup form submit handler
     const personForm = document.getElementById('personForm');
@@ -171,6 +171,48 @@ class TreeCoreCanvas {
     
     // Connection modal buttons
     this.setupConnectionModal();
+  }
+
+  // FIXED: Add style modal setup with proper event listeners
+  setupStyleModal() {
+    const styleModal = document.getElementById('styleModal');
+    const cancelBtn = document.getElementById('cancelStyleModal');
+    const applyBtn = document.getElementById('applySelectedStyle');
+
+    // Cancel button event listener
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.closeStyleModal();
+      });
+    }
+
+    // Apply button event listener
+    if (applyBtn) {
+      applyBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.applySelectedStyles();
+      });
+    }
+
+    // Close modal when clicking outside
+    if (styleModal) {
+      styleModal.addEventListener('click', (e) => {
+        if (e.target === styleModal) {
+          this.closeStyleModal();
+        }
+      });
+    }
+
+    // Prevent modal content clicks from closing modal
+    const modalContent = styleModal?.querySelector('.modal-content');
+    if (modalContent) {
+      modalContent.addEventListener('click', (e) => {
+        e.stopPropagation();
+      });
+    }
   }
 
   setupConnectionModal() {
@@ -314,6 +356,8 @@ class TreeCoreCanvas {
         this.deleteSelected();
       } else if (e.key === 'Escape') {
         this.clearSelection();
+        this.closeStyleModal();
+        this.closeConnectionModal();
       }
     });
   }
@@ -596,7 +640,7 @@ class TreeCoreCanvas {
     this.pushUndoState();
   }
 
-  // Style modal
+  // FIXED: Style modal methods
   openStyleModal() {
     if (this.selectedCircles.size === 0) {
       alert('Please select at least one circle to style.');
@@ -617,30 +661,37 @@ class TreeCoreCanvas {
     
     styleModal.classList.remove('hidden');
     styleModal.style.display = 'flex';
-    
-    // Set up apply button handler
-    const applyBtn = document.getElementById('applySelectedStyle');
-    if (applyBtn) {
-      applyBtn.onclick = () => this.applySelectedStyles();
-    }
   }
 
+  // FIXED: Use updateNodeStyle instead of setNode to prevent data loss
   applySelectedStyles() {
     const color = document.getElementById('selectedNodeColor').value;
     const size = parseInt(document.getElementById('selectedNodeSize').value, 10);
     
-    for (const id of this.selectedCircles) {
-      const node = this.renderer.nodes.get(id);
-      if (node) {
-        node.color = color;
-        node.radius = size;
-      }
+    if (isNaN(size) || size <= 0) {
+      alert('Please enter a valid size.');
+      return;
     }
     
-    this.renderer.needsRedraw = true;
-    this.pushUndoState();
+    console.log('Applying styles to selected nodes:', Array.from(this.selectedCircles));
+    console.log('New color:', color, 'New size:', size);
     
-    // Close modal
+    // FIXED: Use the new updateNodeStyle method instead of setNode
+    for (const id of this.selectedCircles) {
+      this.renderer.updateNodeStyle(id, {
+        color: color,
+        radius: size
+      });
+    }
+    
+    this.pushUndoState();
+    this.closeStyleModal();
+    
+    console.log('Styles applied successfully');
+  }
+
+  // FIXED: Add closeStyleModal method
+  closeStyleModal() {
     const styleModal = document.getElementById('styleModal');
     if (styleModal) {
       styleModal.classList.add('hidden');

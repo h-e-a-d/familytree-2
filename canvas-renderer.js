@@ -1,5 +1,4 @@
-// canvas-renderer.js
-// HTML5 Canvas-based rendering system for the family tree
+// canvas-renderer.js - Fixed touch event handling and node updates
 
 export class CanvasRenderer {
   constructor(container) {
@@ -86,7 +85,7 @@ export class CanvasRenderer {
     this.canvas.addEventListener('wheel', (e) => this.handleWheel(e));
     this.canvas.addEventListener('dblclick', (e) => this.handleDoubleClick(e));
     
-    // Touch events
+    // Touch events - FIXED: Check if events are cancelable
     this.canvas.addEventListener('touchstart', (e) => this.handleTouchStart(e), { passive: false });
     this.canvas.addEventListener('touchmove', (e) => this.handleTouchMove(e), { passive: false });
     this.canvas.addEventListener('touchend', (e) => this.handleTouchEnd(e), { passive: false });
@@ -140,22 +139,39 @@ export class CanvasRenderer {
     return null;
   }
 
-  // Add or update a node
+  // FIXED: Add or update a node - preserve existing data
   setNode(id, data) {
-    this.nodes.set(id, {
-      x: data.x || 0,
-      y: data.y || 0,
-      name: data.name || '',
-      fatherName: data.fatherName || '',
-      surname: data.surname || '',
-      birthName: data.birthName || '',
-      dob: data.dob || '',
-      gender: data.gender || '',
-      color: data.color || this.settings.nodeColor,
-      radius: data.radius || this.settings.nodeRadius
-    });
+    const existingNode = this.nodes.get(id);
+    const nodeData = {
+      // Preserve existing data
+      ...(existingNode || {}),
+      // Apply new data
+      ...data,
+      // Ensure required fields have defaults
+      x: data.x !== undefined ? data.x : (existingNode?.x || 0),
+      y: data.y !== undefined ? data.y : (existingNode?.y || 0),
+      name: data.name !== undefined ? data.name : (existingNode?.name || ''),
+      fatherName: data.fatherName !== undefined ? data.fatherName : (existingNode?.fatherName || ''),
+      surname: data.surname !== undefined ? data.surname : (existingNode?.surname || ''),
+      birthName: data.birthName !== undefined ? data.birthName : (existingNode?.birthName || ''),
+      dob: data.dob !== undefined ? data.dob : (existingNode?.dob || ''),
+      gender: data.gender !== undefined ? data.gender : (existingNode?.gender || ''),
+      color: data.color !== undefined ? data.color : (existingNode?.color || this.settings.nodeColor),
+      radius: data.radius !== undefined ? data.radius : (existingNode?.radius || this.settings.nodeRadius)
+    };
     
+    this.nodes.set(id, nodeData);
     this.needsRedraw = true;
+  }
+
+  // FIXED: Update node properties without replacing the entire node
+  updateNodeStyle(id, styleData) {
+    const node = this.nodes.get(id);
+    if (node) {
+      if (styleData.color !== undefined) node.color = styleData.color;
+      if (styleData.radius !== undefined) node.radius = styleData.radius;
+      this.needsRedraw = true;
+    }
   }
 
   // Remove a node
@@ -297,9 +313,12 @@ export class CanvasRenderer {
     }
   }
 
-  // Touch event handlers
+  // FIXED: Touch event handlers - check cancelable before preventDefault
   handleTouchStart(e) {
-    e.preventDefault();
+    // Only prevent default if the event is cancelable
+    if (e.cancelable) {
+      e.preventDefault();
+    }
     
     if (e.touches.length === 1) {
       // Single touch - simulate mouse down
@@ -319,7 +338,10 @@ export class CanvasRenderer {
   }
 
   handleTouchMove(e) {
-    e.preventDefault();
+    // Only prevent default if the event is cancelable
+    if (e.cancelable) {
+      e.preventDefault();
+    }
     
     if (e.touches.length === 1 && (this.isDragging || this.isPanning)) {
       // Single touch - simulate mouse move
@@ -353,7 +375,10 @@ export class CanvasRenderer {
   }
 
   handleTouchEnd(e) {
-    e.preventDefault();
+    // Only prevent default if the event is cancelable
+    if (e.cancelable) {
+      e.preventDefault();
+    }
     this.handleMouseUp({});
   }
 
