@@ -1,5 +1,5 @@
 // tree-drag.js
-// Fixed drag implementation with proper coordinate handling
+// Fixed drag implementation with proper coordinate conversion
 
 export class DragManager {
   constructor(svg, panZoom, connections, selection) {
@@ -12,7 +12,7 @@ export class DragManager {
     this.isDragging = false;
     this.dragThreshold = 3;
     
-    // Active drags with cached references
+    // Active drags
     this.activeDrags = new Map();
   }
 
@@ -32,37 +32,39 @@ export class DragManager {
       isCircleTouching: false,
       dragStarted: false,
       touchStartPos: { x: 0, y: 0 },
-      startMouseSVG: { x: 0, y: 0 },
-      startCirclePos: { x: 0, y: 0 }
+      startScreenPos: { x: 0, y: 0 },
+      originalCircleSVG: { x: 0, y: 0 },
+      accumulatedDelta: { x: 0, y: 0 }
     };
 
     this.activeDrags.set(personId, dragState);
 
-    // Optimized position update using transform
-    const updateTransform = (svgX, svgY) => {
-      // Calculate the delta from the start position
-      const dx = svgX - dragState.startMouseSVG.x;
-      const dy = svgY - dragState.startMouseSVG.y;
+    // Update transform directly in screen pixels
+    const updateTransform = (screenX, screenY) => {
+      // Calculate screen pixel delta from start
+      const deltaX = screenX - dragState.startScreenPos.x;
+      const deltaY = screenY - dragState.startScreenPos.y;
       
-      // Apply transform relative to start position
-      group.style.transform = `translate(${dx}px, ${dy}px)`;
+      // Apply transform in screen pixels
+      group.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
       
-      // Store the current position for final update
-      dragState.currentPos = {
-        x: dragState.startCirclePos.x + dx,
-        y: dragState.startCirclePos.y + dy
-      };
+      // Store accumulated delta for final position calculation
+      dragState.accumulatedDelta = { x: deltaX, y: deltaY };
     };
 
     // Final position update when drag ends
     const commitPosition = () => {
-      if (!dragState.currentPos) return;
+      // Calculate the final SVG position based on screen delta
+      // We need to scale the pixel delta by the current zoom level
+      const transform = this.panZoom.getTransform();
+      const svgDeltaX = dragState.accumulatedDelta.x / transform.scale;
+      const svgDeltaY = dragState.accumulatedDelta.y / transform.scale;
       
-      const newCx = dragState.currentPos.x;
-      const newCy = dragState.currentPos.y;
+      const newCx = dragState.originalCircleSVG.x + svgDeltaX;
+      const newCy = dragState.originalCircleSVG.y + svgDeltaY;
       
       if (!isNaN(newCx) && !isNaN(newCy)) {
-        // Update actual SVG attributes BEFORE removing transform
+        // Update actual SVG attributes
         circle.setAttribute('cx', newCx);
         circle.setAttribute('cy', newCy);
         
@@ -83,9 +85,12 @@ export class DragManager {
         }
       }
       
-      // Remove transform AFTER updating positions
+      // Remove transform after updating positions
       group.style.transform = '';
       group.style.willChange = '';
+      
+      // Reset accumulated delta
+      dragState.accumulatedDelta = { x: 0, y: 0 };
     };
 
     // Mouse events for desktop
@@ -97,15 +102,13 @@ export class DragManager {
         dragState.isDragging = true;
         this.isDragging = true;
         
-        // Get current circle position
-        const currentCx = parseFloat(circle.getAttribute('cx')) || 0;
-        const currentCy = parseFloat(circle.getAttribute('cy')) || 0;
+        // Store start screen position
+        dragState.startScreenPos = { x: e.clientX, y: e.clientY };
         
-        // Store start positions
-        const svgCoords = this.panZoom.screenToSVG(e.clientX, e.clientY);
-        dragState.startMouseSVG = svgCoords;
-        dragState.startCirclePos = { x: currentCx, y: currentCy };
-        dragState.currentPos = { x: currentCx, y: currentCy };
+        // Store original circle SVG position
+        const cx = parseFloat(circle.getAttribute('cx')) || 0;
+        const cy = parseFloat(circle.getAttribute('cy')) || 0;
+        dragState.originalCircleSVG = { x: cx, y: cy };
         
         circle.style.cursor = 'grabbing';
         group.style.willChange = 'transform';
@@ -123,16 +126,12 @@ export class DragManager {
         
         const touch = e.touches[0];
         dragState.touchStartPos = { x: touch.clientX, y: touch.clientY };
+        dragState.startScreenPos = { x: touch.clientX, y: touch.clientY };
         
-        // Get current circle position
-        const currentCx = parseFloat(circle.getAttribute('cx')) || 0;
-        const currentCy = parseFloat(circle.getAttribute('cy')) || 0;
-        
-        // Store start positions
-        const svgCoords = this.panZoom.screenToSVG(touch.clientX, touch.clientY);
-        dragState.startMouseSVG = svgCoords;
-        dragState.startCirclePos = { x: currentCx, y: currentCy };
-        dragState.currentPos = { x: currentCx, y: currentCy };
+        // Store original circle SVG position
+        const cx = parseFloat(circle.getAttribute('cx')) || 0;
+        const cy = parseFloat(circle.getAttribute('cy')) || 0;
+        dragState.originalCircleSVG = { x: cx, y: cy };
         
         // Visual feedback
         circle.style.transform = 'scale(1.05)';
@@ -173,8 +172,7 @@ export class DragManager {
       }
       
       if (dragState.dragStarted) {
-        const svgCoords = this.panZoom.screenToSVG(touch.clientX, touch.clientY);
-        updateTransform(svgCoords.x, svgCoords.y);
+        updateTransform(touch.clientX, touch.clientY);
       }
     }, { passive: false, capture: true });
 
@@ -197,15 +195,15 @@ export class DragManager {
         // Commit final position
         commitPosition();
         
-        // Update only connections for this person (optimized)
-        setTimeout(() => {
+        // Update connections after a small delay to ensure DOM is updated
+        requestAnimationFrame(() => {
           if (this.connections.updatePersonConnections) {
             this.connections.updatePersonConnections(personId);
           } else {
             this.connections.generateAll();
           }
           this.onDragEnd?.(personId);
-        }, 0);
+        });
         
         // End haptic feedback
         if (navigator.vibrate) {
@@ -218,8 +216,7 @@ export class DragManager {
     const handleMouseMove = (e) => {
       if (!dragState.isDragging || dragState.isCircleTouching) return;
       
-      const svgCoords = this.panZoom.screenToSVG(e.clientX, e.clientY);
-      updateTransform(svgCoords.x, svgCoords.y);
+      updateTransform(e.clientX, e.clientY);
     };
 
     const handleMouseUp = () => {
@@ -232,13 +229,15 @@ export class DragManager {
       // Commit final position
       commitPosition();
       
-      // Update only connections for this person (optimized)
-      if (this.connections.updatePersonConnections) {
-        this.connections.updatePersonConnections(personId);
-      } else {
-        this.connections.generateAll();
-      }
-      this.onDragEnd?.(personId);
+      // Update connections after a small delay
+      requestAnimationFrame(() => {
+        if (this.connections.updatePersonConnections) {
+          this.connections.updatePersonConnections(personId);
+        } else {
+          this.connections.generateAll();
+        }
+        this.onDragEnd?.(personId);
+      });
     };
 
     // Store references for cleanup
