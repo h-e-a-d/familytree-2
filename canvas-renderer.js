@@ -705,12 +705,17 @@ export class CanvasRenderer {
       
       if (!fromNode || !toNode) continue;
       
-      ctx.strokeStyle = conn.type === 'spouse' 
-        ? this.settings.spouseConnectionColor 
-        : this.settings.connectionColor;
-      
+      // Set connection style based on type
       if (conn.type === 'spouse') {
+        ctx.strokeStyle = this.settings.spouseConnectionColor;
         ctx.setLineDash([4, 2]);
+      } else if (conn.type === 'line-only') {
+        // FIXED: Special styling for line-only connections
+        ctx.strokeStyle = '#9b59b6'; // Purple color for line-only
+        ctx.setLineDash([8, 4, 2, 4]); // Distinctive dash pattern
+      } else {
+        ctx.strokeStyle = this.settings.connectionColor;
+        ctx.setLineDash([]);
       }
       
       ctx.beginPath();
@@ -718,7 +723,7 @@ export class CanvasRenderer {
       ctx.lineTo(toNode.x, toNode.y);
       ctx.stroke();
       
-      ctx.setLineDash([]);
+      ctx.setLineDash([]); // Reset dash pattern
     }
   }
 

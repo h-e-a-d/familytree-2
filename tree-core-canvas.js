@@ -35,6 +35,7 @@ class TreeCoreCanvas {
     // Line removal state
     this.currentConnectionToRemove = null;
     this.hiddenConnections = new Set(); // Track hidden connections
+    this.lineOnlyConnections = new Set(); // Track line-only connections
     
     // ID counter
     this.nextId = 1;
@@ -94,6 +95,7 @@ class TreeCoreCanvas {
     this.setupKeyboard();
     this.setupStyleModal(); // FIXED: Add style modal setup
     this.setupLineRemovalModal(); // Add line removal modal setup
+    this.setupViewSwitching(); // FIXED: Add view switching handler
     
     // Setup form submit handler
     const personForm = document.getElementById('personForm');
@@ -109,6 +111,41 @@ class TreeCoreCanvas {
     this.pushUndoState();
     
     console.log('TreeCoreCanvas initialization complete');
+  }
+
+  // FIXED: Add view switching handler to ensure canvas redraws properly
+  setupViewSwitching() {
+    const viewToggle = document.getElementById('viewToggle');
+    if (viewToggle) {
+      // Listen for the app.js view switching and handle canvas redraw
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+            const graphicView = document.getElementById('graphicView');
+            const tableView = document.getElementById('tableView');
+            
+            // Check if we switched to graphic view
+            if (graphicView && !graphicView.classList.contains('hidden') && 
+                tableView && tableView.classList.contains('hidden')) {
+              // Delay to ensure the view is fully visible
+              setTimeout(() => {
+                if (this.renderer) {
+                  console.log('Refreshing canvas after view switch');
+                  this.renderer.resize();
+                  this.renderer.needsRedraw = true;
+                }
+              }, 100);
+            }
+          }
+        });
+      });
+      
+      // Observe changes to the graphic view
+      const graphicView = document.getElementById('graphicView');
+      if (graphicView) {
+        observer.observe(graphicView, { attributes: true, attributeFilter: ['class'] });
+      }
+    }
   }
 
   updateRendererSettings() {
@@ -353,6 +390,7 @@ class TreeCoreCanvas {
     const fatherBtn = document.getElementById('fatherBtn');
     const childBtn = document.getElementById('childBtn');
     const spouseBtn = document.getElementById('spouseBtn');
+    const lineOnlyBtn = document.getElementById('lineOnlyBtn'); // FIXED: Add line only button
 
     if (cancelBtn) {
       cancelBtn.addEventListener('click', () => this.closeConnectionModal());
@@ -372,6 +410,11 @@ class TreeCoreCanvas {
 
     if (spouseBtn) {
       spouseBtn.addEventListener('click', () => this.handleConnectionChoice('spouse'));
+    }
+
+    // FIXED: Add event listener for "Line only" button
+    if (lineOnlyBtn) {
+      lineOnlyBtn.addEventListener('click', () => this.handleConnectionChoice('line-only'));
     }
   }
 
@@ -648,9 +691,33 @@ class TreeCoreCanvas {
     const personAData = this.getPersonData(this.connectionPersonA);
     const personBData = this.getPersonData(this.connectionPersonB);
     
-    // FIXED: Remove conflicting relationships before setting new ones
+    // FIXED: Remove any hidden connection between these people when creating new connections
+    const connectionKey = this.getConnectionKey(this.connectionPersonA, this.connectionPersonB);
+    if (this.hiddenConnections.has(connectionKey)) {
+      this.hiddenConnections.delete(connectionKey);
+      console.log(`Removed hidden connection between ${this.connectionPersonA} and ${this.connectionPersonB} - new connection will be visible`);
+    }
+    
+    // FIXED: Handle "Line only" option
+    if (relationship === 'line-only') {
+      // Create a line-only connection without any relationship data
+      const connectionKey = this.getConnectionKey(this.connectionPersonA, this.connectionPersonB);
+      this.lineOnlyConnections.add(connectionKey);
+      console.log(`Added line-only connection: ${connectionKey}`);
+      
+      this.regenerateConnections();
+      this.pushUndoState();
+      console.log(`Created line-only connection between ${this.connectionPersonA} and ${this.connectionPersonB}`);
+      this.closeConnectionModal();
+      return;
+    }
+    
+    // FIXED: Clear ALL conflicting relationships before setting new ones
     switch (relationship) {
       case 'mother':
+        // FIXED: Clear any existing relationships between these two people first
+        this.clearExistingRelationships(this.connectionPersonA, this.connectionPersonB);
+        
         // Remove any existing mother relationship for personB
         if (personBData.motherId && personBData.motherId !== this.connectionPersonA) {
           console.log(`Removing previous mother relationship: ${personBData.motherId}`);
@@ -659,6 +726,9 @@ class TreeCoreCanvas {
         break;
         
       case 'father':
+        // FIXED: Clear any existing relationships between these two people first
+        this.clearExistingRelationships(this.connectionPersonA, this.connectionPersonB);
+        
         // Remove any existing father relationship for personB
         if (personBData.fatherId && personBData.fatherId !== this.connectionPersonA) {
           console.log(`Removing previous father relationship: ${personBData.fatherId}`);
@@ -667,6 +737,9 @@ class TreeCoreCanvas {
         break;
         
       case 'child':
+        // FIXED: Clear any existing relationships between these two people first
+        this.clearExistingRelationships(this.connectionPersonA, this.connectionPersonB);
+        
         if (personBData.gender === 'male') {
           // PersonB is male, so becomes father of personA
           // Remove any existing father relationship for personA
@@ -688,6 +761,9 @@ class TreeCoreCanvas {
         break;
         
       case 'spouse':
+        // FIXED: Clear any existing relationships between these two people first
+        this.clearExistingRelationships(this.connectionPersonA, this.connectionPersonB);
+        
         // Remove any existing spouse relationships for both persons
         if (personAData.spouseId && personAData.spouseId !== this.connectionPersonB) {
           console.log(`Removing previous spouse relationship for A: ${personAData.spouseId}`);
@@ -729,12 +805,49 @@ class TreeCoreCanvas {
     this.closeConnectionModal();
   }
 
-  // FIXED: Helper method to clean up empty relationship fields
-  cleanupPersonData(personData) {
-    // Convert empty strings to undefined for cleaner data
-    if (personData.motherId === '') delete personData.motherId;
-    if (personData.fatherId === '') delete personData.fatherId;
-    if (personData.spouseId === '') delete personData.spouseId;
+  // FIXED: Helper method to clear existing relationships between two specific people
+  clearExistingRelationships(personAId, personBId) {
+    const personAData = this.getPersonData(personAId);
+    const personBData = this.getPersonData(personBId);
+    
+    // Clear A -> B relationships
+    if (personAData.motherId === personBId) {
+      delete personAData.motherId;
+      console.log(`Cleared mother relationship: ${personAId} -> ${personBId}`);
+    }
+    if (personAData.fatherId === personBId) {
+      delete personAData.fatherId;
+      console.log(`Cleared father relationship: ${personAId} -> ${personBId}`);
+    }
+    if (personAData.spouseId === personBId) {
+      delete personAData.spouseId;
+      console.log(`Cleared spouse relationship: ${personAId} -> ${personBId}`);
+    }
+    
+    // Clear B -> A relationships
+    if (personBData.motherId === personAId) {
+      delete personBData.motherId;
+      console.log(`Cleared mother relationship: ${personBId} -> ${personAId}`);
+    }
+    if (personBData.fatherId === personAId) {
+      delete personBData.fatherId;
+      console.log(`Cleared father relationship: ${personBId} -> ${personAId}`);
+    }
+    if (personBData.spouseId === personAId) {
+      delete personBData.spouseId;
+      console.log(`Cleared spouse relationship: ${personBId} -> ${personAId}`);
+    }
+    
+    // FIXED: Also remove any line-only connections between these people
+    const connectionKey = this.getConnectionKey(personAId, personBId);
+    if (this.lineOnlyConnections.has(connectionKey)) {
+      this.lineOnlyConnections.delete(connectionKey);
+      console.log(`Cleared line-only connection: ${connectionKey}`);
+    }
+    
+    // Update the data
+    this.personData.set(personAId, personAData);
+    this.personData.set(personBId, personBData);
   }
 
   getPersonDisplayName(personId) {
@@ -773,6 +886,15 @@ class TreeCoreCanvas {
             this.renderer.addConnection(childId, childData.spouseId, 'spouse');
           }
         }
+      }
+    }
+    
+    // FIXED: Add line-only connections
+    for (const connectionKey of this.lineOnlyConnections) {
+      if (!this.hiddenConnections.has(connectionKey)) {
+        const [id1, id2] = connectionKey.split('-');
+        // Add as a generic connection (will be drawn as a regular line)
+        this.renderer.addConnection(id1, id2, 'line-only');
       }
     }
   }
@@ -922,7 +1044,8 @@ class TreeCoreCanvas {
       nodes: new Map(),
       personData: new Map(this.personData || []),
       camera: this.renderer.getCamera(),
-      hiddenConnections: new Set(this.hiddenConnections) // Include hidden connections
+      hiddenConnections: new Set(this.hiddenConnections), // Include hidden connections
+      lineOnlyConnections: new Set(this.lineOnlyConnections) // Include line-only connections
     };
     
     // Deep copy nodes
@@ -971,6 +1094,9 @@ class TreeCoreCanvas {
     // Restore hidden connections
     this.hiddenConnections = new Set(state.hiddenConnections || []);
     
+    // Restore line-only connections
+    this.lineOnlyConnections = new Set(state.lineOnlyConnections || []);
+    
     // Restore camera
     if (state.camera) {
       this.renderer.setCamera(state.camera.x, state.camera.y, state.camera.scale);
@@ -986,7 +1112,7 @@ class TreeCoreCanvas {
   // Save/Load JSON
   saveToJSON() {
     const data = {
-      version: '2.1', // Increment version for hidden connections feature
+      version: '2.2', // Increment version for line-only connections feature
       settings: {
         nodeRadius: this.nodeRadius,
         defaultColor: this.defaultColor,
@@ -997,6 +1123,7 @@ class TreeCoreCanvas {
       },
       camera: this.renderer.getCamera(),
       hiddenConnections: Array.from(this.hiddenConnections), // Include hidden connections
+      lineOnlyConnections: Array.from(this.lineOnlyConnections), // Include line-only connections
       persons: []
     };
     
@@ -1047,6 +1174,7 @@ class TreeCoreCanvas {
     this.renderer.clearConnections();
     this.personData = new Map();
     this.hiddenConnections = new Set(); // Clear hidden connections
+    this.lineOnlyConnections = new Set(); // Clear line-only connections
     
     // Restore settings
     if (data.settings) {
@@ -1067,6 +1195,11 @@ class TreeCoreCanvas {
     // Restore hidden connections
     if (data.hiddenConnections) {
       this.hiddenConnections = new Set(data.hiddenConnections);
+    }
+    
+    // Restore line-only connections
+    if (data.lineOnlyConnections) {
+      this.lineOnlyConnections = new Set(data.lineOnlyConnections);
     }
     
     // Restore persons
@@ -1109,7 +1242,7 @@ class TreeCoreCanvas {
     
     this.nextId = maxId + 1;
     
-    // Regenerate connections (will respect hidden connections)
+    // Regenerate connections (will respect hidden connections and include line-only connections)
     this.regenerateConnections();
     
     // Clear history
