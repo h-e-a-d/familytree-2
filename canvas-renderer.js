@@ -295,6 +295,8 @@ export class CanvasRenderer {
     } else if (!hit && !this.hasDraggedSignificantly) {
       // Clicked on empty canvas - clear all selection
       this.selectedNodes.clear();
+      // FIXED: Call the selection change callback when clearing selection
+      this.onSelectionCleared?.();
       this.needsRedraw = true;
     }
     
@@ -471,6 +473,8 @@ export class CanvasRenderer {
       } else if (!hit && !this.hasDraggedSignificantly) {
         // Touched empty canvas - clear all selection
         this.selectedNodes.clear();
+        // FIXED: Call the selection change callback when clearing selection
+        this.onSelectionCleared?.();
         this.needsRedraw = true;
       }
       
@@ -739,6 +743,7 @@ export class CanvasRenderer {
   onNodeClick = null;
   onNodeDoubleClick = null;
   onNodeDragEnd = null;
+  onSelectionCleared = null;
 
   // Cleanup
   destroy() {

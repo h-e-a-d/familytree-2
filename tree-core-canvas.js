@@ -70,6 +70,11 @@ class TreeCoreCanvas {
       this.pushUndoState();
     };
     
+    // FIXED: Add callback for when selection is cleared
+    this.renderer.onSelectionCleared = () => {
+      this.handleSelectionCleared();
+    };
+    
     // Apply settings to renderer
     this.updateRendererSettings();
     
@@ -112,6 +117,12 @@ class TreeCoreCanvas {
     // The canvas renderer now handles selection directly
     // We just need to sync our selectedCircles set with the renderer's selection
     this.selectedCircles = this.renderer.getSelectedNodes();
+    this.updateActionButtons();
+  }
+
+  // FIXED: Handle when selection is cleared by clicking empty space
+  handleSelectionCleared() {
+    this.selectedCircles.clear();
     this.updateActionButtons();
   }
 
