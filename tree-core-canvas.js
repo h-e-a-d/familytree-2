@@ -32,6 +32,10 @@ class TreeCoreCanvas {
     this.connectionPersonA = null;
     this.connectionPersonB = null;
     
+    // Line removal state
+    this.currentConnectionToRemove = null;
+    this.hiddenConnections = new Set(); // Track hidden connections
+    
     // ID counter
     this.nextId = 1;
   }
@@ -74,6 +78,11 @@ class TreeCoreCanvas {
     this.renderer.onSelectionCleared = () => {
       this.handleSelectionCleared();
     };
+
+    // Add callback for connection line clicks
+    this.renderer.onConnectionClick = (connection, index) => {
+      this.handleConnectionClick(connection, index);
+    };
     
     // Apply settings to renderer
     this.updateRendererSettings();
@@ -84,6 +93,7 @@ class TreeCoreCanvas {
     this.setupExport();
     this.setupKeyboard();
     this.setupStyleModal(); // FIXED: Add style modal setup
+    this.setupLineRemovalModal(); // Add line removal modal setup
     
     // Setup form submit handler
     const personForm = document.getElementById('personForm');
@@ -124,6 +134,13 @@ class TreeCoreCanvas {
   handleSelectionCleared() {
     this.selectedCircles.clear();
     this.updateActionButtons();
+  }
+
+  // Handle connection line clicks
+  handleConnectionClick(connection, index) {
+    console.log('Connection line clicked:', connection);
+    this.currentConnectionToRemove = { connection, index };
+    this.openLineRemovalModal(connection);
   }
 
   setupButtons() {
@@ -215,6 +232,119 @@ class TreeCoreCanvas {
         e.stopPropagation();
       });
     }
+  }
+
+  // Setup line removal modal
+  setupLineRemovalModal() {
+    // Create modal if it doesn't exist
+    this.createLineRemovalModal();
+    
+    const lineRemovalModal = document.getElementById('lineRemovalModal');
+    const cancelBtn = document.getElementById('cancelLineRemoval');
+    const confirmBtn = document.getElementById('confirmLineRemoval');
+
+    // Cancel button event listener
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.closeLineRemovalModal();
+      });
+    }
+
+    // Confirm button event listener
+    if (confirmBtn) {
+      confirmBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.confirmLineRemoval();
+      });
+    }
+
+    // Close modal when clicking outside
+    if (lineRemovalModal) {
+      lineRemovalModal.addEventListener('click', (e) => {
+        if (e.target === lineRemovalModal) {
+          this.closeLineRemovalModal();
+        }
+      });
+    }
+
+    // Prevent modal content clicks from closing modal
+    const modalContent = lineRemovalModal?.querySelector('.modal-content');
+    if (modalContent) {
+      modalContent.addEventListener('click', (e) => {
+        e.stopPropagation();
+      });
+    }
+  }
+
+  // Create line removal modal dynamically
+  createLineRemovalModal() {
+    // Check if modal already exists
+    if (document.getElementById('lineRemovalModal')) {
+      return;
+    }
+
+    const modal = document.createElement('div');
+    modal.id = 'lineRemovalModal';
+    modal.className = 'modal hidden';
+    modal.style.display = 'none';
+
+    modal.innerHTML = `
+      <div class="modal-content">
+        <h2>Remove the line</h2>
+        <p style="margin-bottom: 20px; color: #666; font-size: 14px;">This does not remove the relation</p>
+        <div class="form-actions">
+          <button type="button" id="cancelLineRemoval">Cancel</button>
+          <button type="button" id="confirmLineRemoval" style="background: #e74c3c;">Yes</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+  }
+
+  // Open line removal modal
+  openLineRemovalModal(connection) {
+    const lineRemovalModal = document.getElementById('lineRemovalModal');
+    if (!lineRemovalModal) return;
+    
+    lineRemovalModal.classList.remove('hidden');
+    lineRemovalModal.style.display = 'flex';
+  }
+
+  // Close line removal modal
+  closeLineRemovalModal() {
+    const lineRemovalModal = document.getElementById('lineRemovalModal');
+    if (lineRemovalModal) {
+      lineRemovalModal.classList.add('hidden');
+      lineRemovalModal.style.display = 'none';
+    }
+    
+    this.currentConnectionToRemove = null;
+  }
+
+  // Confirm line removal
+  confirmLineRemoval() {
+    if (!this.currentConnectionToRemove) {
+      this.closeLineRemovalModal();
+      return;
+    }
+
+    const { connection, index } = this.currentConnectionToRemove;
+    
+    // Add this connection to the hidden connections set
+    const connectionKey = this.getConnectionKey(connection.from, connection.to);
+    this.hiddenConnections.add(connectionKey);
+    
+    // Remove the visual connection line
+    this.renderer.removeConnection(index);
+    
+    console.log(`Hidden connection line between ${connection.from} and ${connection.to} (relationship data preserved)`);
+    
+    this.closeLineRemovalModal();
+    this.pushUndoState();
   }
 
   setupConnectionModal() {
@@ -360,6 +490,7 @@ class TreeCoreCanvas {
         this.clearSelection();
         this.closeStyleModal();
         this.closeConnectionModal();
+        this.closeLineRemovalModal();
       }
     });
   }
@@ -517,28 +648,74 @@ class TreeCoreCanvas {
     const personAData = this.getPersonData(this.connectionPersonA);
     const personBData = this.getPersonData(this.connectionPersonB);
     
+    // FIXED: Remove conflicting relationships before setting new ones
     switch (relationship) {
       case 'mother':
+        // Remove any existing mother relationship for personB
+        if (personBData.motherId && personBData.motherId !== this.connectionPersonA) {
+          console.log(`Removing previous mother relationship: ${personBData.motherId}`);
+        }
         personBData.motherId = this.connectionPersonA;
         break;
+        
       case 'father':
+        // Remove any existing father relationship for personB
+        if (personBData.fatherId && personBData.fatherId !== this.connectionPersonA) {
+          console.log(`Removing previous father relationship: ${personBData.fatherId}`);
+        }
         personBData.fatherId = this.connectionPersonA;
         break;
+        
       case 'child':
         if (personBData.gender === 'male') {
+          // PersonB is male, so becomes father of personA
+          // Remove any existing father relationship for personA
+          if (personAData.fatherId && personAData.fatherId !== this.connectionPersonB) {
+            console.log(`Removing previous father relationship: ${personAData.fatherId}`);
+          }
           personAData.fatherId = this.connectionPersonB;
         } else if (personBData.gender === 'female') {
+          // PersonB is female, so becomes mother of personA
+          // Remove any existing mother relationship for personA
+          if (personAData.motherId && personAData.motherId !== this.connectionPersonB) {
+            console.log(`Removing previous mother relationship: ${personAData.motherId}`);
+          }
           personAData.motherId = this.connectionPersonB;
         } else {
           alert('Parent gender must be specified to create parent-child relationship.');
           return;
         }
         break;
+        
       case 'spouse':
+        // Remove any existing spouse relationships for both persons
+        if (personAData.spouseId && personAData.spouseId !== this.connectionPersonB) {
+          console.log(`Removing previous spouse relationship for A: ${personAData.spouseId}`);
+          // Also remove the reverse relationship
+          const oldSpouseAData = this.getPersonData(personAData.spouseId);
+          if (oldSpouseAData.spouseId === this.connectionPersonA) {
+            oldSpouseAData.spouseId = '';
+            this.personData.set(personAData.spouseId, oldSpouseAData);
+          }
+        }
+        if (personBData.spouseId && personBData.spouseId !== this.connectionPersonA) {
+          console.log(`Removing previous spouse relationship for B: ${personBData.spouseId}`);
+          // Also remove the reverse relationship
+          const oldSpouseBData = this.getPersonData(personBData.spouseId);
+          if (oldSpouseBData.spouseId === this.connectionPersonB) {
+            oldSpouseBData.spouseId = '';
+            this.personData.set(personBData.spouseId, oldSpouseBData);
+          }
+        }
+        
         personAData.spouseId = this.connectionPersonB;
         personBData.spouseId = this.connectionPersonA;
         break;
     }
+    
+    // FIXED: Clean up empty relationship fields
+    this.cleanupPersonData(personAData);
+    this.cleanupPersonData(personBData);
     
     // Update stored data
     this.personData.set(this.connectionPersonA, personAData);
@@ -550,6 +727,14 @@ class TreeCoreCanvas {
     console.log(`Connected ${this.connectionPersonA} and ${this.connectionPersonB} as ${relationship}`);
     
     this.closeConnectionModal();
+  }
+
+  // FIXED: Helper method to clean up empty relationship fields
+  cleanupPersonData(personData) {
+    // Convert empty strings to undefined for cleaner data
+    if (personData.motherId === '') delete personData.motherId;
+    if (personData.fatherId === '') delete personData.fatherId;
+    if (personData.spouseId === '') delete personData.spouseId;
   }
 
   getPersonDisplayName(personId) {
@@ -566,21 +751,35 @@ class TreeCoreCanvas {
   regenerateConnections() {
     this.renderer.clearConnections();
     
-    // Regenerate all connections based on stored data
+    // Regenerate all connections based on stored data, but respect hidden connections
     for (const [childId, childData] of (this.personData || new Map())) {
       if (childData.motherId) {
-        this.renderer.addConnection(childId, childData.motherId, 'parent');
+        const connectionKey = this.getConnectionKey(childId, childData.motherId);
+        if (!this.hiddenConnections.has(connectionKey)) {
+          this.renderer.addConnection(childId, childData.motherId, 'parent');
+        }
       }
       if (childData.fatherId) {
-        this.renderer.addConnection(childId, childData.fatherId, 'parent');
+        const connectionKey = this.getConnectionKey(childId, childData.fatherId);
+        if (!this.hiddenConnections.has(connectionKey)) {
+          this.renderer.addConnection(childId, childData.fatherId, 'parent');
+        }
       }
       if (childData.spouseId) {
         // Only add spouse connection once
         if (childId < childData.spouseId) {
-          this.renderer.addConnection(childId, childData.spouseId, 'spouse');
+          const connectionKey = this.getConnectionKey(childId, childData.spouseId);
+          if (!this.hiddenConnections.has(connectionKey)) {
+            this.renderer.addConnection(childId, childData.spouseId, 'spouse');
+          }
         }
       }
     }
+  }
+
+  // Generate a unique key for a connection (order-independent)
+  getConnectionKey(id1, id2) {
+    return id1 < id2 ? `${id1}-${id2}` : `${id2}-${id1}`;
   }
 
   // Selection management
@@ -630,6 +829,7 @@ class TreeCoreCanvas {
     this.selectedCircles.clear();
     this.renderer.clearSelection();
     this.updateActionButtons();
+    console.log('Selection cleared and UI updated');
   }
 
   deleteSelected() {
@@ -721,7 +921,8 @@ class TreeCoreCanvas {
     const state = {
       nodes: new Map(),
       personData: new Map(this.personData || []),
-      camera: this.renderer.getCamera()
+      camera: this.renderer.getCamera(),
+      hiddenConnections: new Set(this.hiddenConnections) // Include hidden connections
     };
     
     // Deep copy nodes
@@ -767,6 +968,9 @@ class TreeCoreCanvas {
     // Restore person data
     this.personData = new Map(state.personData);
     
+    // Restore hidden connections
+    this.hiddenConnections = new Set(state.hiddenConnections || []);
+    
     // Restore camera
     if (state.camera) {
       this.renderer.setCamera(state.camera.x, state.camera.y, state.camera.scale);
@@ -782,7 +986,7 @@ class TreeCoreCanvas {
   // Save/Load JSON
   saveToJSON() {
     const data = {
-      version: '2.0', // New version for canvas
+      version: '2.1', // Increment version for hidden connections feature
       settings: {
         nodeRadius: this.nodeRadius,
         defaultColor: this.defaultColor,
@@ -792,6 +996,7 @@ class TreeCoreCanvas {
         dateColor: this.dateColor
       },
       camera: this.renderer.getCamera(),
+      hiddenConnections: Array.from(this.hiddenConnections), // Include hidden connections
       persons: []
     };
     
@@ -841,6 +1046,7 @@ class TreeCoreCanvas {
     this.renderer.nodes.clear();
     this.renderer.clearConnections();
     this.personData = new Map();
+    this.hiddenConnections = new Set(); // Clear hidden connections
     
     // Restore settings
     if (data.settings) {
@@ -856,6 +1062,11 @@ class TreeCoreCanvas {
     // Restore camera
     if (data.camera) {
       this.renderer.setCamera(data.camera.x, data.camera.y, data.camera.scale);
+    }
+    
+    // Restore hidden connections
+    if (data.hiddenConnections) {
+      this.hiddenConnections = new Set(data.hiddenConnections);
     }
     
     // Restore persons
@@ -898,7 +1109,7 @@ class TreeCoreCanvas {
     
     this.nextId = maxId + 1;
     
-    // Regenerate connections
+    // Regenerate connections (will respect hidden connections)
     this.regenerateConnections();
     
     // Clear history

@@ -141,6 +141,59 @@ export class CanvasRenderer {
     return null;
   }
 
+  // Find connection line at position
+  getConnectionAt(screenX, screenY) {
+    const worldPos = this.screenToWorld(screenX, screenY);
+    const threshold = 8; // 8px threshold for line clicking
+    
+    for (let i = 0; i < this.connections.length; i++) {
+      const conn = this.connections[i];
+      const fromNode = this.nodes.get(conn.from);
+      const toNode = this.nodes.get(conn.to);
+      
+      if (!fromNode || !toNode) continue;
+      
+      // Calculate distance from point to line segment
+      const distance = this.distanceToLineSegment(
+        worldPos.x, worldPos.y,
+        fromNode.x, fromNode.y,
+        toNode.x, toNode.y
+      );
+      
+      if (distance <= threshold) {
+        return { index: i, connection: conn };
+      }
+    }
+    
+    return null;
+  }
+
+  // Calculate distance from point to line segment
+  distanceToLineSegment(px, py, x1, y1, x2, y2) {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const length = Math.sqrt(dx * dx + dy * dy);
+    
+    if (length === 0) {
+      // Line is a point
+      const dpx = px - x1;
+      const dpy = py - y1;
+      return Math.sqrt(dpx * dpx + dpy * dpy);
+    }
+    
+    // Calculate the parameter t that represents the closest point on the line
+    const t = Math.max(0, Math.min(1, ((px - x1) * dx + (py - y1) * dy) / (length * length)));
+    
+    // Find the closest point on the line segment
+    const closestX = x1 + t * dx;
+    const closestY = y1 + t * dy;
+    
+    // Calculate distance from point to closest point on line
+    const distX = px - closestX;
+    const distY = py - closestY;
+    return Math.sqrt(distX * distX + distY * distY);
+  }
+
   // FIXED: Add or update a node - preserve existing data
   setNode(id, data) {
     const existingNode = this.nodes.get(id);
@@ -198,6 +251,23 @@ export class CanvasRenderer {
   // Clear all connections
   clearConnections() {
     this.connections = [];
+    this.needsRedraw = true;
+  }
+
+  // Remove a specific connection by index
+  removeConnection(index) {
+    if (index >= 0 && index < this.connections.length) {
+      this.connections.splice(index, 1);
+      this.needsRedraw = true;
+    }
+  }
+
+  // Remove connection by from/to IDs
+  removeConnectionByIds(fromId, toId) {
+    this.connections = this.connections.filter(conn => 
+      !(conn.from === fromId && conn.to === toId) && 
+      !(conn.from === toId && conn.to === fromId) // Remove both directions
+    );
     this.needsRedraw = true;
   }
 
@@ -267,7 +337,18 @@ export class CanvasRenderer {
         const hit = this.getNodeAt(pos.x, pos.y);
         if (hit !== this.hoveredNode) {
           this.hoveredNode = hit;
-          this.canvas.style.cursor = hit ? 'pointer' : 'grab';
+          
+          // Check if we're hovering over a connection line
+          const connectionHit = this.getConnectionAt(pos.x, pos.y);
+          
+          if (hit) {
+            this.canvas.style.cursor = 'pointer';
+          } else if (connectionHit) {
+            this.canvas.style.cursor = 'pointer'; // Show pointer for clickable lines
+          } else {
+            this.canvas.style.cursor = 'grab';
+          }
+          
           this.needsRedraw = true;
         }
       }
@@ -293,11 +374,19 @@ export class CanvasRenderer {
       this.onNodeClick?.(hit.id, e);
       this.needsRedraw = true;
     } else if (!hit && !this.hasDraggedSignificantly) {
-      // Clicked on empty canvas - clear all selection
-      this.selectedNodes.clear();
-      // FIXED: Call the selection change callback when clearing selection
-      this.onSelectionCleared?.();
-      this.needsRedraw = true;
+      // Check if we clicked on a connection line
+      const connectionHit = this.getConnectionAt(pos.x, pos.y);
+      
+      if (connectionHit) {
+        // Clicked on a connection line
+        this.onConnectionClick?.(connectionHit.connection, connectionHit.index);
+      } else {
+        // Clicked on empty canvas - clear all selection
+        this.selectedNodes.clear();
+        // FIXED: Call the selection change callback when clearing selection
+        this.onSelectionCleared?.();
+        this.needsRedraw = true;
+      }
     }
     
     // Handle drag end
@@ -471,11 +560,19 @@ export class CanvasRenderer {
         this.onNodeClick?.(hit.id, { clientX: lastTouchPos.x, clientY: lastTouchPos.y });
         this.needsRedraw = true;
       } else if (!hit && !this.hasDraggedSignificantly) {
-        // Touched empty canvas - clear all selection
-        this.selectedNodes.clear();
-        // FIXED: Call the selection change callback when clearing selection
-        this.onSelectionCleared?.();
-        this.needsRedraw = true;
+        // Check if we touched a connection line
+        const connectionHit = this.getConnectionAt(lastTouchPos.x, lastTouchPos.y);
+        
+        if (connectionHit) {
+          // Touched a connection line
+          this.onConnectionClick?.(connectionHit.connection, connectionHit.index);
+        } else {
+          // Touched empty canvas - clear all selection
+          this.selectedNodes.clear();
+          // FIXED: Call the selection change callback when clearing selection
+          this.onSelectionCleared?.();
+          this.needsRedraw = true;
+        }
       }
       
       // Handle drag end
@@ -744,6 +841,7 @@ export class CanvasRenderer {
   onNodeDoubleClick = null;
   onNodeDragEnd = null;
   onSelectionCleared = null;
+  onConnectionClick = null;
 
   // Cleanup
   destroy() {
