@@ -850,6 +850,16 @@ class TreeCoreCanvas {
     this.personData.set(personBId, personBData);
   }
 
+  // FIXED: Helper method to clean up empty relationship fields
+  cleanupPersonData(personData) {
+    // Remove empty string values to keep data clean
+    Object.keys(personData).forEach(key => {
+      if (personData[key] === '' || personData[key] === null || personData[key] === undefined) {
+        delete personData[key];
+      }
+    });
+  }
+
   getPersonDisplayName(personId) {
     const data = this.getPersonData(personId);
     const node = this.renderer.nodes.get(personId);
