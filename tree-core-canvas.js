@@ -109,18 +109,9 @@ class TreeCoreCanvas {
   }
 
   handleNodeClick(nodeId, event) {
-    const isSelected = this.selectedCircles.has(nodeId);
-    
-    if (!event.shiftKey && !event.ctrlKey) {
-      this.selectedCircles.clear();
-    }
-    
-    if (isSelected) {
-      this.selectedCircles.delete(nodeId);
-    } else {
-      this.selectedCircles.add(nodeId);
-    }
-    
+    // The canvas renderer now handles selection directly
+    // We just need to sync our selectedCircles set with the renderer's selection
+    this.selectedCircles = this.renderer.getSelectedNodes();
     this.updateActionButtons();
   }
 
@@ -465,6 +456,9 @@ class TreeCoreCanvas {
 
   // Connection management
   handleConnectSelected() {
+    // Sync with renderer's selection
+    this.selectedCircles = this.renderer.getSelectedNodes();
+    
     if (this.selectedCircles.size !== 2) {
       alert('Please select exactly 2 circles to connect.');
       return;
@@ -580,6 +574,9 @@ class TreeCoreCanvas {
 
   // Selection management
   updateActionButtons() {
+    // Sync with renderer's selection
+    this.selectedCircles = this.renderer.getSelectedNodes();
+    
     const hasSelection = this.selectedCircles.size > 0;
     const canConnect = this.selectedCircles.size === 2;
     
@@ -625,6 +622,9 @@ class TreeCoreCanvas {
   }
 
   deleteSelected() {
+    // Sync with renderer's selection
+    this.selectedCircles = this.renderer.getSelectedNodes();
+    
     if (this.selectedCircles.size === 0) return;
     
     const count = this.selectedCircles.size;
@@ -642,6 +642,9 @@ class TreeCoreCanvas {
 
   // FIXED: Style modal methods
   openStyleModal() {
+    // Sync with renderer's selection
+    this.selectedCircles = this.renderer.getSelectedNodes();
+    
     if (this.selectedCircles.size === 0) {
       alert('Please select at least one circle to style.');
       return;
@@ -665,6 +668,9 @@ class TreeCoreCanvas {
 
   // FIXED: Use updateNodeStyle instead of setNode to prevent data loss
   applySelectedStyles() {
+    // Sync with renderer's selection
+    this.selectedCircles = this.renderer.getSelectedNodes();
+    
     const color = document.getElementById('selectedNodeColor').value;
     const size = parseInt(document.getElementById('selectedNodeSize').value, 10);
     

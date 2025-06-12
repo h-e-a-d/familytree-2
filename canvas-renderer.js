@@ -25,6 +25,8 @@ export class CanvasRenderer {
     this.draggedNode = null;
     this.dragOffset = { x: 0, y: 0 };
     this.lastMousePos = { x: 0, y: 0 };
+    this.mouseDownPos = null; // Track initial mouse/touch position
+    this.hasDraggedSignificantly = false; // Track if drag threshold exceeded
     this.hoveredNode = null;
     
     // Performance
@@ -203,12 +205,13 @@ export class CanvasRenderer {
   handleMouseDown(e) {
     const pos = { x: e.clientX, y: e.clientY };
     this.lastMousePos = pos;
+    this.mouseDownPos = pos; // Track where mouse was pressed
+    this.hasDraggedSignificantly = false; // Track if we've dragged enough to prevent selection
     
     const hit = this.getNodeAt(pos.x, pos.y);
     
     if (hit) {
-      // Start dragging node
-      this.isDragging = true;
+      // Prepare for potential dragging
       this.draggedNode = hit;
       const worldPos = this.screenToWorld(pos.x, pos.y);
       this.dragOffset = {
@@ -216,30 +219,11 @@ export class CanvasRenderer {
         y: worldPos.y - hit.node.y
       };
       
-      // Handle selection
-      if (!e.shiftKey && !e.ctrlKey) {
-        this.selectedNodes.clear();
-      }
-      
-      if (this.selectedNodes.has(hit.id)) {
-        this.selectedNodes.delete(hit.id);
-      } else {
-        this.selectedNodes.add(hit.id);
-      }
-      
       this.canvas.style.cursor = 'grabbing';
-      
-      // Callback
-      this.onNodeClick?.(hit.id, e);
     } else {
       // Start panning
       this.isPanning = true;
       this.canvas.style.cursor = 'grabbing';
-      
-      // Clear selection if not holding shift
-      if (!e.shiftKey) {
-        this.selectedNodes.clear();
-      }
     }
     
     this.needsRedraw = true;
@@ -250,7 +234,23 @@ export class CanvasRenderer {
     const dx = pos.x - this.lastMousePos.x;
     const dy = pos.y - this.lastMousePos.y;
     
-    if (this.isDragging && this.draggedNode) {
+    // Check if we've moved significantly from initial mouse down position
+    if (this.mouseDownPos) {
+      const totalDx = pos.x - this.mouseDownPos.x;
+      const totalDy = pos.y - this.mouseDownPos.y;
+      const totalDistance = Math.sqrt(totalDx * totalDx + totalDy * totalDy);
+      
+      if (totalDistance > 5) { // 5px threshold for significant drag
+        this.hasDraggedSignificantly = true;
+      }
+    }
+    
+    if (this.draggedNode && this.hasDraggedSignificantly) {
+      // Start dragging if we haven't already
+      if (!this.isDragging) {
+        this.isDragging = true;
+      }
+      
       // Move dragged node
       const worldPos = this.screenToWorld(pos.x, pos.y);
       this.draggedNode.node.x = worldPos.x - this.dragOffset.x;
@@ -262,12 +262,14 @@ export class CanvasRenderer {
       this.camera.y += dy;
       this.needsRedraw = true;
     } else {
-      // Check hover
-      const hit = this.getNodeAt(pos.x, pos.y);
-      if (hit !== this.hoveredNode) {
-        this.hoveredNode = hit;
-        this.canvas.style.cursor = hit ? 'pointer' : 'grab';
-        this.needsRedraw = true;
+      // Check hover only if not dragging
+      if (!this.draggedNode) {
+        const hit = this.getNodeAt(pos.x, pos.y);
+        if (hit !== this.hoveredNode) {
+          this.hoveredNode = hit;
+          this.canvas.style.cursor = hit ? 'pointer' : 'grab';
+          this.needsRedraw = true;
+        }
       }
     }
     
@@ -275,13 +277,38 @@ export class CanvasRenderer {
   }
 
   handleMouseUp(e) {
-    if (this.isDragging) {
+    const pos = { x: e.clientX, y: e.clientY };
+    const hit = this.getNodeAt(pos.x, pos.y);
+    
+    // Handle selection on mouse up (only if we didn't drag significantly)
+    if (hit && !this.hasDraggedSignificantly) {
+      // Toggle selection for the clicked node
+      if (this.selectedNodes.has(hit.id)) {
+        this.selectedNodes.delete(hit.id);
+      } else {
+        this.selectedNodes.add(hit.id);
+      }
+      
+      // Callback for selection change
+      this.onNodeClick?.(hit.id, e);
+      this.needsRedraw = true;
+    } else if (!hit && !this.hasDraggedSignificantly) {
+      // Clicked on empty canvas - clear all selection
+      this.selectedNodes.clear();
+      this.needsRedraw = true;
+    }
+    
+    // Handle drag end
+    if (this.isDragging && this.draggedNode) {
       this.onNodeDragEnd?.(this.draggedNode.id);
     }
     
+    // Reset state
     this.isDragging = false;
     this.isPanning = false;
     this.draggedNode = null;
+    this.mouseDownPos = null;
+    this.hasDraggedSignificantly = false;
     this.canvas.style.cursor = this.hoveredNode ? 'pointer' : 'grab';
   }
 
@@ -321,18 +348,32 @@ export class CanvasRenderer {
     }
     
     if (e.touches.length === 1) {
-      // Single touch - simulate mouse down
+      // Single touch - prepare for potential drag or selection
       const touch = e.touches[0];
-      this.handleMouseDown({
-        clientX: touch.clientX,
-        clientY: touch.clientY,
-        shiftKey: false,
-        ctrlKey: false
-      });
+      const pos = { x: touch.clientX, y: touch.clientY };
+      this.lastMousePos = pos;
+      this.mouseDownPos = pos; // Track where touch started
+      this.hasDraggedSignificantly = false;
+      
+      const hit = this.getNodeAt(pos.x, pos.y);
+      
+      if (hit) {
+        // Prepare for potential dragging
+        this.draggedNode = hit;
+        const worldPos = this.screenToWorld(pos.x, pos.y);
+        this.dragOffset = {
+          x: worldPos.x - hit.node.x,
+          y: worldPos.y - hit.node.y
+        };
+      } else {
+        // Prepare for panning
+        this.isPanning = true;
+      }
     } else if (e.touches.length === 2) {
       // Two finger touch - prepare for pinch zoom
       this.isDragging = false;
       this.isPanning = false;
+      this.draggedNode = null;
       this.lastTouchDistance = this.getTouchDistance(e.touches);
     }
   }
@@ -343,13 +384,43 @@ export class CanvasRenderer {
       e.preventDefault();
     }
     
-    if (e.touches.length === 1 && (this.isDragging || this.isPanning)) {
-      // Single touch - simulate mouse move
+    if (e.touches.length === 1) {
+      // Single touch movement
       const touch = e.touches[0];
-      this.handleMouseMove({
-        clientX: touch.clientX,
-        clientY: touch.clientY
-      });
+      const pos = { x: touch.clientX, y: touch.clientY };
+      const dx = pos.x - this.lastMousePos.x;
+      const dy = pos.y - this.lastMousePos.y;
+      
+      // Check if we've moved significantly from initial touch position
+      if (this.mouseDownPos) {
+        const totalDx = pos.x - this.mouseDownPos.x;
+        const totalDy = pos.y - this.mouseDownPos.y;
+        const totalDistance = Math.sqrt(totalDx * totalDx + totalDy * totalDy);
+        
+        if (totalDistance > 8) { // Slightly higher threshold for touch (8px)
+          this.hasDraggedSignificantly = true;
+        }
+      }
+      
+      if (this.draggedNode && this.hasDraggedSignificantly) {
+        // Start dragging if we haven't already
+        if (!this.isDragging) {
+          this.isDragging = true;
+        }
+        
+        // Move dragged node
+        const worldPos = this.screenToWorld(pos.x, pos.y);
+        this.draggedNode.node.x = worldPos.x - this.dragOffset.x;
+        this.draggedNode.node.y = worldPos.y - this.dragOffset.y;
+        this.needsRedraw = true;
+      } else if (this.isPanning && this.hasDraggedSignificantly) {
+        // Pan camera
+        this.camera.x += dx;
+        this.camera.y += dy;
+        this.needsRedraw = true;
+      }
+      
+      this.lastMousePos = pos;
     } else if (e.touches.length === 2) {
       // Pinch zoom
       const distance = this.getTouchDistance(e.touches);
@@ -379,7 +450,61 @@ export class CanvasRenderer {
     if (e.cancelable) {
       e.preventDefault();
     }
-    this.handleMouseUp({});
+    
+    if (e.touches.length === 0) {
+      // All fingers lifted - handle like mouse up
+      const lastTouchPos = this.lastMousePos;
+      const hit = this.getNodeAt(lastTouchPos.x, lastTouchPos.y);
+      
+      // Handle selection on touch end (only if we didn't drag significantly)
+      if (hit && !this.hasDraggedSignificantly) {
+        // Toggle selection for the touched node
+        if (this.selectedNodes.has(hit.id)) {
+          this.selectedNodes.delete(hit.id);
+        } else {
+          this.selectedNodes.add(hit.id);
+        }
+        
+        // Callback for selection change
+        this.onNodeClick?.(hit.id, { clientX: lastTouchPos.x, clientY: lastTouchPos.y });
+        this.needsRedraw = true;
+      } else if (!hit && !this.hasDraggedSignificantly) {
+        // Touched empty canvas - clear all selection
+        this.selectedNodes.clear();
+        this.needsRedraw = true;
+      }
+      
+      // Handle drag end
+      if (this.isDragging && this.draggedNode) {
+        this.onNodeDragEnd?.(this.draggedNode.id);
+      }
+      
+      // Reset state
+      this.isDragging = false;
+      this.isPanning = false;
+      this.draggedNode = null;
+      this.mouseDownPos = null;
+      this.hasDraggedSignificantly = false;
+    } else if (e.touches.length === 1) {
+      // Switch from pinch to single touch
+      const touch = e.touches[0];
+      const pos = { x: touch.clientX, y: touch.clientY };
+      this.lastMousePos = pos;
+      this.mouseDownPos = pos;
+      this.hasDraggedSignificantly = false;
+      
+      const hit = this.getNodeAt(pos.x, pos.y);
+      if (hit) {
+        this.draggedNode = hit;
+        const worldPos = this.screenToWorld(pos.x, pos.y);
+        this.dragOffset = {
+          x: worldPos.x - hit.node.x,
+          y: worldPos.y - hit.node.y
+        };
+      } else {
+        this.isPanning = true;
+      }
+    }
   }
 
   getTouchDistance(touches) {
