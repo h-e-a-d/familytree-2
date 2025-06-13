@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Family Tree Builder - Build Your Family Tree</title>
+  <meta name="description" content="Interactive family tree builder with drag-and-drop interface. Create, edit, and visualize your family connections.">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Roboto:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="style.css" />
+  
+  <!-- Back to Homepage Link Styles -->
+  <style>
+    .back-to-home {
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      z-index: 1001;
+      background: rgba(46, 204, 113, 0.9);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 14px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .back-to-home:hover {
+      background: rgba(39, 174, 96, 0.9);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+    }
+    
+    .back-to-home svg {
+      width: 16px;
+      height: 16px;
+    }
+    
+    /* Adjust existing elements to account for back button */
+    .view-toggle-icon {
+      top: 16px;
+      left: 140px !important; /* Move right to avoid overlap */
+    }
+
+/* Add custom styling for the line-only button */
+.connection-btn.line-only {
+  background-color: #9b59b6 !important;
+  border-color: #9b59b6 !important;
+  color: white !important;
+}
+
+.connection-btn.line-only:hover {
+  background-color: #8e44ad !important;
+  border-color: #8e44ad !important;
+  color: white !important;
+}
+  </style>
+</head>
+<body>
+  <!-- Back to Homepage Link -->
+  <a href="index.html" class="back-to-home" aria-label="Back to Homepage">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M19 12H5M12 19l-7-7 7-7"/>
+    </svg>
+    Back to Home
+  </a>
+
+  <!-- View Toggle Icon (upper left) -->
+  <div id="viewToggle" class="icon-button view-toggle-icon">
+    <svg xmlns="http://www.w3.org/2000/svg" class="icon toggle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="3" y="3" width="7" height="7"></rect>
+      <rect x="14" y="3" width="7" height="7"></rect>
+      <rect x="14" y="14" width="7" height="7"></rect>
+      <rect x="3" y="14" width="7" height="7"></rect>
+    </svg>
+  </div>
+
+  <!-- Settings Icon (upper right) -->
+  <div id="settingsToggle" class="icon-button settings-icon">
+    <svg xmlns="http://www.w3.org/2000/svg" class="icon cog" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="3"></circle>
+      <path d="m12 1 1.5 4 3.5-1-1 3.5 4 1.5-4 1.5 1 3.5-3.5-1L12 23l-1.5-4-3.5 1 1-3.5L4 14.5l4-1.5-1-3.5 3.5 1L12 1z"></path>
+    </svg>
+  </div>
+
+  <!-- Settings Panel (hidden by default) -->
+  <div id="settingsPanel" class="panel hidden">
+    <h3>Settings</h3>
+    
+    <!-- Node Settings -->
+    <div class="setting-section">
+      <h4>Node Appearance</h4>
+      <div class="setting-group">
+        <label for="nodeColorPicker">Node Color:</label>
+        <input type="color" id="nodeColorPicker" value="#3498db" />
+      </div>
+      <div class="setting-group">
+        <label for="nodeSizeInput">Node Size:</label>
+        <input type="number" id="nodeSizeInput" min="10" max="100" value="40" />
+        <button id="applyNodeStyle">Apply</button>
+      </div>
+    </div>
+
+    <!-- Font Settings -->
+    <div class="setting-section">
+      <h4>Text Settings</h4>
+      <div class="setting-group">
+        <label for="fontSelect">Font:</label>
+        <select id="fontSelect">
+          <optgroup label="Modern Sans-Serif">
+            <option value="Inter">Inter</option>
+            <option value="Roboto">Roboto</option>
+            <option value="Lato">Lato</option>
+            <option value="Montserrat">Montserrat</option>
+            <option value="Poppins">Poppins</option>
+            <option value="Open Sans">Open Sans</option>
+          </optgroup>
+          <optgroup label="Serif">
+            <option value="Merriweather">Merriweather</option>
+            <option value="Playfair Display">Playfair Display</option>
+            <option value="Roboto Slab">Roboto Slab</option>
+          </optgroup>
+          <optgroup label="Monospace">
+            <option value="Courier New">Courier New</option>
+            <option value="Roboto Mono">Roboto Mono</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="setting-group">
+        <label for="fontSizeInput">Font Size:</label>
+        <input type="number" id="fontSizeInput" min="6" max="72" value="14" />
+      </div>
+      <div class="setting-group">
+        <label for="nameColorPicker">Name Color:</label>
+        <input type="color" id="nameColorPicker" value="#333333" />
+      </div>
+      <div class="setting-group">
+        <label for="dateColorPicker">Date Color:</label>
+        <input type="color" id="dateColorPicker" value="#757575" />
+      </div>
+    </div>
+
+    <!-- Export Settings -->
+    <div class="setting-section">
+      <h4>Export</h4>
+      <div class="export-group">
+        <button id="exportSvg">SVG</button>
+        <button id="exportPng">PNG</button>
+        <button id="exportPdf">PDF</button>
+      </div>
+    </div>
+
+    <!-- Data Settings -->
+    <div class="setting-section">
+      <h4>Data</h4>
+      <div class="setting-group">
+        <button id="saveData">Save JSON</button>
+        <label for="loadData" class="file-label">
+          <span>Load JSON</span>
+          <input type="file" id="loadData" accept=".json" style="display: none;" />
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Container -->
+  <div id="mainContainer">
+    <!-- Graphic View -->
+    <div id="graphicView">
+      <svg id="svgArea"></svg>
+    </div>
+
+    <!-- Table View (initially hidden) -->
+    <div id="tableView" class="hidden">
+      <div id="tableControls">
+        <input type="text" id="searchInput" placeholder="Search..." />
+        <select id="sortSelect">
+          <option value="name">Name</option>
+          <option value="fatherName">Father's Name</option>
+          <option value="surname">Surname</option>
+          <option value="dob">Date of Birth</option>
+          <option value="gender">Gender</option>
+        </select>
+      </div>
+      <table id="familyTable">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Father's Name</th>
+            <th>Surname</th>
+            <th>Birth Name</th>
+            <th>Date of Birth</th>
+            <th>Gender</th>
+            <th>Mother</th>
+            <th>Father</th>
+            <th>Spouse</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="familyTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Floating Action Buttons -->
+  <div class="floating-buttons">
+    <button id="styleBtn" class="floating-btn secondary hidden">Style</button>
+    <button id="connectBtn" class="floating-btn secondary hidden">Link</button>
+    <div class="main-buttons">
+      <button id="undoBtn" class="floating-btn undo">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 7v6h6"></path>
+          <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path>
+        </svg>
+      </button>
+      <button id="addPersonBtn" class="floating-btn primary">+</button>
+    </div>
+  </div>
+
+  <!-- Connection Modal - UPDATED with Line Only option -->
+  <div id="connectionModal" class="modal hidden" style="display: none;">
+    <div class="modal-content">
+      <h2 id="connectionModalTitle">Connect People</h2>
+      <div class="connection-content">
+        <p id="connectionText">Person A is __ to Person B</p>
+        <div class="connection-buttons">
+          <button type="button" id="motherBtn" class="connection-btn">Mother</button>
+          <button type="button" id="fatherBtn" class="connection-btn">Father</button>
+          <button type="button" id="childBtn" class="connection-btn">Child</button>
+          <button type="button" id="spouseBtn" class="connection-btn">Spouse</button>
+          <button type="button" id="lineOnlyBtn" class="connection-btn line-only">Line only</button>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="button" id="cancelConnectionModal">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Style Modal for Selected Circles -->
+  <div id="styleModal" class="modal hidden" style="display: none;">
+    <div class="modal-content">
+      <h2 id="styleModalTitle">Style Selected Circles</h2>
+      <form id="styleForm">
+        <!-- Node Settings -->
+        <div class="setting-section">
+          <h4>Node Appearance</h4>
+          <div class="setting-group">
+            <label for="selectedNodeColor">Node Color:</label>
+            <input type="color" id="selectedNodeColor" value="#3498db" />
+          </div>
+          <div class="setting-group">
+            <label for="selectedNodeSize">Node Size:</label>
+            <input type="number" id="selectedNodeSize" min="10" max="100" value="40" />
+          </div>
+        </div>
+
+        <!-- Font Settings -->
+        <div class="setting-section">
+          <h4>Text Settings</h4>
+          <div class="setting-group">
+            <label for="selectedFont">Font:</label>
+            <select id="selectedFont">
+              <optgroup label="Modern Sans-Serif">
+                <option value="Inter">Inter</option>
+                <option value="Roboto">Roboto</option>
+                <option value="Lato">Lato</option>
+                <option value="Montserrat">Montserrat</option>
+                <option value="Poppins">Poppins</option>
+                <option value="Open Sans">Open Sans</option>
+              </optgroup>
+              <optgroup label="Serif">
+                <option value="Merriweather">Merriweather</option>
+                <option value="Playfair Display">Playfair Display</option>
+                <option value="Roboto Slab">Roboto Slab</option>
+              </optgroup>
+              <optgroup label="Monospace">
+                <option value="Courier New">Courier New</option>
+                <option value="Roboto Mono">Roboto Mono</option>
+              </optgroup>
+            </select>
+          </div>
+          <div class="setting-group">
+            <label for="selectedFontSize">Font Size:</label>
+            <input type="number" id="selectedFontSize" min="6" max="72" value="14" />
+          </div>
+          <div class="setting-group">
+            <label for="selectedNameColor">Name Color:</label>
+            <input type="color" id="selectedNameColor" value="#333333" />
+          </div>
+          <div class="setting-group">
+            <label for="selectedDateColor">Date Color:</label>
+            <input type="color" id="selectedDateColor" value="#757575" />
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" id="cancelStyleModal">Cancel</button>
+          <button type="submit" id="applySelectedStyle">Apply</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+<!-- Person Modal (ALWAYS starts hidden) -->
+  <div id="personModal" class="modal hidden" style="display: none;">
+    <div class="modal-content">
+      <h2 id="modalTitle">Add Person</h2>
+      <form id="personForm">
+        <div class="form-group">
+          <label for="personName">Given Name <span class="required">*</span></label>
+          <input type="text" id="personName" required />
+        </div>
+        <div class="form-group">
+          <label for="personFatherName">Father's Name</label>
+          <input type="text" id="personFatherName" placeholder="Father's given name" />
+          <small class="help-text">Father's given name (not surname)</small>
+        </div>
+        <div class="form-group">
+          <label for="personSurname">Surname</label>
+          <input type="text" id="personSurname" />
+        </div>
+        <div class="form-group">
+          <label for="personBirthName">Birth Name</label>
+          <input type="text" id="personBirthName" />
+        </div>
+        <div class="form-group">
+          <label for="personDob">Date of Birth</label>
+          <input type="text" id="personDob" placeholder="dd.mm.yyyy or yyyy" />
+          <small class="help-text">Enter full date dd.mm.yyyy or just year yyyy</small>
+        </div>
+        <div class="form-group">
+          <label for="personGender">Gender <span class="required">*</span></label>
+          <select id="personGender" required>
+            <option value="">Select</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Mother</label>
+          <div class="searchable-select" id="motherSelect"></div>
+        </div>
+        <div class="form-group">
+          <label>Father</label>
+          <div class="searchable-select" id="fatherSelect"></div>
+        </div>
+        <div class="form-group">
+          <label>Spouse</label>
+          <div class="searchable-select" id="spouseSelect"></div>
+        </div>
+        <div class="form-actions">
+          <button type="button" id="cancelModal">Cancel</button>
+          <button type="submit" id="savePerson">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts as ES modules -->
+  <script type="module" src="searchableSelect.js"></script>
+  <script type="module" src="modal.js"></script>
+  <script type="module" src="tree.js"></script>
+  <script type="module" src="table.js"></script>
+  <script type="module" src="exporter.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
