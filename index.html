@@ -7,7 +7,7 @@
   <meta name="keywords" content="family tree, genealogy, ancestry, family history, online family tree builder, genealogy software, family connections, MapMyRoots">
   <meta name="author" content="MapMyRoots">
   <meta name="robots" content="index, follow">
-  <meta name="theme-color" content="#2ecc71">
+  <meta name="theme-color" content="#0f866c">
   
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
@@ -65,14 +65,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
   
   <!-- Favicon -->
-  <link rel="icon" type="image/x-icon" href="/favicon.ico">
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-  <link rel="manifest" href="/site.webmanifest">
+  <link rel="icon" type="image/x-icon" href="./favicon.ico">
   
   <!-- Main Stylesheet -->
-  <link rel="stylesheet" href="homepage.css">
+  <link rel="stylesheet" href="./homepage.css">
 </head>
 <body>
   <!-- Google Tag Manager (noscript) -->
@@ -84,7 +80,7 @@
   
   <header class="header" id="header">
     <nav class="nav" role="navigation" aria-label="Main navigation">
-      <a href="/" class="logo" aria-label="MapMyRoots Home">
+      <a href="./" class="logo" aria-label="MapMyRoots Home">
         <div class="logo-icon">🌳</div>
         <span>MapMyRoots</span>
       </a>
@@ -93,17 +89,10 @@
         <li><a href="#features" class="nav-link">Features</a></li>
         <li><a href="#how-it-works" class="nav-link">How It Works</a></li>
         <li><a href="#testimonials" class="nav-link">Reviews</a></li>
-        <li><a href="builder.html" class="cta-button">Start Building</a></li>
+        <li><a href="./builder.html" class="cta-button">Start Building</a></li>
       </ul>
       
       <div style="display: flex; align-items: center; gap: 1rem;">
-        <button class="theme-toggle" aria-label="Toggle dark mode" id="theme-toggle">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="5"/>
-            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
-          </svg>
-        </button>
-        
         <button class="mobile-menu-toggle" aria-label="Open navigation menu" id="mobile-menu-toggle">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="3" y1="6" x2="21" y2="6"/>
@@ -120,18 +109,18 @@
         <li><a href="#features" class="nav-link">Features</a></li>
         <li><a href="#how-it-works" class="nav-link">How It Works</a></li>
         <li><a href="#testimonials" class="nav-link">Reviews</a></li>
-        <li><a href="builder.html" class="nav-link">Start Building</a></li>
+        <li><a href="./builder.html" class="nav-link">Start Building</a></li>
       </ul>
     </div>
   </header>
   
   <main id="main">
-    <section class="hero" aria-labelledby="hero-title">
+    <section class="hero" aria-labelledby="hero-title" style="background-image: url('./tree.webp');">>
       <div class="hero-content">
         <h1 id="hero-title">Build Your Family Legacy</h1>
         <p class="hero-subtitle">Create beautiful, interactive family trees that bring your family history to life. Connect generations, preserve memories, and discover your roots.</p>
         <div class="hero-buttons">
-          <a href="builder.html" class="btn-primary" data-gtm-event="cta_click" data-gtm-location="hero">
+          <a href="./builder.html" class="btn-primary" data-gtm-event="cta_click" data-gtm-location="hero">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="10"/>
               <polygon points="10,8 16,12 10,16 10,8"/>
@@ -330,7 +319,7 @@
         <div class="cta-content">
           <h2>Start Building Your Family Tree Today</h2>
           <p>Join thousands of families who have already discovered their heritage. Create your first family tree in minutes, completely free.</p>
-          <a href="builder.html" class="btn-primary" data-gtm-event="cta_click" data-gtm-location="footer">
+          <a href="./builder.html" class="btn-primary" data-gtm-event="cta_click" data-gtm-location="footer">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
               <polyline points="22,4 12,14.01 9,11.01"/>
@@ -348,7 +337,7 @@
         <h3>Product</h3>
         <ul>
           <li><a href="#features">Features</a></li>
-          <li><a href="builder.html">Tree Builder</a></li>
+          <li><a href="./builder.html">Tree Builder</a></li>
           <li><a href="#how-it-works">How It Works</a></li>
           <li><a href="#testimonials">Reviews</a></li>
         </ul>
@@ -391,6 +380,6 @@
   </footer>
   
   <!-- Main JavaScript -->
-  <script src="homepage.js"></script>
+  <script src="./homepage.js"></script>
 </body>
 </html>
