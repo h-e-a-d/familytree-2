@@ -10,55 +10,36 @@ function gtmTrack(eventName, eventData = {}) {
   }
 }
 
-// Theme toggle functionality
-const themeToggle = document.getElementById('theme-toggle');
-const currentTheme = localStorage.getItem('theme') || 
-  (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-
-document.documentElement.setAttribute('data-theme', currentTheme);
-
-themeToggle.addEventListener('click', () => {
-  const theme = document.documentElement.getAttribute('data-theme');
-  const newTheme = theme === 'dark' ? 'light' : 'dark';
-  
-  document.documentElement.setAttribute('data-theme', newTheme);
-  localStorage.setItem('theme', newTheme);
-  
-  // Track theme change
-  gtmTrack('theme_change', {
-    theme: newTheme,
-    location: 'header'
-  });
-});
-
 // Mobile menu toggle
 const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
 const mobileMenu = document.getElementById('mobile-menu');
 
-mobileMenuToggle.addEventListener('click', () => {
-  const isOpen = mobileMenu.classList.contains('open');
-  mobileMenu.classList.toggle('open');
-  
-  // Track mobile menu usage
-  gtmTrack('mobile_menu_toggle', {
-    action: isOpen ? 'close' : 'open',
-    location: 'header'
-  });
-});
-
-// Close mobile menu when clicking on links
-mobileMenu.addEventListener('click', (e) => {
-  if (e.target.classList.contains('nav-link')) {
-    mobileMenu.classList.remove('open');
+if (mobileMenuToggle && mobileMenu) {
+  mobileMenuToggle.addEventListener('click', () => {
+    const isOpen = mobileMenu.classList.contains('open');
+    mobileMenu.classList.toggle('open');
     
-    // Track navigation clicks from mobile menu
-    gtmTrack('navigation_click', {
-      link_text: e.target.textContent,
-      location: 'mobile_menu',
-      destination: e.target.getAttribute('href')
+    // Track mobile menu usage
+    gtmTrack('mobile_menu_toggle', {
+      action: isOpen ? 'close' : 'open',
+      location: 'header'
     });
-  }
-});
+  });
+
+  // Close mobile menu when clicking on links
+  mobileMenu.addEventListener('click', (e) => {
+    if (e.target.classList.contains('nav-link')) {
+      mobileMenu.classList.remove('open');
+      
+      // Track navigation clicks from mobile menu
+      gtmTrack('navigation_click', {
+        link_text: e.target.textContent,
+        location: 'mobile_menu',
+        destination: e.target.getAttribute('href')
+      });
+    }
+  });
+}
 
 // Header scroll effect
 const header = document.getElementById('header');
@@ -134,9 +115,11 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 
 // Close mobile menu when clicking outside
 document.addEventListener('click', (e) => {
-  if (!mobileMenu.contains(e.target) && !mobileMenuToggle.contains(e.target)) {
-    if (mobileMenu.classList.contains('open')) {
-      mobileMenu.classList.remove('open');
+  if (mobileMenu && mobileMenuToggle) {
+    if (!mobileMenu.contains(e.target) && !mobileMenuToggle.contains(e.target)) {
+      if (mobileMenu.classList.contains('open')) {
+        mobileMenu.classList.remove('open');
+      }
     }
   }
 });
@@ -319,8 +302,10 @@ window.addEventListener('load', () => {
   }
 });
 
-// Service Worker registration for PWA
-if ('serviceWorker' in navigator) {
+// Service Worker registration for PWA (disabled for local development)
+// Uncomment when deploying to a server
+/*
+if ('serviceWorker' in navigator && (location.protocol === 'http:' || location.protocol === 'https:')) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
       .then(registration => {
@@ -339,6 +324,7 @@ if ('serviceWorker' in navigator) {
       });
   });
 }
+*/
 
 // Track form interactions (if any forms are added later)
 document.addEventListener('submit', (e) => {
@@ -393,20 +379,7 @@ document.addEventListener('DOMContentLoaded', () => {
     color_depth: screen.colorDepth,
     timestamp: new Date().toISOString()
   });
-  
-  // Track initial theme
-  gtmTrack('theme_detected', {
-    theme: currentTheme,
-    method: localStorage.getItem('theme') ? 'stored' : 'system'
-  });
 });
-
-// Preload critical assets
-const preloadLink = document.createElement('link');
-preloadLink.rel = 'preload';
-preloadLink.as = 'image';
-preloadLink.href = '/hero-background.webp';
-document.head.appendChild(preloadLink);
 
 // Export functions for testing/debugging
 if (typeof window !== 'undefined') {
