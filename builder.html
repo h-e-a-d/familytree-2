@@ -25,6 +25,112 @@
   
   <!-- Optimized Styles -->
   <style>
+    /* Notification System */
+    .notifications-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .notification {
+      background: white;
+      border-radius: 12px;
+      padding: 16px 20px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+      border-left: 4px solid #3498db;
+      min-width: 300px;
+      max-width: 400px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      opacity: 0;
+      transform: translateX(100%);
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      pointer-events: auto;
+    }
+
+    .notification.show {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .notification.success {
+      border-left-color: #27ae60;
+    }
+
+    .notification.error {
+      border-left-color: #e74c3c;
+    }
+
+    .notification.info {
+      border-left-color: #3498db;
+    }
+
+    .notification.warning {
+      border-left-color: #f39c12;
+    }
+
+    .notification-icon {
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    .notification-content {
+      flex: 1;
+    }
+
+    .notification-title {
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 4px;
+      color: #2c3e50;
+    }
+
+    .notification-message {
+      font-size: 13px;
+      color: #7f8c8d;
+      line-height: 1.4;
+    }
+
+    .notification-close {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      opacity: 0.5;
+      transition: opacity 0.2s ease;
+      background: none;
+      border: none;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .notification-close:hover {
+      opacity: 1;
+    }
+
+    /* Loading spinner for notifications */
+    .notification-spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid #e9ecef;
+      border-left: 2px solid #3498db;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
     /* Vertical Sidebar */
     .sidebar {
       position: fixed;
@@ -161,7 +267,7 @@
       background: #f8f9fa;
       cursor: pointer;
       display: flex;
-      justify-content: between;
+      justify-content: space-between;
       align-items: center;
       border-radius: 8px 8px 0 0;
       transition: background-color 0.2s ease;
@@ -302,45 +408,57 @@
       .node-style-grid {
         grid-template-columns: 1fr;
       }
+
+      .notifications-container {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+      }
+
+      .notification {
+        min-width: unset;
+        max-width: unset;
+      }
     }
 
-/* Custom styling for the line-only button */
-.connection-btn.line-only {
-  background-color: #9b59b6 !important;
-  border-color: #9b59b6 !important;
-  color: white !important;
-}
+    /* Custom styling for the line-only button */
+    .connection-btn.line-only {
+      background-color: #9b59b6 !important;
+      border-color: #9b59b6 !important;
+      color: white !important;
+    }
 
-.connection-btn.line-only:hover {
-  background-color: #8e44ad !important;
-  border-color: #8e44ad !important;
-  color: white !important;
-      /* Debug button for testing */
-      .debug-panel {
-        position: fixed;
-        bottom: 16px;
-        left: 80px;
-        z-index: 2000;
-        background: #f39c12;
-        padding: 8px;
-        border-radius: 8px;
-        display: block; /* Show for testing */
-      }
-      
-      .debug-btn {
-        background: #e67e22;
-        color: white;
-        border: none;
-        padding: 6px 12px;
-        margin: 2px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 12px;
-      }
-      
-      .debug-btn:hover {
-        background: #d35400;
-      }
+    .connection-btn.line-only:hover {
+      background-color: #8e44ad !important;
+      border-color: #8e44ad !important;
+      color: white !important;
+    }
+
+    /* Debug button for testing */
+    .debug-panel {
+      position: fixed;
+      bottom: 16px;
+      left: 80px;
+      z-index: 2000;
+      background: #f39c12;
+      padding: 8px;
+      border-radius: 8px;
+      display: none; /* Hidden by default */
+    }
+    
+    .debug-btn {
+      background: #e67e22;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      margin: 2px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    
+    .debug-btn:hover {
+      background: #d35400;
     }
   </style>
 </head>
@@ -349,6 +467,9 @@
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MNZ4MJB7"
   height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <!-- End Google Tag Manager (noscript) -->
+
+  <!-- Notifications Container -->
+  <div class="notifications-container" id="notificationsContainer"></div>
 
   <!-- Debug Panel (for testing) -->
   <div class="debug-panel" id="debugPanel">
@@ -458,6 +579,8 @@
       <div class="setting-group">
         <label for="nodeSizeInput">Node Size:</label>
         <input type="number" id="nodeSizeInput" min="10" max="100" value="40" />
+      </div>
+      <div class="setting-group">
         <button id="applyNodeStyle">Apply</button>
       </div>
     </div>
@@ -734,6 +857,7 @@
   <script type="module" src="tree.js"></script>
   <script type="module" src="table.js"></script>
   <script type="module" src="exporter.js"></script>
+  <script type="module" src="notifications.js"></script>
   
   <!-- Debug Helper -->
   <script>
@@ -1031,47 +1155,6 @@
             console.log(`Toggled section ${targetId}:`, !isExpanded);
           }
         });
-      });
-      
-      // Node style selection
-      document.querySelectorAll('.node-style-option').forEach(option => {
-        option.addEventListener('click', () => {
-          // Remove selected from all options
-          document.querySelectorAll('.node-style-option').forEach(opt => 
-            opt.classList.remove('selected')
-          );
-          // Add selected to clicked option
-          option.classList.add('selected');
-          
-          const style = option.getAttribute('data-style');
-          console.log('Node style changed to:', style);
-          
-          // Update canvas renderer
-          import('./tree.js').then(() => {
-            // This will be handled by tree-core-canvas.js
-            window.dispatchEvent(new CustomEvent('nodeStyleChanged', { detail: { style } }));
-          });
-        });
-      });
-      
-      // Display preferences checkboxes
-      const preferences = ['showMaidenName', 'showDateOfBirth', 'showFatherName'];
-      preferences.forEach(prefId => {
-        const checkbox = document.getElementById(prefId);
-        if (checkbox) {
-          checkbox.addEventListener('change', () => {
-            console.log(`${prefId} changed to:`, checkbox.checked);
-            
-            // Update canvas renderer
-            const event = new CustomEvent('displayPreferenceChanged', { 
-              detail: { 
-                preference: prefId, 
-                value: checkbox.checked 
-              } 
-            });
-            window.dispatchEvent(event);
-          });
-        }
       });
       
       console.log('Enhanced settings initialized');
