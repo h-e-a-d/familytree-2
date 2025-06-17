@@ -1,100 +1,240 @@
 // app.js
-// -------
-// Main application logic for view switching, settings panel toggle,
-// and other UI interactions
+// Enhanced main application logic with sidebar functionality and optimizations
 
 import { rebuildTableView } from './table.js';
 
 let currentView = 'graphic'; // 'graphic' or 'table'
 
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('App.js initializing...');
+  console.log('Enhanced App.js initializing...');
+  initializeSidebar();
+  initializeEnhancedSettings();
   initializeViewToggle();
   initializeSettingsPanel();
   initializeKeyboardShortcuts();
-  console.log('App.js initialization complete');
+  console.log('Enhanced App.js initialization complete');
 });
 
-function initializeViewToggle() {
+function initializeSidebar() {
+  console.log('Initializing sidebar...');
+  
+  // Home button
+  const homeBtn = document.getElementById('homeBtn');
+  if (homeBtn) {
+    homeBtn.addEventListener('click', () => {
+      console.log('Home button clicked');
+      window.location.href = 'index.html';
+    });
+  }
+  
+  // Zoom in button
+  const zoomInBtn = document.getElementById('zoomInBtn');
+  if (zoomInBtn) {
+    zoomInBtn.addEventListener('click', () => {
+      console.log('Zoom in button clicked');
+      triggerZoom(-100); // Negative for zoom in
+    });
+  }
+  
+  // Zoom out button
+  const zoomOutBtn = document.getElementById('zoomOutBtn');
+  if (zoomOutBtn) {
+    zoomOutBtn.addEventListener('click', () => {
+      console.log('Zoom out button clicked');
+      triggerZoom(100); // Positive for zoom out
+    });
+  }
+  
+  // Settings toggle (enhanced)
+  const settingsToggle = document.getElementById('settingsToggle');
+  const settingsPanel = document.getElementById('settingsPanel');
+  
+  if (settingsToggle && settingsPanel) {
+    settingsToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      console.log('Settings toggle clicked');
+      settingsPanel.classList.toggle('hidden');
+      settingsToggle.classList.toggle('active');
+    });
+  }
+  
+  // View toggle (enhanced)
   const viewToggle = document.getElementById('viewToggle');
+  if (viewToggle) {
+    viewToggle.addEventListener('click', () => {
+      console.log('View toggle clicked from sidebar');
+      toggleView();
+    });
+  }
+}
+
+function triggerZoom(deltaY) {
+  const svgArea = document.getElementById('svgArea');
+  if (svgArea) {
+    // Create a synthetic wheel event
+    const rect = svgArea.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    
+    const wheelEvent = new WheelEvent('wheel', {
+      deltaY: deltaY,
+      clientX: centerX,
+      clientY: centerY,
+      bubbles: true,
+      cancelable: true
+    });
+    
+    svgArea.dispatchEvent(wheelEvent);
+  }
+}
+
+function toggleView() {
   const graphicView = document.getElementById('graphicView');
   const tableView = document.getElementById('tableView');
-
-  if (!viewToggle || !graphicView || !tableView) {
-    console.error('View toggle elements not found');
-    return;
-  }
-
-  // Set initial state
-  currentView = 'graphic';
-  graphicView.classList.remove('hidden');
-  tableView.classList.add('hidden');
-
-  viewToggle.addEventListener('click', () => {
-    console.log('View toggle clicked, current view:', currentView);
+  const viewToggle = document.getElementById('viewToggle');
+  
+  if (!graphicView || !tableView || !viewToggle) return;
+  
+  const icon = viewToggle.querySelector('svg');
+  
+  if (currentView === 'graphic') {
+    // Switch to table view
+    currentView = 'table';
+    tableView.classList.remove('hidden');
+    graphicView.classList.add('hidden');
+    viewToggle.classList.add('active');
     
-    if (currentView === 'graphic') {
-      // Switch to table view
-      currentView = 'table';
-      tableView.classList.remove('hidden');
-      graphicView.classList.add('hidden');
-      
-      // Update icon to show table icon (grid)
-      const icon = viewToggle.querySelector('.icon.toggle');
-      if (icon) {
-        icon.innerHTML = `
-          <path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z" fill="currentColor" stroke="none"></path>
-        `;
-      }
-      
-      // Rebuild table data when switching to table view
-      rebuildTableView();
-    } else {
-      // Switch to graphic view
-      currentView = 'graphic';
-      graphicView.classList.remove('hidden');
-      tableView.classList.add('hidden');
-      
-      // Update icon to show graphic icon (circles)
-      const icon = viewToggle.querySelector('.icon.toggle');
-      if (icon) {
-        icon.innerHTML = `
-          <rect x="3" y="3" width="7" height="7" fill="none" stroke="currentColor" stroke-width="2"></rect>
-          <rect x="14" y="3" width="7" height="7" fill="none" stroke="currentColor" stroke-width="2"></rect>
-          <rect x="14" y="14" width="7" height="7" fill="none" stroke="currentColor" stroke-width="2"></rect>
-          <rect x="3" y="14" width="7" height="7" fill="none" stroke="currentColor" stroke-width="2"></rect>
-        `;
-      }
+    // Update icon to show table icon
+    if (icon) {
+      icon.innerHTML = `
+        <path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z" fill="currentColor" stroke="none"/>
+      `;
     }
     
-    console.log('Switched to view:', currentView);
+    // Rebuild table data when switching to table view
+    rebuildTableView();
+  } else {
+    // Switch to graphic view
+    currentView = 'graphic';
+    graphicView.classList.remove('hidden');
+    tableView.classList.add('hidden');
+    viewToggle.classList.remove('active');
+    
+    // Update icon to show graphic icon
+    if (icon) {
+      icon.innerHTML = `
+        <rect x="3" y="3" width="7" height="7"/>
+        <rect x="14" y="3" width="7" height="7"/>
+        <rect x="14" y="14" width="7" height="7"/>
+        <rect x="3" y="14" width="7" height="7"/>
+      `;
+    }
+    
+    // Trigger canvas refresh when switching back to graphic view
+    setTimeout(() => {
+      import('./tree-core-canvas.js').then(({ treeCore }) => {
+        if (treeCore.renderer) {
+          console.log('Refreshing canvas after view switch');
+          treeCore.renderer.resize();
+          treeCore.renderer.needsRedraw = true;
+        }
+      });
+    }, 100);
+  }
+  
+  console.log('Switched to view:', currentView);
+}
+
+function initializeEnhancedSettings() {
+  console.log('Initializing enhanced settings...');
+  
+  // Collapsible sections
+  document.querySelectorAll('.collapsible-header').forEach(header => {
+    header.addEventListener('click', () => {
+      const targetId = header.getAttribute('data-target');
+      const content = document.getElementById(targetId);
+      
+      if (content) {
+        const isExpanded = content.classList.contains('expanded');
+        content.classList.toggle('expanded');
+        header.classList.toggle('expanded');
+        
+        console.log(`Toggled collapsible section: ${targetId}, expanded: ${!isExpanded}`);
+      }
+    });
+  });
+  
+  // Node style selection
+  document.querySelectorAll('.node-style-option').forEach(option => {
+    option.addEventListener('click', () => {
+      // Remove selected from all options
+      document.querySelectorAll('.node-style-option').forEach(opt => 
+        opt.classList.remove('selected')
+      );
+      // Add selected to clicked option
+      option.classList.add('selected');
+      
+      const style = option.getAttribute('data-style');
+      console.log('Node style changed to:', style);
+      
+      // Update the tree core with new style
+      import('./tree-core-canvas.js').then(({ treeCore }) => {
+        if (treeCore.renderer) {
+          treeCore.renderer.settings.nodeStyle = style;
+          treeCore.renderer.needsRedraw = true;
+          treeCore.pushUndoState();
+        }
+      });
+    });
+  });
+  
+  // Display preferences checkboxes
+  const preferences = ['showMaidenName', 'showDateOfBirth', 'showFatherName'];
+  preferences.forEach(prefId => {
+    const checkbox = document.getElementById(prefId);
+    if (checkbox) {
+      checkbox.addEventListener('change', () => {
+        console.log(`${prefId} changed to:`, checkbox.checked);
+        
+        // Update the tree core with new display preferences
+        import('./tree-core-canvas.js').then(({ treeCore }) => {
+          if (treeCore.renderer) {
+            const prefKey = prefId; // e.g., 'showMaidenName'
+            treeCore.displayPreferences[prefKey] = checkbox.checked;
+            treeCore.renderer.displayPreferences[prefKey] = checkbox.checked;
+            treeCore.renderer.needsRedraw = true;
+            treeCore.pushUndoState();
+          }
+        });
+      });
+    }
   });
 }
 
+function initializeViewToggle() {
+  // This is now handled by the sidebar, but keep for compatibility
+  console.log('View toggle initialization handled by sidebar');
+}
+
 function initializeSettingsPanel() {
-  const settingsToggle = document.getElementById('settingsToggle');
   const settingsPanel = document.getElementById('settingsPanel');
 
-  if (!settingsToggle || !settingsPanel) {
-    console.error('Settings elements not found');
+  if (!settingsPanel) {
+    console.error('Settings panel not found');
     return;
   }
 
   // Ensure settings panel starts hidden
   settingsPanel.classList.add('hidden');
 
-  settingsToggle.addEventListener('click', (e) => {
-    e.stopPropagation();
-    console.log('Settings toggle clicked');
-    settingsPanel.classList.toggle('hidden');
-  });
-
   // Close settings panel when clicking outside
   document.addEventListener('click', (e) => {
-    if (!settingsPanel.contains(e.target) && !settingsToggle.contains(e.target)) {
+    const settingsToggle = document.getElementById('settingsToggle');
+    if (!settingsPanel.contains(e.target) && !settingsToggle?.contains(e.target)) {
       if (!settingsPanel.classList.contains('hidden')) {
         console.log('Closing settings panel (clicked outside)');
         settingsPanel.classList.add('hidden');
+        settingsToggle?.classList.remove('active');
       }
     }
   });
@@ -115,10 +255,7 @@ function initializeKeyboardShortcuts() {
     // Toggle between views with Tab key
     if (e.key === 'Tab' && !e.ctrlKey && !e.altKey && !e.shiftKey) {
       e.preventDefault();
-      const viewToggle = document.getElementById('viewToggle');
-      if (viewToggle) {
-        viewToggle.click();
-      }
+      toggleView();
     }
     
     // Open add person modal with 'A' key
@@ -139,7 +276,7 @@ function initializeKeyboardShortcuts() {
       }
     }
     
-    // Undo with 'U' key (in addition to Ctrl+Z handled in tree.js)
+    // Undo with 'U' key (in addition to Ctrl+Z handled in tree-core-canvas.js)
     else if (e.key === 'u' || e.key === 'U') {
       if (!e.ctrlKey && !e.altKey) {
         e.preventDefault();
@@ -172,12 +309,29 @@ function initializeKeyboardShortcuts() {
       }
     }
     
+    // Zoom in with '+' key
+    else if (e.key === '+' || e.key === '=') {
+      if (!e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        triggerZoom(-100);
+      }
+    }
+    
+    // Zoom out with '-' key
+    else if (e.key === '-' || e.key === '_') {
+      if (!e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        triggerZoom(100);
+      }
+    }
+    
     // Close modal with Escape key
     else if (e.key === 'Escape') {
       const personModal = document.getElementById('personModal');
       const styleModal = document.getElementById('styleModal');
       const connectionModal = document.getElementById('connectionModal');
       const settingsPanel = document.getElementById('settingsPanel');
+      const settingsToggle = document.getElementById('settingsToggle');
       
       if (personModal && !personModal.classList.contains('hidden')) {
         import('./modal.js').then(mod => {
@@ -193,12 +347,13 @@ function initializeKeyboardShortcuts() {
         connectionModal.style.display = 'none';
       } else if (settingsPanel && !settingsPanel.classList.contains('hidden')) {
         settingsPanel.classList.add('hidden');
+        settingsToggle?.classList.remove('active');
       }
     }
     
-    // Note: Delete key and Ctrl+Z are handled in tree.js
+    // Note: Delete key and Ctrl+Z are handled in tree-core-canvas.js
   });
 }
 
 // Export functions that might be needed by other modules
-export { initializeViewToggle, initializeSettingsPanel, currentView };
+export { initializeViewToggle, initializeSettingsPanel, currentView, toggleView };
