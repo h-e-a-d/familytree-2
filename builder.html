@@ -315,7 +315,33 @@
   background-color: #8e44ad !important;
   border-color: #8e44ad !important;
   color: white !important;
-}
+      /* Debug button for testing */
+      .debug-panel {
+        position: fixed;
+        bottom: 16px;
+        left: 80px;
+        z-index: 2000;
+        background: #f39c12;
+        padding: 8px;
+        border-radius: 8px;
+        display: block; /* Show for testing */
+      }
+      
+      .debug-btn {
+        background: #e67e22;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        margin: 2px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+      }
+      
+      .debug-btn:hover {
+        background: #d35400;
+      }
+    }
   </style>
 </head>
 <body>
@@ -323,6 +349,14 @@
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MNZ4MJB7"
   height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <!-- End Google Tag Manager (noscript) -->
+
+  <!-- Debug Panel (for testing) -->
+  <div class="debug-panel" id="debugPanel">
+    <button class="debug-btn" onclick="testZoom()">Test Zoom</button>
+    <button class="debug-btn" onclick="document.getElementById('addPersonBtn').click()">Open Modal</button>
+    <button class="debug-btn" onclick="document.getElementById('settingsToggle').click()">Toggle Settings</button>
+    <button class="debug-btn" onclick="document.getElementById('viewToggle').click()">Toggle View</button>
+  </div>
 
   <!-- Vertical Sidebar -->
   <div class="sidebar">
@@ -700,93 +734,290 @@
   <script type="module" src="tree.js"></script>
   <script type="module" src="table.js"></script>
   <script type="module" src="exporter.js"></script>
-  <script type="module" src="app.js"></script>
   
-  <script type="module">
-    // Enhanced App Initialization
-    document.addEventListener('DOMContentLoaded', () => {
-      // Initialize sidebar functionality
-      initializeSidebar();
-      // Initialize settings enhancements
-      initializeEnhancedSettings();
+  <!-- Debug Helper -->
+  <script>
+    // Debug Helper - Simple debugging utilities
+    window.addEventListener('DOMContentLoaded', () => {
+      console.log('=== DEBUG HELPER LOADED ===');
+      
+      // Test sidebar buttons after a delay
+      setTimeout(() => {
+        console.log('=== TESTING SIDEBAR BUTTONS ===');
+        
+        const buttons = [
+          'homeBtn',
+          'zoomInBtn', 
+          'zoomOutBtn',
+          'settingsToggle',
+          'viewToggle'
+        ];
+        
+        buttons.forEach(id => {
+          const btn = document.getElementById(id);
+          console.log(`${id}:`, btn ? 'Found' : 'NOT FOUND');
+        });
+        
+        // Test modal elements
+        console.log('=== TESTING MODAL ELEMENTS ===');
+        const modalElements = [
+          'personModal',
+          'personName',
+          'genderMale',
+          'genderFemale',
+          'savePerson',
+          'cancelModal'
+        ];
+        
+        modalElements.forEach(id => {
+          const el = document.getElementById(id);
+          console.log(`${id}:`, el ? 'Found' : 'NOT FOUND');
+        });
+        
+        // Test canvas
+        console.log('=== TESTING CANVAS ===');
+        const graphicView = document.getElementById('graphicView');
+        const canvas = graphicView?.querySelector('canvas');
+        console.log('GraphicView:', graphicView ? 'Found' : 'NOT FOUND');
+        console.log('Canvas:', canvas ? 'Found' : 'NOT FOUND');
+        
+        // Test tree core
+        console.log('=== TESTING TREE CORE ===');
+        import('./tree.js').then(() => {
+          console.log('Tree.js imported successfully');
+          return import('./tree-core-canvas.js');
+        }).then(({ treeCore }) => {
+          console.log('TreeCore:', treeCore ? 'Found' : 'NOT FOUND');
+          console.log('TreeCore renderer:', treeCore.renderer ? 'Found' : 'NOT FOUND');
+        }).catch(error => {
+          console.error('Error importing tree modules:', error);
+        });
+        
+      }, 2000);
+      
+      // Listen for custom events
+      ['savePersonFromModal', 'displayPreferenceChanged', 'nodeStyleChanged'].forEach(eventName => {
+        document.addEventListener(eventName, (e) => {
+          console.log(`🎯 Custom event fired: ${eventName}`, e.detail);
+        });
+      });
     });
     
+    // Helper functions for testing
+    window.testZoom = function() {
+      console.log('Testing zoom functionality...');
+      const graphicView = document.getElementById('graphicView');
+      const canvas = graphicView?.querySelector('canvas');
+      
+      if (canvas) {
+        console.log('Found canvas, dispatching wheel event');
+        const rect = canvas.getBoundingClientRect();
+        const wheelEvent = new WheelEvent('wheel', {
+          deltaY: -100,
+          clientX: rect.left + rect.width / 2,
+          clientY: rect.top + rect.height / 2,
+          bubbles: true,
+          cancelable: true
+        });
+        canvas.dispatchEvent(wheelEvent);
+      } else {
+        console.log('No canvas found');
+      }
+    };
+  </script>
+  
+  <script type="module">
+    import { rebuildTableView } from './table.js';
+    
+    // Enhanced App Initialization
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('Initializing enhanced functionality...');
+      // Wait for tree core to be ready, then initialize sidebar
+      setTimeout(() => {
+        initializeSidebar();
+        initializeEnhancedSettings();
+      }, 1000); // Increased delay
+    });
+    
+    let currentView = 'graphic';
+    
     function initializeSidebar() {
+      console.log('Initializing sidebar...');
+      
       // Home button
-      document.getElementById('homeBtn')?.addEventListener('click', () => {
-        window.location.href = 'index.html';
-      });
+      const homeBtn = document.getElementById('homeBtn');
+      if (homeBtn) {
+        homeBtn.addEventListener('click', () => {
+          console.log('Home button clicked');
+          window.location.href = 'index.html';
+        });
+        console.log('Home button initialized');
+      }
       
-      // Zoom buttons
-      document.getElementById('zoomInBtn')?.addEventListener('click', () => {
-        // Trigger zoom in
-        const event = new WheelEvent('wheel', { deltaY: -100 });
-        document.getElementById('svgArea')?.dispatchEvent(event);
-      });
+      // Zoom buttons - improved to work with canvas
+      const zoomInBtn = document.getElementById('zoomInBtn');
+      if (zoomInBtn) {
+        zoomInBtn.addEventListener('click', () => {
+          console.log('Zoom in button clicked');
+          triggerCanvasZoom(-100);
+        });
+        console.log('Zoom in button initialized');
+      }
       
-      document.getElementById('zoomOutBtn')?.addEventListener('click', () => {
-        // Trigger zoom out
-        const event = new WheelEvent('wheel', { deltaY: 100 });
-        document.getElementById('svgArea')?.dispatchEvent(event);
-      });
+      const zoomOutBtn = document.getElementById('zoomOutBtn');
+      if (zoomOutBtn) {
+        zoomOutBtn.addEventListener('click', () => {
+          console.log('Zoom out button clicked');
+          triggerCanvasZoom(100);
+        });
+        console.log('Zoom out button initialized');
+      }
       
-      // Settings toggle (reuse existing functionality)
+      // Settings toggle
       const settingsToggle = document.getElementById('settingsToggle');
       const settingsPanel = document.getElementById('settingsPanel');
       
       if (settingsToggle && settingsPanel) {
         settingsToggle.addEventListener('click', (e) => {
           e.stopPropagation();
+          console.log('Settings toggle clicked');
+          const isHidden = settingsPanel.classList.contains('hidden');
           settingsPanel.classList.toggle('hidden');
           settingsToggle.classList.toggle('active');
+          console.log('Settings panel', isHidden ? 'opened' : 'closed');
         });
-      }
-      
-      // View toggle (reuse existing functionality)
-      const viewToggle = document.getElementById('viewToggle');
-      if (viewToggle) {
-        viewToggle.addEventListener('click', () => {
-          // Trigger existing view toggle functionality
-          const event = new Event('click');
-          const oldToggle = document.querySelector('[data-original-view-toggle]');
-          if (oldToggle) {
-            oldToggle.dispatchEvent(event);
-          } else {
-            // Fallback: implement view switching directly
-            const graphicView = document.getElementById('graphicView');
-            const tableView = document.getElementById('tableView');
-            const icon = viewToggle.querySelector('svg');
-            
-            if (graphicView && tableView) {
-              if (graphicView.classList.contains('hidden')) {
-                // Switch to graphic view
-                graphicView.classList.remove('hidden');
-                tableView.classList.add('hidden');
-                viewToggle.classList.remove('active');
-                // Update icon
-                icon.innerHTML = `
-                  <rect x="3" y="3" width="7" height="7"/>
-                  <rect x="14" y="3" width="7" height="7"/>
-                  <rect x="14" y="14" width="7" height="7"/>
-                  <rect x="3" y="14" width="7" height="7"/>
-                `;
-              } else {
-                // Switch to table view
-                tableView.classList.remove('hidden');
-                graphicView.classList.add('hidden');
-                viewToggle.classList.add('active');
-                // Update icon for table view
-                icon.innerHTML = `
-                  <path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z" fill="currentColor" stroke="none"/>
-                `;
-              }
+        
+        // Close settings when clicking outside
+        document.addEventListener('click', (e) => {
+          if (!settingsPanel.contains(e.target) && !settingsToggle.contains(e.target)) {
+            if (!settingsPanel.classList.contains('hidden')) {
+              settingsPanel.classList.add('hidden');
+              settingsToggle.classList.remove('active');
             }
           }
         });
+        
+        console.log('Settings toggle initialized');
+      }
+      
+      // View toggle
+      const viewToggle = document.getElementById('viewToggle');
+      if (viewToggle) {
+        viewToggle.addEventListener('click', () => {
+          console.log('View toggle clicked');
+          toggleView();
+        });
+        console.log('View toggle initialized');
       }
     }
     
+    function triggerCanvasZoom(deltaY) {
+      console.log('Triggering canvas zoom:', deltaY);
+      
+      // Try to get the canvas element directly
+      const graphicView = document.getElementById('graphicView');
+      const canvas = graphicView?.querySelector('canvas');
+      
+      if (canvas) {
+        console.log('Found canvas, triggering zoom');
+        const rect = canvas.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        
+        const wheelEvent = new WheelEvent('wheel', {
+          deltaY: deltaY,
+          clientX: centerX,
+          clientY: centerY,
+          bubbles: true,
+          cancelable: true
+        });
+        
+        canvas.dispatchEvent(wheelEvent);
+      } else {
+        console.log('Canvas not found, trying SVG fallback');
+        const svgArea = document.getElementById('svgArea');
+        if (svgArea) {
+          const rect = svgArea.getBoundingClientRect();
+          const centerX = rect.left + rect.width / 2;
+          const centerY = rect.top + rect.height / 2;
+          
+          const wheelEvent = new WheelEvent('wheel', {
+            deltaY: deltaY,
+            clientX: centerX,
+            clientY: centerY,
+            bubbles: true,
+            cancelable: true
+          });
+          
+          svgArea.dispatchEvent(wheelEvent);
+        }
+      }
+    }
+    
+    function toggleView() {
+      console.log('Toggling view from:', currentView);
+      
+      const graphicView = document.getElementById('graphicView');
+      const tableView = document.getElementById('tableView');
+      const viewToggle = document.getElementById('viewToggle');
+      
+      if (!graphicView || !tableView || !viewToggle) {
+        console.error('View elements not found');
+        return;
+      }
+      
+      const icon = viewToggle.querySelector('svg');
+      
+      if (currentView === 'graphic') {
+        // Switch to table view
+        currentView = 'table';
+        tableView.classList.remove('hidden');
+        graphicView.classList.add('hidden');
+        viewToggle.classList.add('active');
+        
+        // Update icon
+        if (icon) {
+          icon.innerHTML = `
+            <path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z" fill="currentColor" stroke="none"/>
+          `;
+        }
+        
+        // Rebuild table
+        setTimeout(() => {
+          rebuildTableView();
+        }, 100);
+        
+      } else {
+        // Switch to graphic view
+        currentView = 'graphic';
+        graphicView.classList.remove('hidden');
+        tableView.classList.add('hidden');
+        viewToggle.classList.remove('active');
+        
+        // Update icon
+        if (icon) {
+          icon.innerHTML = `
+            <rect x="3" y="3" width="7" height="7"/>
+            <rect x="14" y="3" width="7" height="7"/>
+            <rect x="14" y="14" width="7" height="7"/>
+            <rect x="3" y="14" width="7" height="7"/>
+          `;
+        }
+        
+        // Refresh canvas
+        setTimeout(() => {
+          import('./tree.js').then(() => {
+            console.log('Canvas refreshed after view switch');
+          });
+        }, 100);
+      }
+      
+      console.log('Switched to view:', currentView);
+    }
+    
     function initializeEnhancedSettings() {
+      console.log('Initializing enhanced settings...');
+      
       // Collapsible sections
       document.querySelectorAll('.collapsible-header').forEach(header => {
         header.addEventListener('click', () => {
@@ -797,6 +1028,7 @@
             const isExpanded = content.classList.contains('expanded');
             content.classList.toggle('expanded');
             header.classList.toggle('expanded');
+            console.log(`Toggled section ${targetId}:`, !isExpanded);
           }
         });
       });
@@ -814,8 +1046,11 @@
           const style = option.getAttribute('data-style');
           console.log('Node style changed to:', style);
           
-          // TODO: Implement style change in canvas renderer
-          // This would require updating the tree-core-canvas.js to support rectangle rendering
+          // Update canvas renderer
+          import('./tree.js').then(() => {
+            // This will be handled by tree-core-canvas.js
+            window.dispatchEvent(new CustomEvent('nodeStyleChanged', { detail: { style } }));
+          });
         });
       });
       
@@ -826,11 +1061,20 @@
         if (checkbox) {
           checkbox.addEventListener('change', () => {
             console.log(`${prefId} changed to:`, checkbox.checked);
-            // TODO: Implement display preference changes in canvas renderer
-            // This would require updating the rendering logic to respect these preferences
+            
+            // Update canvas renderer
+            const event = new CustomEvent('displayPreferenceChanged', { 
+              detail: { 
+                preference: prefId, 
+                value: checkbox.checked 
+              } 
+            });
+            window.dispatchEvent(event);
           });
         }
       });
+      
+      console.log('Enhanced settings initialized');
     }
   </script>
 </body>
