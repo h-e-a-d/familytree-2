@@ -717,27 +717,198 @@ class TreeCoreCanvas {
   }
 
   exportCanvasAsPNG() {
-    const tempCanvas = document.createElement('canvas');
-    const tempCtx = tempCanvas.getContext('2d');
-    
-    tempCanvas.width = this.renderer.canvas.width;
-    tempCanvas.height = this.renderer.canvas.height;
-    
-    tempCtx.fillStyle = 'white';
-    tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-    
-    tempCtx.drawImage(this.renderer.canvas, 0, 0);
-    
-    tempCanvas.toBlob((blob) => {
-      const url = URL.createObjectURL(blob);
+    try {
+      // Use the improved export method from canvas renderer
+      const exportCanvas = this.renderer.exportAsImage('png');
+      
+      exportCanvas.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'family-tree.png';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
+    } catch (error) {
+      console.error('Error exporting PNG:', error);
+      notifications.error('Export Failed', 'Could not export PNG: ' + error.message);
+    }
+  }
+
+  exportCanvasAsSVG() {
+    try {
+      // Create SVG export with proper bounds
+      const bounds = this.renderer.getContentBounds();
+      if (!bounds) {
+        throw new Error('No content to export');
+      }
+
+      // Add 5px margin
+      const margin = 5;
+      const exportWidth = bounds.width + (margin * 2);
+      const exportHeight = bounds.height + (margin * 2);
+
+      // Create SVG
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('width', exportWidth);
+      svg.setAttribute('height', exportHeight);
+      svg.setAttribute('viewBox', `0 0 ${exportWidth} ${exportHeight}`);
+      svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+
+      // White background
+      const background = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      background.setAttribute('width', '100%');
+      background.setAttribute('height', '100%');
+      background.setAttribute('fill', '#ffffff');
+      svg.appendChild(background);
+
+      // Create group for content with offset
+      const contentGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      contentGroup.setAttribute('transform', `translate(${margin - bounds.x}, ${margin - bounds.y})`);
+
+      // Export connections
+      for (const conn of this.renderer.connections) {
+        const fromNode = this.renderer.nodes.get(conn.from);
+        const toNode = this.renderer.nodes.get(conn.to);
+        
+        if (!fromNode || !toNode) continue;
+        
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', fromNode.x);
+        line.setAttribute('y1', fromNode.y);
+        line.setAttribute('x2', toNode.x);
+        line.setAttribute('y2', toNode.y);
+        line.setAttribute('stroke-width', '2');
+        
+        if (conn.type === 'spouse') {
+          line.setAttribute('stroke', this.renderer.settings.spouseConnectionColor);
+          line.setAttribute('stroke-dasharray', '4 2');
+        } else if (conn.type === 'line-only') {
+          line.setAttribute('stroke', '#9b59b6');
+          line.setAttribute('stroke-dasharray', '8 4 2 4');
+        } else {
+          line.setAttribute('stroke', this.renderer.settings.connectionColor);
+        }
+        
+        contentGroup.appendChild(line);
+      }
+
+      // Export nodes
+      for (const [id, node] of this.renderer.nodes) {
+        const nodeGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        
+        if (this.renderer.settings.nodeStyle === 'rectangle') {
+          const width = this.renderer.getNodeWidth(node);
+          const height = this.renderer.getNodeHeight(node);
+          
+          const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          rect.setAttribute('x', node.x - width/2);
+          rect.setAttribute('y', node.y - height/2);
+          rect.setAttribute('width', width);
+          rect.setAttribute('height', height);
+          rect.setAttribute('fill', node.color || this.renderer.settings.nodeColor);
+          rect.setAttribute('stroke', this.renderer.settings.strokeColor);
+          rect.setAttribute('stroke-width', this.renderer.settings.strokeWidth);
+          nodeGroup.appendChild(rect);
+        } else {
+          const radius = node.radius || this.renderer.settings.nodeRadius;
+          
+          const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          circle.setAttribute('cx', node.x);
+          circle.setAttribute('cy', node.y);
+          circle.setAttribute('r', radius);
+          circle.setAttribute('fill', node.color || this.renderer.settings.nodeColor);
+          circle.setAttribute('stroke', this.renderer.settings.strokeColor);
+          circle.setAttribute('stroke-width', this.renderer.settings.strokeWidth);
+          nodeGroup.appendChild(circle);
+        }
+
+        // Add text elements
+        this.addSVGText(nodeGroup, node);
+        contentGroup.appendChild(nodeGroup);
+      }
+
+      svg.appendChild(contentGroup);
+
+      // Serialize and download
+      const svgData = new XMLSerializer().serializeToString(svg);
+      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+      
+      const url = URL.createObjectURL(svgBlob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'family-tree.png';
+      a.download = 'family-tree.svg';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    });
+      
+    } catch (error) {
+      console.error('Error exporting SVG:', error);
+      notifications.error('Export Failed', 'Could not export SVG: ' + error.message);
+    }
+  }
+
+  addSVGText(nodeGroup, node) {
+    let y = node.y;
+    const lineHeight = 12;
+    
+    // Calculate total lines to center text vertically
+    let totalLines = 0;
+    const fullName = this.renderer.buildFullName(node);
+    if (fullName) totalLines += 1;
+    if (this.displayPreferences.showMaidenName && node.maidenName && node.maidenName !== node.surname) totalLines += 1;
+    if (this.displayPreferences.showDateOfBirth && node.dob) totalLines += 1;
+    
+    y = node.y - (totalLines - 1) * lineHeight / 2;
+    
+    // Add name text
+    if (fullName) {
+      const nameText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      nameText.setAttribute('x', node.x);
+      nameText.setAttribute('y', y);
+      nameText.setAttribute('text-anchor', 'middle');
+      nameText.setAttribute('dominant-baseline', 'middle');
+      nameText.setAttribute('font-family', this.renderer.settings.fontFamily);
+      nameText.setAttribute('font-size', this.renderer.settings.nameFontSize);
+      nameText.setAttribute('font-weight', '600');
+      nameText.setAttribute('fill', this.renderer.settings.nameColor);
+      nameText.textContent = fullName;
+      nodeGroup.appendChild(nameText);
+      y += lineHeight;
+    }
+    
+    // Add maiden name if applicable
+    if (this.displayPreferences.showMaidenName && node.maidenName && node.maidenName !== node.surname) {
+      const maidenText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      maidenText.setAttribute('x', node.x);
+      maidenText.setAttribute('y', y);
+      maidenText.setAttribute('text-anchor', 'middle');
+      maidenText.setAttribute('dominant-baseline', 'middle');
+      maidenText.setAttribute('font-family', this.renderer.settings.fontFamily);
+      maidenText.setAttribute('font-size', this.renderer.settings.dobFontSize);
+      maidenText.setAttribute('font-style', 'italic');
+      maidenText.setAttribute('fill', this.renderer.settings.nameColor);
+      maidenText.textContent = `(${node.maidenName})`;
+      nodeGroup.appendChild(maidenText);
+      y += 10;
+    }
+    
+    // Add DOB if applicable
+    if (this.displayPreferences.showDateOfBirth && node.dob) {
+      const dobText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      dobText.setAttribute('x', node.x);
+      dobText.setAttribute('y', y + 5);
+      dobText.setAttribute('text-anchor', 'middle');
+      dobText.setAttribute('dominant-baseline', 'middle');
+      dobText.setAttribute('font-family', this.renderer.settings.fontFamily);
+      dobText.setAttribute('font-size', this.renderer.settings.dobFontSize);
+      dobText.setAttribute('fill', this.renderer.settings.dobColor);
+      dobText.textContent = node.dob;
+      nodeGroup.appendChild(dobText);
+    }
   }
 
   setupKeyboard() {
