@@ -25,7 +25,96 @@
   
   <!-- Optimized Styles -->
   <style>
-    /* Notification System */
+    /* Cache Management Styles */
+    .cache-indicator {
+      position: fixed;
+      bottom: 16px;
+      left: 16px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 12px;
+      color: #666;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      z-index: 1000;
+      border: 1px solid rgba(0,0,0,0.1);
+      max-width: 200px;
+    }
+
+    .cache-indicator.saving {
+      background: rgba(46, 204, 113, 0.1);
+      border-color: rgba(46, 204, 113, 0.3);
+      color: #27ae60;
+    }
+
+    .cache-indicator.error {
+      background: rgba(231, 76, 60, 0.1);
+      border-color: rgba(231, 76, 60, 0.3);
+      color: #e74c3c;
+    }
+
+    /* Legacy Import Modal */
+    .legacy-import-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+    }
+
+    .legacy-import-content {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .legacy-import-content h3 {
+      margin-bottom: 16px;
+      color: #2c3e50;
+    }
+
+    .legacy-import-content p {
+      margin-bottom: 12px;
+      color: #666;
+      line-height: 1.5;
+    }
+
+    .legacy-format-info {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 16px;
+      margin: 16px 0;
+      border-left: 4px solid #3498db;
+    }
+
+    .legacy-format-info h4 {
+      margin-bottom: 8px;
+      color: #2c3e50;
+      font-size: 14px;
+    }
+
+    .legacy-format-info ul {
+      margin: 0;
+      padding-left: 20px;
+      font-size: 13px;
+      color: #666;
+    }
+
+    .legacy-format-info li {
+      margin-bottom: 4px;
+    }
+
+    /* Notifications System Updates */
     .notifications-container {
       position: fixed;
       top: 20px;
@@ -73,6 +162,10 @@
 
     .notification.warning {
       border-left-color: #f39c12;
+    }
+
+    .notification.cache {
+      border-left-color: #9b59b6;
     }
 
     .notification-icon {
@@ -419,6 +512,14 @@
         min-width: unset;
         max-width: unset;
       }
+
+      .cache-indicator {
+        bottom: 8px;
+        left: 8px;
+        right: 8px;
+        max-width: none;
+        text-align: center;
+      }
     }
 
     /* Custom styling for the line-only button */
@@ -434,31 +535,49 @@
       color: white !important;
     }
 
-    /* Debug button for testing */
-    .debug-panel {
-      position: fixed;
-      bottom: 16px;
-      left: 80px;
-      z-index: 2000;
-      background: #f39c12;
-      padding: 8px;
+    /* Import/Export Enhancement */
+    .import-export-enhanced {
+      border: 2px dashed #e9ecef;
       border-radius: 8px;
-      display: none; /* Hidden by default */
+      padding: 16px;
+      text-align: center;
+      margin-bottom: 16px;
+      transition: border-color 0.2s ease;
     }
-    
-    .debug-btn {
-      background: #e67e22;
-      color: white;
-      border: none;
-      padding: 6px 12px;
-      margin: 2px;
-      border-radius: 4px;
-      cursor: pointer;
+
+    .import-export-enhanced:hover {
+      border-color: #3498db;
+    }
+
+    .import-export-enhanced.dragover {
+      border-color: #3498db;
+      background: rgba(52, 152, 219, 0.05);
+    }
+
+    .format-support {
       font-size: 12px;
+      color: #666;
+      margin-top: 8px;
     }
-    
-    .debug-btn:hover {
-      background: #d35400;
+
+    /* Settings improvements */
+    .setting-group-enhanced {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .setting-group-enhanced label {
+      font-weight: 500;
+      color: #495057;
+      font-size: 14px;
+    }
+
+    .setting-group-enhanced .help-text {
+      font-size: 12px;
+      color: #6c757d;
+      margin-top: 4px;
     }
   </style>
 </head>
@@ -468,16 +587,39 @@
   height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <!-- End Google Tag Manager (noscript) -->
 
+  <!-- Cache Indicator -->
+  <div class="cache-indicator" id="cacheIndicator">
+    <div id="saveIndicator">Auto-save enabled</div>
+  </div>
+
+  <!-- Legacy Import Modal -->
+  <div class="legacy-import-modal" id="legacyImportModal">
+    <div class="legacy-import-content">
+      <h3>Legacy Format Detected</h3>
+      <p>We found a family tree file in an older format. We'll automatically convert it to work with the latest version.</p>
+      
+      <div class="legacy-format-info">
+        <h4>Conversion Details:</h4>
+        <ul>
+          <li>Position coordinates (cx,cy → x,y)</li>
+          <li>Node styling (fill,r → color,radius)</li>
+          <li>Field names (birth_name → maidenName)</li>
+          <li>Relationship structure updates</li>
+        </ul>
+      </div>
+      
+      <p><strong>Your data will be preserved.</strong> After conversion, we recommend saving the file in the new format.</p>
+      
+      <div class="form-actions">
+        <button id="proceedConversion" style="background: #27ae60; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">
+          Proceed with Conversion
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Notifications Container -->
   <div class="notifications-container" id="notificationsContainer"></div>
-
-  <!-- Debug Panel (for testing) -->
-  <div class="debug-panel" id="debugPanel">
-    <button class="debug-btn" onclick="testZoom()">Test Zoom</button>
-    <button class="debug-btn" onclick="document.getElementById('addPersonBtn').click()">Open Modal</button>
-    <button class="debug-btn" onclick="document.getElementById('settingsToggle').click()">Toggle Settings</button>
-    <button class="debug-btn" onclick="document.getElementById('viewToggle').click()">Toggle View</button>
-  </div>
 
   <!-- Vertical Sidebar -->
   <div class="sidebar">
@@ -624,7 +766,7 @@
       </div>
     </div>
 
-    <!-- Export Settings -->
+    <!-- Enhanced Export Settings -->
     <div class="setting-section">
       <h4>Export</h4>
       <div class="export-group">
@@ -632,18 +774,30 @@
         <button id="exportPng">PNG</button>
         <button id="exportPdf">PDF</button>
       </div>
+      <div class="format-support">
+        Supports: SVG (vector), PNG (image), PDF (document)
+      </div>
     </div>
 
-    <!-- Data Settings -->
+    <!-- Enhanced Data Settings with Import/Export -->
     <div class="setting-section">
-      <h4>Data</h4>
-      <div class="setting-group">
-        <button id="saveData">Save JSON</button>
-        <label for="loadData" class="file-label">
-          <span>Load JSON</span>
-          <input type="file" id="loadData" accept=".json" style="display: none;" />
-        </label>
+      <h4>Data Management</h4>
+      
+      <!-- Enhanced Import/Export Area -->
+      <div class="import-export-enhanced" id="importExportArea">
+        <div class="setting-group">
+          <button id="saveData">Save Family Tree</button>
+          <label for="loadData" class="file-label">
+            <span>Load Family Tree</span>
+            <input type="file" id="loadData" accept=".json" style="display: none;" />
+          </label>
+        </div>
+        <div class="format-support">
+          Supports both new format and legacy format files
+        </div>
       </div>
+      
+      <!-- Auto-save Controls will be added here by JavaScript -->
     </div>
   </div>
 
@@ -859,114 +1013,127 @@
   <script type="module" src="exporter.js"></script>
   <script type="module" src="notifications.js"></script>
   
-  <!-- Debug Helper -->
-  <script>
-    // Debug Helper - Simple debugging utilities
-    window.addEventListener('DOMContentLoaded', () => {
-      console.log('=== DEBUG HELPER LOADED ===');
-      
-      // Test sidebar buttons after a delay
-      setTimeout(() => {
-        console.log('=== TESTING SIDEBAR BUTTONS ===');
-        
-        const buttons = [
-          'homeBtn',
-          'zoomInBtn', 
-          'zoomOutBtn',
-          'settingsToggle',
-          'viewToggle'
-        ];
-        
-        buttons.forEach(id => {
-          const btn = document.getElementById(id);
-          console.log(`${id}:`, btn ? 'Found' : 'NOT FOUND');
-        });
-        
-        // Test modal elements
-        console.log('=== TESTING MODAL ELEMENTS ===');
-        const modalElements = [
-          'personModal',
-          'personName',
-          'genderMale',
-          'genderFemale',
-          'savePerson',
-          'cancelModal'
-        ];
-        
-        modalElements.forEach(id => {
-          const el = document.getElementById(id);
-          console.log(`${id}:`, el ? 'Found' : 'NOT FOUND');
-        });
-        
-        // Test canvas
-        console.log('=== TESTING CANVAS ===');
-        const graphicView = document.getElementById('graphicView');
-        const canvas = graphicView?.querySelector('canvas');
-        console.log('GraphicView:', graphicView ? 'Found' : 'NOT FOUND');
-        console.log('Canvas:', canvas ? 'Found' : 'NOT FOUND');
-        
-        // Test tree core
-        console.log('=== TESTING TREE CORE ===');
-        import('./tree.js').then(() => {
-          console.log('Tree.js imported successfully');
-          return import('./tree-core-canvas.js');
-        }).then(({ treeCore }) => {
-          console.log('TreeCore:', treeCore ? 'Found' : 'NOT FOUND');
-          console.log('TreeCore renderer:', treeCore.renderer ? 'Found' : 'NOT FOUND');
-        }).catch(error => {
-          console.error('Error importing tree modules:', error);
-        });
-        
-      }, 2000);
-      
-      // Listen for custom events
-      ['savePersonFromModal', 'displayPreferenceChanged', 'nodeStyleChanged'].forEach(eventName => {
-        document.addEventListener(eventName, (e) => {
-          console.log(`🎯 Custom event fired: ${eventName}`, e.detail);
-        });
-      });
-    });
-    
-    // Helper functions for testing
-    window.testZoom = function() {
-      console.log('Testing zoom functionality...');
-      const graphicView = document.getElementById('graphicView');
-      const canvas = graphicView?.querySelector('canvas');
-      
-      if (canvas) {
-        console.log('Found canvas, dispatching wheel event');
-        const rect = canvas.getBoundingClientRect();
-        const wheelEvent = new WheelEvent('wheel', {
-          deltaY: -100,
-          clientX: rect.left + rect.width / 2,
-          clientY: rect.top + rect.height / 2,
-          bubbles: true,
-          cancelable: true
-        });
-        canvas.dispatchEvent(wheelEvent);
-      } else {
-        console.log('No canvas found');
-      }
-    };
-  </script>
-  
   <script type="module">
     import { rebuildTableView } from './table.js';
     
-    // Enhanced App Initialization
+    // Enhanced App Initialization with caching support
     document.addEventListener('DOMContentLoaded', () => {
-      console.log('Initializing enhanced functionality...');
+      console.log('Initializing enhanced family tree with caching...');
+      
+      // Setup drag and drop for file import
+      setupDragAndDrop();
+      
+      // Setup cache indicator updates
+      setupCacheIndicator();
+      
       // Wait for tree core to be ready, then initialize sidebar
       setTimeout(() => {
         initializeSidebar();
         initializeEnhancedSettings();
-      }, 1000); // Increased delay
+      }, 1000);
     });
+    
+    function setupDragAndDrop() {
+      const importExportArea = document.getElementById('importExportArea');
+      if (!importExportArea) return;
+      
+      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        importExportArea.addEventListener(eventName, preventDefaults, false);
+      });
+      
+      function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      
+      ['dragenter', 'dragover'].forEach(eventName => {
+        importExportArea.addEventListener(eventName, highlight, false);
+      });
+      
+      ['dragleave', 'drop'].forEach(eventName => {
+        importExportArea.addEventListener(eventName, unhighlight, false);
+      });
+      
+      function highlight(e) {
+        importExportArea.classList.add('dragover');
+      }
+      
+      function unhighlight(e) {
+        importExportArea.classList.remove('dragover');
+      }
+      
+      importExportArea.addEventListener('drop', handleDrop, false);
+      
+      function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        
+        if (files.length > 0) {
+          const file = files[0];
+          if (file.type === 'application/json' || file.name.endsWith('.json')) {
+            // Trigger the file input change event
+            const loadDataInput = document.getElementById('loadData');
+            if (loadDataInput) {
+              // Create a new FileList
+              const fileList = new DataTransfer();
+              fileList.items.add(file);
+              loadDataInput.files = fileList.files;
+              
+              // Trigger change event
+              const event = new Event('change', { bubbles: true });
+              loadDataInput.dispatchEvent(event);
+            }
+          } else {
+            import('./notifications.js').then(({ notifications }) => {
+              notifications.error('Invalid File', 'Please drop a JSON file');
+            });
+          }
+        }
+      }
+    }
+    
+    function setupCacheIndicator() {
+      // Update cache indicator based on system state
+      const cacheIndicator = document.getElementById('cacheIndicator');
+      if (!cacheIndicator) return;
+      
+      // Listen for save events
+      window.addEventListener('storage', (e) => {
+        if (e.key && e.key.includes('familyTreeCanvas')) {
+          const saveIndicator = document.getElementById('saveIndicator');
+          if (saveIndicator) {
+            saveIndicator.textContent = `Saved: ${new Date().toLocaleTimeString()}`;
+            cacheIndicator.classList.add('saving');
+            
+            setTimeout(() => {
+              cacheIndicator.classList.remove('saving');
+            }, 2000);
+          }
+        }
+      });
+      
+      // Check for cached data on load
+      setTimeout(() => {
+        const cachedData = localStorage.getItem('familyTreeCanvas_state');
+        if (cachedData) {
+          const saveIndicator = document.getElementById('saveIndicator');
+          if (saveIndicator) {
+            try {
+              const data = JSON.parse(cachedData);
+              const lastSave = new Date(data.timestamp);
+              saveIndicator.textContent = `Last saved: ${lastSave.toLocaleTimeString()}`;
+            } catch (error) {
+              saveIndicator.textContent = 'Cached data available';
+            }
+          }
+        }
+      }, 2000);
+    }
     
     let currentView = 'graphic';
     
     function initializeSidebar() {
-      console.log('Initializing sidebar...');
+      console.log('Initializing enhanced sidebar...');
       
       // Home button
       const homeBtn = document.getElementById('homeBtn');
@@ -1038,7 +1205,6 @@
     function triggerCanvasZoom(deltaY) {
       console.log('Triggering canvas zoom:', deltaY);
       
-      // Try to get the canvas element directly
       const graphicView = document.getElementById('graphicView');
       const canvas = graphicView?.querySelector('canvas');
       
