@@ -1,4 +1,4 @@
-// canvas-renderer.js - Enhanced with fixed display preferences and rectangle node support
+// canvas-renderer.js - Enhanced with improved export functionality
 
 export class CanvasRenderer {
   constructor(container) {
@@ -115,6 +115,160 @@ export class CanvasRenderer {
     this.ctx.scale(this.dpr, this.dpr);
     
     this.needsRedraw = true;
+  }
+
+  // Calculate bounding box of all nodes and connections (for export)
+  getContentBounds() {
+    if (this.nodes.size === 0) {
+      return null;
+    }
+
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+    // Check all nodes
+    for (const [id, node] of this.nodes) {
+      if (this.settings.nodeStyle === 'rectangle') {
+        const width = this.getNodeWidth(node);
+        const height = this.getNodeHeight(node);
+        
+        minX = Math.min(minX, node.x - width/2);
+        minY = Math.min(minY, node.y - height/2);
+        maxX = Math.max(maxX, node.x + width/2);
+        maxY = Math.max(maxY, node.y + height/2);
+      } else {
+        const radius = node.radius || this.settings.nodeRadius;
+        
+        minX = Math.min(minX, node.x - radius);
+        minY = Math.min(minY, node.y - radius);
+        maxX = Math.max(maxX, node.x + radius);
+        maxY = Math.max(maxY, node.y + radius);
+      }
+    }
+
+    return {
+      x: minX,
+      y: minY,
+      width: maxX - minX,
+      height: maxY - minY
+    };
+  }
+
+  // Export canvas as image without grid and with proper bounds
+  exportAsImage(format = 'png') {
+    const bounds = this.getContentBounds();
+    if (!bounds) {
+      throw new Error('No content to export');
+    }
+
+    // Add 5px margin
+    const margin = 5;
+    const exportWidth = bounds.width + (margin * 2);
+    const exportHeight = bounds.height + (margin * 2);
+
+    // Create export canvas
+    const exportCanvas = document.createElement('canvas');
+    const exportCtx = exportCanvas.getContext('2d');
+    
+    // Set canvas size (use higher resolution for better quality)
+    const scale = 2;
+    exportCanvas.width = exportWidth * scale;
+    exportCanvas.height = exportHeight * scale;
+    exportCtx.scale(scale, scale);
+
+    // Fill with white background
+    exportCtx.fillStyle = '#ffffff';
+    exportCtx.fillRect(0, 0, exportWidth, exportHeight);
+
+    // Save current state
+    exportCtx.save();
+
+    // Translate to account for bounds and margin
+    exportCtx.translate(margin - bounds.x, margin - bounds.y);
+
+    // Draw only nodes and connections (no grid)
+    this.drawConnectionsOnly(exportCtx);
+    this.drawNodesOnly(exportCtx);
+
+    // Restore state
+    exportCtx.restore();
+
+    return exportCanvas;
+  }
+
+  // Draw only connections (for export)
+  drawConnectionsOnly(ctx) {
+    ctx.lineWidth = 2;
+    
+    for (const conn of this.connections) {
+      const fromNode = this.nodes.get(conn.from);
+      const toNode = this.nodes.get(conn.to);
+      
+      if (!fromNode || !toNode) continue;
+      
+      if (conn.type === 'spouse') {
+        ctx.strokeStyle = this.settings.spouseConnectionColor;
+        ctx.setLineDash([4, 2]);
+      } else if (conn.type === 'line-only') {
+        ctx.strokeStyle = '#9b59b6';
+        ctx.setLineDash([8, 4, 2, 4]);
+      } else {
+        ctx.strokeStyle = this.settings.connectionColor;
+        ctx.setLineDash([]);
+      }
+      
+      ctx.beginPath();
+      ctx.moveTo(fromNode.x, fromNode.y);
+      ctx.lineTo(toNode.x, toNode.y);
+      ctx.stroke();
+      
+      ctx.setLineDash([]);
+    }
+  }
+
+  // Draw only nodes (for export)
+  drawNodesOnly(ctx) {
+    for (const [id, node] of this.nodes) {
+      if (this.settings.nodeStyle === 'rectangle') {
+        this.drawRectangleNodeExport(ctx, id, node);
+      } else {
+        this.drawCircleNodeExport(ctx, id, node);
+      }
+    }
+  }
+
+  // Draw circle node for export (no selection states)
+  drawCircleNodeExport(ctx, id, node) {
+    const radius = node.radius || this.settings.nodeRadius;
+    
+    // Draw circle
+    ctx.fillStyle = node.color || this.settings.nodeColor;
+    ctx.strokeStyle = this.settings.strokeColor;
+    ctx.lineWidth = this.settings.strokeWidth;
+    
+    ctx.beginPath();
+    ctx.arc(node.x, node.y, radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    
+    // Draw text
+    this.drawNodeText(ctx, node, radius * 1.8);
+  }
+
+  // Draw rectangle node for export (no selection states)
+  drawRectangleNodeExport(ctx, id, node) {
+    const width = this.getNodeWidth(node);
+    const height = this.getNodeHeight(node);
+    
+    // Draw rectangle
+    ctx.fillStyle = node.color || this.settings.nodeColor;
+    ctx.strokeStyle = this.settings.strokeColor;
+    ctx.lineWidth = this.settings.strokeWidth;
+    
+    ctx.fillRect(node.x - width/2, node.y - height/2, width, height);
+    ctx.strokeRect(node.x - width/2, node.y - height/2, width, height);
+    
+    // Draw text
+    this.drawNodeText(ctx, node, width - 20);
   }
 
   // Convert screen coordinates to world coordinates
