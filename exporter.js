@@ -1,103 +1,153 @@
+// exporter.js - Enhanced with notification support
+
+import { notifications } from './notifications.js';
+
 export function exportTree(format) {
   const original = document.getElementById('svgArea');
   if (!original) {
     console.error('SVG area not found');
+    notifications.error('Export Failed', 'SVG area not found');
     return;
   }
   
-  const clone = original.cloneNode(true);
+  // Show loading notification
+  const loadingId = notifications.loading('Exporting...', `Generating ${format.toUpperCase()} file`);
   
-  // Remove grid lines and background if they exist
-  clone.querySelectorAll('.grid-line').forEach((el) => el.remove());
-  
-  // Ensure the clone has proper styling
-  const style = document.createElementNS('http://www.w3.org/2000/svg', 'style');
-  style.textContent = `
-    .person-group circle { 
-      stroke: #2c3e50; 
-      stroke-width: 2px; 
-    }
-    .person-group text.name { 
-      font-weight: 600; 
-      font-family: 'Inter', sans-serif;
-    }
-    .person-group text.dob { 
-      font-size: 12px; 
-      fill: #757575; 
-      font-family: 'Inter', sans-serif;
-    }
-    .relation { 
-      stroke: #7f8c8d; 
-      stroke-width: 2px; 
-    }
-    .relation.spouse { 
-      stroke-dasharray: 4 2; 
-    }
-  `;
-  clone.insertBefore(style, clone.firstChild);
-  
-  // Get the bounding box of all content
-  const bbox = getContentBounds(clone);
-  if (bbox) {
-    clone.setAttribute('viewBox', `${bbox.x - 50} ${bbox.y - 50} ${bbox.width + 100} ${bbox.height + 100}`);
-    clone.setAttribute('width', bbox.width + 100);
-    clone.setAttribute('height', bbox.height + 100);
-  }
-  
-  const svgData = new XMLSerializer().serializeToString(clone);
-  const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-  
-  if (format === 'svg') {
-    downloadBlob(svgBlob, 'family-tree.svg');
-  } else {
-    const img = new Image();
-    const url = URL.createObjectURL(svgBlob);
-    
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const scale = 2; // Higher resolution
-      canvas.width = img.width * scale;
-      canvas.height = img.height * scale;
-      const ctx = canvas.getContext('2d');
-      ctx.scale(scale, scale);
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0);
-      URL.revokeObjectURL(url);
-      
-      if (format === 'png') {
-        canvas.toBlob((blob) => downloadBlob(blob, 'family-tree.png'));   
-      } else if (format === 'pdf') {
-        import('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js').then((module) => {
-          const { jsPDF } = module.jspdf;
-          const imgData = canvas.toDataURL('image/png');
-          const imgWidth = canvas.width / scale;
-          const imgHeight = canvas.height / scale;
+  try {
+    // Small delay to show the loading notification
+    setTimeout(() => {
+      try {
+        const clone = original.cloneNode(true);
+        
+        // Remove grid lines and background if they exist
+        clone.querySelectorAll('.grid-line').forEach((el) => el.remove());
+        
+        // Ensure the clone has proper styling
+        const style = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+        style.textContent = `
+          .person-group circle { 
+            stroke: #2c3e50; 
+            stroke-width: 2px; 
+          }
+          .person-group text.name { 
+            font-weight: 600; 
+            font-family: 'Inter', sans-serif;
+          }
+          .person-group text.dob { 
+            font-size: 12px; 
+            fill: #757575; 
+            font-family: 'Inter', sans-serif;
+          }
+          .relation { 
+            stroke: #7f8c8d; 
+            stroke-width: 2px; 
+          }
+          .relation.spouse { 
+            stroke-dasharray: 4 2; 
+          }
+        `;
+        clone.insertBefore(style, clone.firstChild);
+        
+        // Get the bounding box of all content
+        const bbox = getContentBounds(clone);
+        if (bbox) {
+          clone.setAttribute('viewBox', `${bbox.x - 50} ${bbox.y - 50} ${bbox.width + 100} ${bbox.height + 100}`);
+          clone.setAttribute('width', bbox.width + 100);
+          clone.setAttribute('height', bbox.height + 100);
+        }
+        
+        const svgData = new XMLSerializer().serializeToString(clone);
+        const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+        
+        if (format === 'svg') {
+          downloadBlob(svgBlob, 'family-tree.svg');
+          notifications.remove(loadingId);
+          notifications.success('Export Complete', 'SVG file has been downloaded successfully');
+        } else {
+          const img = new Image();
+          const url = URL.createObjectURL(svgBlob);
           
-          // Choose orientation based on aspect ratio
-          const orientation = imgWidth > imgHeight ? 'landscape' : 'portrait';
-          const pdf = new jsPDF({ 
-            orientation: orientation, 
-            unit: 'pt', 
-            format: [imgWidth, imgHeight] 
-          });
+          img.onload = () => {
+            try {
+              const canvas = document.createElement('canvas');
+              const scale = 2; // Higher resolution
+              canvas.width = img.width * scale;
+              canvas.height = img.height * scale;
+              const ctx = canvas.getContext('2d');
+              ctx.scale(scale, scale);
+              ctx.fillStyle = '#ffffff';
+              ctx.fillRect(0, 0, canvas.width, canvas.height);
+              ctx.drawImage(img, 0, 0);
+              URL.revokeObjectURL(url);
+              
+              if (format === 'png') {
+                canvas.toBlob((blob) => {
+                  downloadBlob(blob, 'family-tree.png');
+                  notifications.remove(loadingId);
+                  notifications.success('Export Complete', 'PNG file has been downloaded successfully');
+                });   
+              } else if (format === 'pdf') {
+                // Dynamic import for PDF library
+                import('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js')
+                  .then((module) => {
+                    try {
+                      const { jsPDF } = module.jspdf;
+                      const imgData = canvas.toDataURL('image/png');
+                      const imgWidth = canvas.width / scale;
+                      const imgHeight = canvas.height / scale;
+                      
+                      // Choose orientation based on aspect ratio
+                      const orientation = imgWidth > imgHeight ? 'landscape' : 'portrait';
+                      const pdf = new jsPDF({ 
+                        orientation: orientation, 
+                        unit: 'pt', 
+                        format: [imgWidth, imgHeight] 
+                      });
+                      
+                      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+                      pdf.save('family-tree.pdf');
+                      
+                      notifications.remove(loadingId);
+                      notifications.success('Export Complete', 'PDF file has been downloaded successfully');
+                    } catch (pdfError) {
+                      console.error('Error creating PDF:', pdfError);
+                      notifications.remove(loadingId);
+                      notifications.error('PDF Export Failed', 'Error creating PDF file');
+                    }
+                  })
+                  .catch(err => {
+                    console.error('Error loading jsPDF:', err);
+                    notifications.remove(loadingId);
+                    notifications.error('PDF Export Failed', 'Could not load PDF library');
+                  });
+              }
+            } catch (canvasError) {
+              console.error('Error processing canvas:', canvasError);
+              notifications.remove(loadingId);
+              notifications.error('Export Failed', 'Error processing image data');
+            }
+          };
           
-          pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-          pdf.save('family-tree.pdf');
-        }).catch(err => {
-          console.error('Error loading jsPDF:', err);
-          alert('Error loading PDF library. Please try again.');
-        });
+          img.onerror = () => {
+            console.error('Error loading image for export');
+            notifications.remove(loadingId);
+            notifications.error('Export Failed', 'Error loading image for export');
+            URL.revokeObjectURL(url);
+          };
+          
+          img.src = url;
+        }
+      } catch (processError) {
+        console.error('Error during export process:', processError);
+        notifications.remove(loadingId);
+        notifications.error('Export Failed', 'An error occurred during the export process');
       }
-    };
+    }, 200); // Small delay to show loading notification
     
-    img.onerror = () => {
-      console.error('Error loading image for export');
-      alert('Error creating image for export');
-      URL.revokeObjectURL(url);
-    };
-    
-    img.src = url;
+  } catch (error) {
+    console.error('Export error:', error);
+    notifications.remove(loadingId);
+    notifications.error('Export Failed', 'Failed to export family tree');
   }
 }
 
@@ -160,11 +210,26 @@ function getContentBounds(svgElement) {
 }
 
 function downloadBlob(blob, filename) {
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(link.href);
+  try {
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+  } catch (error) {
+    console.error('Error downloading file:', error);
+    notifications.error('Download Failed', 'Could not download the file');
+  }
+}
+
+// Export success notification helper
+export function showExportSuccess(format) {
+  notifications.success('Export Complete', `${format.toUpperCase()} file has been downloaded successfully`);
+}
+
+// Export error notification helper
+export function showExportError(format, message) {
+  notifications.error('Export Failed', `Failed to export ${format.toUpperCase()}: ${message}`);
 }
