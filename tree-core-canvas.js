@@ -655,9 +655,21 @@ class TreeCoreCanvas {
   }
 
   setupExport() {
-    // SVG Export
+    // SVG Export (FIXED with notifications)
     document.getElementById('exportSvg')?.addEventListener('click', () => {
-      notifications.error('Not Available', 'SVG export not yet implemented for canvas renderer');
+      const loadingId = notifications.loading('Exporting...', 'Generating SVG file');
+      
+      try {
+        setTimeout(() => {
+          this.exportCanvasAsSVG();
+          notifications.remove(loadingId);
+          notifications.success('Export Complete', 'SVG file has been downloaded');
+        }, 100);
+      } catch (error) {
+        notifications.remove(loadingId);
+        notifications.error('Export Failed', 'Error generating SVG file');
+        console.error('SVG export error:', error);
+      }
     });
     
     // PNG Export (FIXED with notifications)
