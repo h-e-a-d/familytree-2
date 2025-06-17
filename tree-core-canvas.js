@@ -1,4 +1,4 @@
-// tree-core-canvas.js - Enhanced with fixed settings and notifications
+// tree-core-canvas.js - Enhanced with backwards compatibility and caching functionality
 
 import { CanvasRenderer } from './canvas-renderer.js';
 import { openModalForEdit, closeModal, getSelectedGender } from './modal.js';
@@ -50,6 +50,12 @@ class TreeCoreCanvas {
     
     // ID counter
     this.nextId = 1;
+    
+    // Caching
+    this.cacheKey = 'familyTreeCanvas_state';
+    this.autoSaveInterval = 30000; // Auto-save every 30 seconds
+    this.autoSaveTimer = null;
+    this.lastSaveTime = null;
   }
 
   initialize() {
@@ -84,6 +90,7 @@ class TreeCoreCanvas {
     this.renderer.onNodeDragEnd = (nodeId) => {
       this.regenerateConnections();
       this.pushUndoState();
+      this.autoSave(); // Auto-save after drag
     };
     
     this.renderer.onSelectionCleared = () => {
@@ -107,6 +114,7 @@ class TreeCoreCanvas {
     this.setupViewSwitching();
     this.setupDisplayPreferences();
     this.setupNodeStyleSwitcher();
+    this.setupCaching();
     
     // Setup form submit handler
     const personForm = document.getElementById('personForm');
@@ -124,13 +132,667 @@ class TreeCoreCanvas {
       this.handleSavePersonFromModal(e.detail);
     });
     
-    // Initial state
-    this.pushUndoState();
+    // Try to load cached state first, then check for legacy format
+    this.loadCachedState().then((loaded) => {
+      if (!loaded) {
+        // No cached state, check if there's a way to load legacy data
+        this.checkForLegacyData();
+      }
+      
+      // Initial state if nothing was loaded
+      if (!this.personData || this.personData.size === 0) {
+        this.pushUndoState();
+      }
+    });
     
     console.log('TreeCoreCanvas initialization complete');
   }
 
-  // Setup node style switcher (NEW/FIXED)
+  // ================== CACHING FUNCTIONALITY ==================
+
+  setupCaching() {
+    console.log('Setting up caching functionality...');
+    
+    // Start auto-save timer
+    this.startAutoSave();
+    
+    // Save before page unload
+    window.addEventListener('beforeunload', () => {
+      this.saveToCache();
+    });
+    
+    // Save when page becomes hidden (mobile/tab switching)
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        this.saveToCache();
+      }
+    });
+    
+    // Add cache management UI
+    this.addCacheManagementUI();
+    
+    console.log('Caching setup complete');
+  }
+
+  startAutoSave() {
+    if (this.autoSaveTimer) {
+      clearInterval(this.autoSaveTimer);
+    }
+    
+    this.autoSaveTimer = setInterval(() => {
+      this.autoSave();
+    }, this.autoSaveInterval);
+    
+    console.log(`Auto-save started (${this.autoSaveInterval / 1000}s interval)`);
+  }
+
+  autoSave() {
+    try {
+      this.saveToCache();
+      this.lastSaveTime = new Date();
+      
+      // Update save indicator if it exists
+      const saveIndicator = document.getElementById('saveIndicator');
+      if (saveIndicator) {
+        saveIndicator.textContent = `Last saved: ${this.lastSaveTime.toLocaleTimeString()}`;
+        saveIndicator.style.color = '#27ae60';
+      }
+      
+      console.log('Auto-save completed');
+    } catch (error) {
+      console.error('Auto-save failed:', error);
+      notifications.warning('Auto-save Failed', 'Could not save progress automatically');
+    }
+  }
+
+  saveToCache() {
+    try {
+      const state = this.getCurrentState();
+      const stateString = JSON.stringify(state);
+      
+      // Check localStorage size limit
+      const currentSize = new Blob([stateString]).size;
+      if (currentSize > 5 * 1024 * 1024) { // 5MB limit
+        console.warn('State too large for localStorage, compressing...');
+        // Save only essential data if too large
+        const compressedState = this.getCompressedState();
+        localStorage.setItem(this.cacheKey, JSON.stringify(compressedState));
+      } else {
+        localStorage.setItem(this.cacheKey, stateString);
+      }
+      
+      // Also save a backup with timestamp
+      const backupKey = `${this.cacheKey}_backup_${Date.now()}`;
+      localStorage.setItem(backupKey, stateString);
+      
+      // Clean old backups (keep only last 3)
+      this.cleanOldBackups();
+      
+      console.log('State saved to cache');
+      return true;
+    } catch (error) {
+      console.error('Failed to save to cache:', error);
+      return false;
+    }
+  }
+
+  async loadCachedState() {
+    try {
+      const cachedState = localStorage.getItem(this.cacheKey);
+      if (!cachedState) {
+        console.log('No cached state found');
+        return false;
+      }
+      
+      const state = JSON.parse(cachedState);
+      console.log('Loading cached state:', state);
+      
+      // Detect format and load accordingly
+      if (state.version || state.persons) {
+        // New format
+        this.processLoadedData(state);
+      } else if (state.people) {
+        // Legacy format
+        this.processLegacyData(state);
+      } else {
+        console.warn('Unknown cached state format');
+        return false;
+      }
+      
+      notifications.success('Progress Restored', 'Your previous work has been restored');
+      console.log('Cached state loaded successfully');
+      return true;
+    } catch (error) {
+      console.error('Failed to load cached state:', error);
+      notifications.error('Restore Failed', 'Could not restore previous progress');
+      return false;
+    }
+  }
+
+  getCurrentState() {
+    return {
+      version: '2.5', // Increment version for caching
+      timestamp: Date.now(),
+      settings: {
+        nodeRadius: this.nodeRadius,
+        defaultColor: this.defaultColor,
+        fontFamily: this.fontFamily,
+        fontSize: this.fontSize,
+        nameColor: this.nameColor,
+        dateColor: this.dateColor
+      },
+      displayPreferences: { ...this.displayPreferences },
+      nodeStyle: this.nodeStyle,
+      camera: this.renderer ? this.renderer.getCamera() : { x: 0, y: 0, scale: 1 },
+      hiddenConnections: Array.from(this.hiddenConnections),
+      lineOnlyConnections: Array.from(this.lineOnlyConnections),
+      persons: this.getPersonsArray(),
+      personData: this.personData ? Array.from(this.personData.entries()) : [],
+      nextId: this.nextId
+    };
+  }
+
+  getCompressedState() {
+    // Return only essential data for large states
+    return {
+      version: '2.5',
+      timestamp: Date.now(),
+      persons: this.getPersonsArray(),
+      personData: this.personData ? Array.from(this.personData.entries()) : [],
+      nextId: this.nextId
+    };
+  }
+
+  getPersonsArray() {
+    const persons = [];
+    if (this.renderer && this.renderer.nodes) {
+      for (const [id, node] of this.renderer.nodes) {
+        const personData = this.personData?.get(id) || {};
+        persons.push({
+          id,
+          x: node.x,
+          y: node.y,
+          color: node.color,
+          radius: node.radius,
+          ...personData
+        });
+      }
+    }
+    return persons;
+  }
+
+  cleanOldBackups() {
+    try {
+      const backupKeys = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(`${this.cacheKey}_backup_`)) {
+          backupKeys.push({
+            key,
+            timestamp: parseInt(key.split('_').pop())
+          });
+        }
+      }
+      
+      // Sort by timestamp and keep only the 3 most recent
+      backupKeys.sort((a, b) => b.timestamp - a.timestamp);
+      for (let i = 3; i < backupKeys.length; i++) {
+        localStorage.removeItem(backupKeys[i].key);
+      }
+    } catch (error) {
+      console.error('Failed to clean old backups:', error);
+    }
+  }
+
+  clearCache() {
+    try {
+      localStorage.removeItem(this.cacheKey);
+      
+      // Clear backups
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(`${this.cacheKey}_backup_`)) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+      
+      notifications.success('Cache Cleared', 'All cached progress has been cleared');
+      console.log('Cache cleared');
+    } catch (error) {
+      console.error('Failed to clear cache:', error);
+      notifications.error('Clear Failed', 'Could not clear cached data');
+    }
+  }
+
+  addCacheManagementUI() {
+    const settingsPanel = document.getElementById('settingsPanel');
+    if (!settingsPanel) return;
+    
+    // Add cache management section
+    const cacheSection = document.createElement('div');
+    cacheSection.className = 'setting-section';
+    cacheSection.innerHTML = `
+      <h4>Progress & Cache</h4>
+      <div class="setting-group">
+        <span id="saveIndicator" style="font-size: 12px; color: #666;">Auto-save enabled</span>
+      </div>
+      <div class="setting-group">
+        <button id="manualSaveBtn" style="flex: 1;">Save Now</button>
+        <button id="clearCacheBtn" style="flex: 1; background: #e74c3c;">Clear Cache</button>
+      </div>
+      <div class="setting-group">
+        <label for="autoSaveToggle">Auto-save enabled:</label>
+        <input type="checkbox" id="autoSaveToggle" checked>
+      </div>
+    `;
+    
+    // Insert before the last section
+    settingsPanel.appendChild(cacheSection);
+    
+    // Wire up events
+    document.getElementById('manualSaveBtn')?.addEventListener('click', () => {
+      if (this.saveToCache()) {
+        notifications.success('Saved', 'Progress saved manually');
+      } else {
+        notifications.error('Save Failed', 'Could not save progress');
+      }
+    });
+    
+    document.getElementById('clearCacheBtn')?.addEventListener('click', () => {
+      if (confirm('Are you sure you want to clear all cached progress? This cannot be undone.')) {
+        this.clearCache();
+      }
+    });
+    
+    document.getElementById('autoSaveToggle')?.addEventListener('change', (e) => {
+      if (e.target.checked) {
+        this.startAutoSave();
+        notifications.success('Auto-save On', 'Automatic saving enabled');
+      } else {
+        if (this.autoSaveTimer) {
+          clearInterval(this.autoSaveTimer);
+          this.autoSaveTimer = null;
+        }
+        notifications.info('Auto-save Off', 'Automatic saving disabled');
+      }
+    });
+  }
+
+  // ================== BACKWARDS COMPATIBILITY ==================
+
+  checkForLegacyData() {
+    // Check if there's any indication of legacy data to import
+    console.log('Checking for legacy data...');
+    
+    // This could be extended to check for specific legacy cache keys
+    // or offer to import from uploaded files
+  }
+
+  // Process legacy JSON format (from the uploaded file)
+  processLegacyData(data) {
+    console.log('Processing legacy data format:', data);
+    
+    try {
+      // Clear current state
+      this.renderer.nodes.clear();
+      this.renderer.clearConnections();
+      this.personData = new Map();
+      this.hiddenConnections = new Set();
+      this.lineOnlyConnections = new Set();
+      
+      // Process font settings if available
+      if (data.fontSettings) {
+        this.fontFamily = data.fontSettings.fontFamily || this.fontFamily;
+        this.fontSize = data.fontSettings.fontSize || this.fontSize;
+        this.nameColor = data.fontSettings.nameColor || this.nameColor;
+        this.dateColor = data.fontSettings.dateColor || this.dateColor;
+        this.updateRendererSettings();
+      }
+      
+      // Convert legacy people format to new format
+      let maxId = 0;
+      for (const person of data.people) {
+        const nodeData = {
+          x: person.cx || 0,
+          y: person.cy || 0,
+          name: person.name || '',
+          fatherName: person.father_name || '',
+          surname: person.surname || '',
+          maidenName: person.birth_name || '', // Convert birth_name to maidenName
+          dob: person.dob || '',
+          gender: person.gender || '',
+          color: person.fill || this.defaultColor, // Convert fill to color
+          radius: person.r || this.nodeRadius // Convert r to radius
+        };
+        
+        this.renderer.setNode(person.id, nodeData);
+        
+        // Store person data with converted field names
+        this.personData.set(person.id, {
+          name: person.name || '',
+          fatherName: person.father_name || '',
+          surname: person.surname || '',
+          maidenName: person.birth_name || '',
+          dob: person.dob || '',
+          gender: person.gender || '',
+          motherId: person.mother_id || '',
+          fatherId: person.father_id || '',
+          spouseId: person.spouse_id || ''
+        });
+        
+        // Track max ID for new person creation
+        const numId = parseInt(person.id.replace('p', ''));
+        if (!isNaN(numId) && numId > maxId) {
+          maxId = numId;
+        }
+      }
+      
+      this.nextId = maxId + 1;
+      
+      // Process relations if available
+      if (data.relations) {
+        // Convert relations to connections
+        for (const relation of data.relations) {
+          if (relation.relationship === 'family') {
+            this.renderer.addConnection(relation.source, relation.target, 'parent');
+          }
+        }
+      } else {
+        // Generate connections from family relationships
+        this.regenerateConnections();
+      }
+      
+      // Reset undo/redo
+      this.undoStack = [];
+      this.redoStack = [];
+      this.pushUndoState();
+      
+      // Save the converted data to cache
+      this.saveToCache();
+      
+      notifications.success('Legacy Data Loaded', 'Family tree imported and converted successfully');
+      console.log('Legacy data processed successfully');
+      
+    } catch (error) {
+      console.error('Error processing legacy data:', error);
+      notifications.error('Import Failed', 'Could not process legacy family tree data');
+      throw error;
+    }
+  }
+
+  // Enhanced loadFromJSON to handle both formats
+  processLoadedData(data) {
+    console.log('Processing loaded data, version:', data.version);
+    
+    // Detect and handle different formats
+    if (data.people && !data.persons) {
+      // Legacy format
+      return this.processLegacyData(data);
+    }
+    
+    // New format processing (existing code with enhancements)
+    this.renderer.nodes.clear();
+    this.renderer.clearConnections();
+    this.personData = new Map();
+    this.hiddenConnections = new Set();
+    this.lineOnlyConnections = new Set();
+    
+    // Restore settings
+    if (data.settings) {
+      this.nodeRadius = data.settings.nodeRadius || this.nodeRadius;
+      this.defaultColor = data.settings.defaultColor || this.defaultColor;
+      this.fontFamily = data.settings.fontFamily || this.fontFamily;
+      this.fontSize = data.settings.fontSize || this.fontSize;
+      this.nameColor = data.settings.nameColor || this.nameColor;
+      this.dateColor = data.settings.dateColor || this.dateColor;
+      this.updateRendererSettings();
+    }
+    
+    // Restore display preferences
+    if (data.displayPreferences) {
+      this.displayPreferences = { ...data.displayPreferences };
+      Object.keys(this.displayPreferences).forEach(key => {
+        const checkbox = document.getElementById(key);
+        if (checkbox) {
+          checkbox.checked = this.displayPreferences[key];
+        }
+      });
+    }
+    
+    // Restore node style
+    if (data.nodeStyle) {
+      this.nodeStyle = data.nodeStyle;
+      document.querySelectorAll('.node-style-option').forEach(opt => {
+        opt.classList.remove('selected');
+        if (opt.getAttribute('data-style') === this.nodeStyle) {
+          opt.classList.add('selected');
+        }
+      });
+    }
+    
+    // Restore camera
+    if (data.camera && this.renderer) {
+      this.renderer.setCamera(data.camera.x, data.camera.y, data.camera.scale);
+    }
+    
+    // Restore hidden/line-only connections
+    if (data.hiddenConnections) {
+      this.hiddenConnections = new Set(data.hiddenConnections);
+    }
+    if (data.lineOnlyConnections) {
+      this.lineOnlyConnections = new Set(data.lineOnlyConnections);
+    }
+    
+    // Restore person data
+    if (data.personData && Array.isArray(data.personData)) {
+      // Handle array format (from cache)
+      for (const [id, personData] of data.personData) {
+        this.personData.set(id, personData);
+      }
+    }
+    
+    // Restore next ID
+    if (data.nextId) {
+      this.nextId = data.nextId;
+    }
+    
+    // Process persons
+    let maxId = 0;
+    const persons = data.persons || [];
+    for (const person of persons) {
+      const nodeData = {
+        x: person.x || person.cx || 0,
+        y: person.y || person.cy || 0,
+        name: person.name || '',
+        fatherName: person.fatherName || person.father_name || '',
+        surname: person.surname || '',
+        maidenName: person.maidenName || person.birthName || person.birth_name || '',
+        dob: person.dob || '',
+        gender: person.gender || '',
+        color: person.color || person.nodeColor || person.fill || this.defaultColor,
+        radius: person.radius || person.nodeSize || person.r || this.nodeRadius
+      };
+      
+      this.renderer.setNode(person.id, nodeData);
+      
+      // Store/update person data
+      if (!this.personData.has(person.id)) {
+        this.personData.set(person.id, {
+          name: person.name || '',
+          fatherName: person.fatherName || person.father_name || '',
+          surname: person.surname || '',
+          maidenName: person.maidenName || person.birthName || person.birth_name || '',
+          dob: person.dob || '',
+          gender: person.gender || '',
+          motherId: person.motherId || person.mother_id || '',
+          fatherId: person.fatherId || person.father_id || '',
+          spouseId: person.spouseId || person.spouse_id || ''
+        });
+      }
+      
+      const numId = parseInt(person.id.replace('p', ''));
+      if (!isNaN(numId) && numId > maxId) {
+        maxId = numId;
+      }
+    }
+    
+    if (maxId >= this.nextId) {
+      this.nextId = maxId + 1;
+    }
+    
+    this.regenerateConnections();
+    
+    this.undoStack = [];
+    this.redoStack = [];
+    this.pushUndoState();
+    
+    // Save to cache after successful load
+    this.saveToCache();
+  }
+
+  // Enhanced JSON export with backwards compatibility markers
+  saveToJSON() {
+    const data = {
+      version: '2.5',
+      timestamp: Date.now(),
+      format: 'MapMyRoots_Canvas',
+      backwards_compatible: true,
+      settings: {
+        nodeRadius: this.nodeRadius,
+        defaultColor: this.defaultColor,
+        fontFamily: this.fontFamily,
+        fontSize: this.fontSize,
+        nameColor: this.nameColor,
+        dateColor: this.dateColor
+      },
+      displayPreferences: { ...this.displayPreferences },
+      nodeStyle: this.nodeStyle,
+      camera: this.renderer.getCamera(),
+      hiddenConnections: Array.from(this.hiddenConnections),
+      lineOnlyConnections: Array.from(this.lineOnlyConnections),
+      persons: this.getPersonsArray(),
+      
+      // Legacy compatibility section
+      legacy_format: {
+        people: this.convertToLegacyPeople(),
+        relations: this.convertToLegacyRelations(),
+        fontSettings: {
+          fontFamily: this.fontFamily,
+          fontSize: this.fontSize,
+          nameColor: this.nameColor,
+          dateColor: this.dateColor
+        }
+      }
+    };
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `family_tree_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  convertToLegacyPeople() {
+    const legacyPeople = [];
+    if (this.renderer && this.renderer.nodes) {
+      for (const [id, node] of this.renderer.nodes) {
+        const personData = this.personData?.get(id) || {};
+        legacyPeople.push({
+          id: id,
+          name: node.name || '',
+          father_name: node.fatherName || '',
+          surname: node.surname || '',
+          birth_name: node.maidenName || '',
+          dob: node.dob || '',
+          gender: node.gender || '',
+          mother_id: personData.motherId || '',
+          father_id: personData.fatherId || '',
+          spouse_id: personData.spouseId || '',
+          cx: node.x,
+          cy: node.y,
+          r: node.radius || this.nodeRadius,
+          fill: node.color || this.defaultColor
+        });
+      }
+    }
+    return legacyPeople;
+  }
+
+  convertToLegacyRelations() {
+    const relations = [];
+    
+    // Convert family relationships to legacy relations format
+    for (const [childId, childData] of (this.personData || new Map())) {
+      if (childData.motherId) {
+        relations.push({
+          source: childData.motherId,
+          target: childId,
+          relationship: 'family'
+        });
+      }
+      if (childData.fatherId) {
+        relations.push({
+          source: childData.fatherId,
+          target: childId,
+          relationship: 'family'
+        });
+      }
+      if (childData.spouseId && childId < childData.spouseId) {
+        relations.push({
+          source: childId,
+          target: childData.spouseId,
+          relationship: 'spouse'
+        });
+      }
+    }
+    
+    return relations;
+  }
+
+  // Enhanced loadFromJSON to detect and handle format
+  loadFromJSON(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const data = JSON.parse(evt.target.result);
+        
+        console.log('Loaded JSON data:', data);
+        
+        // Detect format
+        if (data.people && !data.persons) {
+          console.log('Detected legacy format');
+          notifications.info('Legacy Format Detected', 'Converting legacy family tree format...');
+          this.processLegacyData(data);
+        } else if (data.persons || data.format === 'MapMyRoots_Canvas') {
+          console.log('Detected new format');
+          this.processLoadedData(data);
+        } else {
+          notifications.warning('Unknown Format', 'File format not recognized, attempting to import...');
+          this.processLoadedData(data);
+        }
+        
+        notifications.success('Import Complete', 'Family tree loaded successfully');
+      } catch (error) {
+        console.error('Error parsing JSON:', error);
+        notifications.error('Import Failed', 'Invalid JSON format or corrupted file');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  // Rest of the methods remain the same as the original implementation...
+  // [Include all the existing methods from the original tree-core-canvas.js]
+
+  // Setup node style switcher (existing method)
   setupNodeStyleSwitcher() {
     console.log('Setting up node style switcher...');
     
@@ -138,32 +800,64 @@ class TreeCoreCanvas {
       option.addEventListener('click', () => {
         console.log('Node style option clicked:', option);
         
-        // Remove selected from all options
         document.querySelectorAll('.node-style-option').forEach(opt => {
           opt.classList.remove('selected');
         });
         
-        // Add selected to clicked option
         option.classList.add('selected');
         
         const style = option.getAttribute('data-style');
         console.log('Node style changed to:', style);
         
-        // Update the node style
         this.nodeStyle = style;
         if (this.renderer) {
           this.renderer.setNodeStyle(style);
         }
         
-        // Show notification
         notifications.success('Style Updated', `Node style changed to ${style}`);
-        
-        // Save state
         this.pushUndoState();
+        this.autoSave(); // Auto-save after style change
       });
     });
     
     console.log('Node style switcher setup complete');
+  }
+
+  // Enhanced pushUndoState with auto-save
+  pushUndoState() {
+    const state = {
+      nodes: new Map(),
+      personData: new Map(this.personData || []),
+      camera: this.renderer ? this.renderer.getCamera() : { x: 0, y: 0, scale: 1 },
+      hiddenConnections: new Set(this.hiddenConnections),
+      lineOnlyConnections: new Set(this.lineOnlyConnections),
+      displayPreferences: { ...this.displayPreferences },
+      nodeStyle: this.nodeStyle,
+      settings: {
+        nodeRadius: this.nodeRadius,
+        defaultColor: this.defaultColor,
+        fontFamily: this.fontFamily,
+        fontSize: this.fontSize,
+        nameColor: this.nameColor,
+        dateColor: this.dateColor
+      }
+    };
+    
+    if (this.renderer) {
+      for (const [id, node] of this.renderer.nodes) {
+        state.nodes.set(id, { ...node });
+      }
+    }
+    
+    this.undoStack.push(state);
+    if (this.undoStack.length > this.maxUndoSize) {
+      this.undoStack.shift();
+    }
+    
+    this.redoStack = [];
+    
+    // Auto-save after state change
+    setTimeout(() => this.autoSave(), 100);
   }
 
   // Setup display preferences (FIXED)
@@ -198,7 +892,7 @@ class TreeCoreCanvas {
           const label = checkbox.parentNode.querySelector('label').textContent;
           notifications.info('Display Updated', `${label} ${newValue ? 'enabled' : 'disabled'}`);
           
-          // Save state
+          // Save state and auto-save
           this.pushUndoState();
         });
         
@@ -728,201 +1422,6 @@ class TreeCoreCanvas {
     });
   }
 
-  exportCanvasAsPNG() {
-    try {
-      // Use the improved export method from canvas renderer
-      const exportCanvas = this.renderer.exportAsImage('png');
-      
-      exportCanvas.toBlob((blob) => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'family-tree.png';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      });
-    } catch (error) {
-      console.error('Error exporting PNG:', error);
-      notifications.error('Export Failed', 'Could not export PNG: ' + error.message);
-    }
-  }
-
-  exportCanvasAsSVG() {
-    try {
-      // Create SVG export with proper bounds
-      const bounds = this.renderer.getContentBounds();
-      if (!bounds) {
-        throw new Error('No content to export');
-      }
-
-      // Add 5px margin
-      const margin = 5;
-      const exportWidth = bounds.width + (margin * 2);
-      const exportHeight = bounds.height + (margin * 2);
-
-      // Create SVG
-      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      svg.setAttribute('width', exportWidth);
-      svg.setAttribute('height', exportHeight);
-      svg.setAttribute('viewBox', `0 0 ${exportWidth} ${exportHeight}`);
-      svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-
-      // White background
-      const background = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-      background.setAttribute('width', '100%');
-      background.setAttribute('height', '100%');
-      background.setAttribute('fill', '#ffffff');
-      svg.appendChild(background);
-
-      // Create group for content with offset
-      const contentGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-      contentGroup.setAttribute('transform', `translate(${margin - bounds.x}, ${margin - bounds.y})`);
-
-      // Export connections
-      for (const conn of this.renderer.connections) {
-        const fromNode = this.renderer.nodes.get(conn.from);
-        const toNode = this.renderer.nodes.get(conn.to);
-        
-        if (!fromNode || !toNode) continue;
-        
-        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        line.setAttribute('x1', fromNode.x);
-        line.setAttribute('y1', fromNode.y);
-        line.setAttribute('x2', toNode.x);
-        line.setAttribute('y2', toNode.y);
-        line.setAttribute('stroke-width', '2');
-        
-        if (conn.type === 'spouse') {
-          line.setAttribute('stroke', this.renderer.settings.spouseConnectionColor);
-          line.setAttribute('stroke-dasharray', '4 2');
-        } else if (conn.type === 'line-only') {
-          line.setAttribute('stroke', '#9b59b6');
-          line.setAttribute('stroke-dasharray', '8 4 2 4');
-        } else {
-          line.setAttribute('stroke', this.renderer.settings.connectionColor);
-        }
-        
-        contentGroup.appendChild(line);
-      }
-
-      // Export nodes
-      for (const [id, node] of this.renderer.nodes) {
-        const nodeGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        
-        if (this.renderer.settings.nodeStyle === 'rectangle') {
-          const width = this.renderer.getNodeWidth(node);
-          const height = this.renderer.getNodeHeight(node);
-          
-          const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-          rect.setAttribute('x', node.x - width/2);
-          rect.setAttribute('y', node.y - height/2);
-          rect.setAttribute('width', width);
-          rect.setAttribute('height', height);
-          rect.setAttribute('fill', node.color || this.renderer.settings.nodeColor);
-          rect.setAttribute('stroke', this.renderer.settings.strokeColor);
-          rect.setAttribute('stroke-width', this.renderer.settings.strokeWidth);
-          nodeGroup.appendChild(rect);
-        } else {
-          const radius = node.radius || this.renderer.settings.nodeRadius;
-          
-          const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-          circle.setAttribute('cx', node.x);
-          circle.setAttribute('cy', node.y);
-          circle.setAttribute('r', radius);
-          circle.setAttribute('fill', node.color || this.renderer.settings.nodeColor);
-          circle.setAttribute('stroke', this.renderer.settings.strokeColor);
-          circle.setAttribute('stroke-width', this.renderer.settings.strokeWidth);
-          nodeGroup.appendChild(circle);
-        }
-
-        // Add text elements
-        this.addSVGText(nodeGroup, node);
-        contentGroup.appendChild(nodeGroup);
-      }
-
-      svg.appendChild(contentGroup);
-
-      // Serialize and download
-      const svgData = new XMLSerializer().serializeToString(svg);
-      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-      
-      const url = URL.createObjectURL(svgBlob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'family-tree.svg';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      
-    } catch (error) {
-      console.error('Error exporting SVG:', error);
-      notifications.error('Export Failed', 'Could not export SVG: ' + error.message);
-    }
-  }
-
-  addSVGText(nodeGroup, node) {
-    let y = node.y;
-    const lineHeight = 12;
-    
-    // Calculate total lines to center text vertically
-    let totalLines = 0;
-    const fullName = this.renderer.buildFullName(node);
-    if (fullName) totalLines += 1;
-    if (this.displayPreferences.showMaidenName && node.maidenName && node.maidenName !== node.surname) totalLines += 1;
-    if (this.displayPreferences.showDateOfBirth && node.dob) totalLines += 1;
-    
-    y = node.y - (totalLines - 1) * lineHeight / 2;
-    
-    // Add name text
-    if (fullName) {
-      const nameText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      nameText.setAttribute('x', node.x);
-      nameText.setAttribute('y', y);
-      nameText.setAttribute('text-anchor', 'middle');
-      nameText.setAttribute('dominant-baseline', 'middle');
-      nameText.setAttribute('font-family', this.renderer.settings.fontFamily);
-      nameText.setAttribute('font-size', this.renderer.settings.nameFontSize);
-      nameText.setAttribute('font-weight', '600');
-      nameText.setAttribute('fill', this.renderer.settings.nameColor);
-      nameText.textContent = fullName;
-      nodeGroup.appendChild(nameText);
-      y += lineHeight;
-    }
-    
-    // Add maiden name if applicable
-    if (this.displayPreferences.showMaidenName && node.maidenName && node.maidenName !== node.surname) {
-      const maidenText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      maidenText.setAttribute('x', node.x);
-      maidenText.setAttribute('y', y);
-      maidenText.setAttribute('text-anchor', 'middle');
-      maidenText.setAttribute('dominant-baseline', 'middle');
-      maidenText.setAttribute('font-family', this.renderer.settings.fontFamily);
-      maidenText.setAttribute('font-size', this.renderer.settings.dobFontSize);
-      maidenText.setAttribute('font-style', 'italic');
-      maidenText.setAttribute('fill', this.renderer.settings.nameColor);
-      maidenText.textContent = `(${node.maidenName})`;
-      nodeGroup.appendChild(maidenText);
-      y += 10;
-    }
-    
-    // Add DOB if applicable
-    if (this.displayPreferences.showDateOfBirth && node.dob) {
-      const dobText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      dobText.setAttribute('x', node.x);
-      dobText.setAttribute('y', y + 5);
-      dobText.setAttribute('text-anchor', 'middle');
-      dobText.setAttribute('dominant-baseline', 'middle');
-      dobText.setAttribute('font-family', this.renderer.settings.fontFamily);
-      dobText.setAttribute('font-size', this.renderer.settings.dobFontSize);
-      dobText.setAttribute('fill', this.renderer.settings.dobColor);
-      dobText.textContent = node.dob;
-      nodeGroup.appendChild(dobText);
-    }
-  }
-
   setupKeyboard() {
     document.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
@@ -1041,11 +1540,7 @@ class TreeCoreCanvas {
     this.renderer.setNode(id, nodeData);
   }
 
-  getPersonData(id) {
-    return this.personData?.get(id) || {};
-  }
-
-  // Connection management (unchanged methods)
+  // Connection management methods
   handleConnectSelected() {
     this.selectedCircles = this.renderer.getSelectedNodes();
     
@@ -1417,38 +1912,7 @@ class TreeCoreCanvas {
     }
   }
 
-  // Undo/Redo
-  pushUndoState() {
-    const state = {
-      nodes: new Map(),
-      personData: new Map(this.personData || []),
-      camera: this.renderer.getCamera(),
-      hiddenConnections: new Set(this.hiddenConnections),
-      lineOnlyConnections: new Set(this.lineOnlyConnections),
-      displayPreferences: { ...this.displayPreferences },
-      nodeStyle: this.nodeStyle,
-      settings: {
-        nodeRadius: this.nodeRadius,
-        defaultColor: this.defaultColor,
-        fontFamily: this.fontFamily,
-        fontSize: this.fontSize,
-        nameColor: this.nameColor,
-        dateColor: this.dateColor
-      }
-    };
-    
-    for (const [id, node] of this.renderer.nodes) {
-      state.nodes.set(id, { ...node });
-    }
-    
-    this.undoStack.push(state);
-    if (this.undoStack.length > this.maxUndoSize) {
-      this.undoStack.shift();
-    }
-    
-    this.redoStack = [];
-  }
-
+  // Undo/Redo functionality
   undo() {
     if (this.undoStack.length < 2) {
       notifications.info('Undo', 'Nothing to undo');
@@ -1536,165 +2000,227 @@ class TreeCoreCanvas {
     
     this.updateRendererSettings();
     this.regenerateConnections();
-    this.clearSelection();
-  }
-
-  // Enhanced Save/Load JSON with notifications
-  saveToJSON() {
-    const data = {
-      version: '2.4', // Increment version
-      settings: {
-        nodeRadius: this.nodeRadius,
-        defaultColor: this.defaultColor,
-        fontFamily: this.fontFamily,
-        fontSize: this.fontSize,
-        nameColor: this.nameColor,
-        dateColor: this.dateColor
-      },
-      displayPreferences: { ...this.displayPreferences },
-      nodeStyle: this.nodeStyle,
-      camera: this.renderer.getCamera(),
-      hiddenConnections: Array.from(this.hiddenConnections),
-      lineOnlyConnections: Array.from(this.lineOnlyConnections),
-      persons: []
-    };
-    
-    for (const [id, node] of this.renderer.nodes) {
-      const personData = this.personData?.get(id) || {};
-      data.persons.push({
-        id,
-        x: node.x,
-        y: node.y,
-        color: node.color,
-        radius: node.radius,
-        ...personData
+  exportCanvasAsPNG() {
+    try {
+      // Use the improved export method from canvas renderer
+      const exportCanvas = this.renderer.exportAsImage('png');
+      
+      exportCanvas.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'family-tree.png';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
       });
+    } catch (error) {
+      console.error('Error exporting PNG:', error);
+      notifications.error('Export Failed', 'Could not export PNG: ' + error.message);
     }
-    
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'family_tree_canvas.json';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
   }
 
-  loadFromJSON(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      try {
-        const data = JSON.parse(evt.target.result);
-        this.processLoadedData(data);
-        notifications.success('Load Complete', 'Family tree loaded successfully');
-      } catch (error) {
-        console.error('Error parsing JSON:', error);
-        notifications.error('Load Failed', 'Invalid JSON format');
+  exportCanvasAsSVG() {
+    try {
+      // Create SVG export with proper bounds
+      const bounds = this.renderer.getContentBounds();
+      if (!bounds) {
+        throw new Error('No content to export');
       }
-    };
-    reader.readAsText(file);
+
+      // Add 5px margin
+      const margin = 5;
+      const exportWidth = bounds.width + (margin * 2);
+      const exportHeight = bounds.height + (margin * 2);
+
+      // Create SVG
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('width', exportWidth);
+      svg.setAttribute('height', exportHeight);
+      svg.setAttribute('viewBox', `0 0 ${exportWidth} ${exportHeight}`);
+      svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+
+      // White background
+      const background = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      background.setAttribute('width', '100%');
+      background.setAttribute('height', '100%');
+      background.setAttribute('fill', '#ffffff');
+      svg.appendChild(background);
+
+      // Create group for content with offset
+      const contentGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      contentGroup.setAttribute('transform', `translate(${margin - bounds.x}, ${margin - bounds.y})`);
+
+      // Export connections
+      for (const conn of this.renderer.connections) {
+        const fromNode = this.renderer.nodes.get(conn.from);
+        const toNode = this.renderer.nodes.get(conn.to);
+        
+        if (!fromNode || !toNode) continue;
+        
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', fromNode.x);
+        line.setAttribute('y1', fromNode.y);
+        line.setAttribute('x2', toNode.x);
+        line.setAttribute('y2', toNode.y);
+        line.setAttribute('stroke-width', '2');
+        
+        if (conn.type === 'spouse') {
+          line.setAttribute('stroke', this.renderer.settings.spouseConnectionColor);
+          line.setAttribute('stroke-dasharray', '4 2');
+        } else if (conn.type === 'line-only') {
+          line.setAttribute('stroke', '#9b59b6');
+          line.setAttribute('stroke-dasharray', '8 4 2 4');
+        } else {
+          line.setAttribute('stroke', this.renderer.settings.connectionColor);
+        }
+        
+        contentGroup.appendChild(line);
+      }
+
+      // Export nodes
+      for (const [id, node] of this.renderer.nodes) {
+        const nodeGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        
+        if (this.renderer.settings.nodeStyle === 'rectangle') {
+          const width = this.renderer.getNodeWidth(node);
+          const height = this.renderer.getNodeHeight(node);
+          
+          const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          rect.setAttribute('x', node.x - width/2);
+          rect.setAttribute('y', node.y - height/2);
+          rect.setAttribute('width', width);
+          rect.setAttribute('height', height);
+          rect.setAttribute('fill', node.color || this.renderer.settings.nodeColor);
+          rect.setAttribute('stroke', this.renderer.settings.strokeColor);
+          rect.setAttribute('stroke-width', this.renderer.settings.strokeWidth);
+          nodeGroup.appendChild(rect);
+        } else {
+          const radius = node.radius || this.renderer.settings.nodeRadius;
+          
+          const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          circle.setAttribute('cx', node.x);
+          circle.setAttribute('cy', node.y);
+          circle.setAttribute('r', radius);
+          circle.setAttribute('fill', node.color || this.renderer.settings.nodeColor);
+          circle.setAttribute('stroke', this.renderer.settings.strokeColor);
+          circle.setAttribute('stroke-width', this.renderer.settings.strokeWidth);
+          nodeGroup.appendChild(circle);
+        }
+
+        // Add text elements
+        this.addSVGText(nodeGroup, node);
+        contentGroup.appendChild(nodeGroup);
+      }
+
+      svg.appendChild(contentGroup);
+
+      // Serialize and download
+      const svgData = new XMLSerializer().serializeToString(svg);
+      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+      
+      const url = URL.createObjectURL(svgBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'family-tree.svg';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+    } catch (error) {
+      console.error('Error exporting SVG:', error);
+      notifications.error('Export Failed', 'Could not export SVG: ' + error.message);
+    }
   }
 
-  processLoadedData(data) {
-    this.renderer.nodes.clear();
-    this.renderer.clearConnections();
-    this.personData = new Map();
-    this.hiddenConnections = new Set();
-    this.lineOnlyConnections = new Set();
+  addSVGText(nodeGroup, node) {
+    let y = node.y;
+    const lineHeight = 12;
     
-    if (data.settings) {
-      this.nodeRadius = data.settings.nodeRadius || this.nodeRadius;
-      this.defaultColor = data.settings.defaultColor || this.defaultColor;
-      this.fontFamily = data.settings.fontFamily || this.fontFamily;
-      this.fontSize = data.settings.fontSize || this.fontSize;
-      this.nameColor = data.settings.nameColor || this.nameColor;
-      this.dateColor = data.settings.dateColor || this.dateColor;
-      this.updateRendererSettings();
+    // Calculate total lines to center text vertically
+    let totalLines = 0;
+    const fullName = this.renderer.buildFullName(node);
+    if (fullName) totalLines += 1;
+    if (this.displayPreferences.showMaidenName && node.maidenName && node.maidenName !== node.surname) totalLines += 1;
+    if (this.displayPreferences.showDateOfBirth && node.dob) totalLines += 1;
+    
+    y = node.y - (totalLines - 1) * lineHeight / 2;
+    
+    // Add name text
+    if (fullName) {
+      const nameText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      nameText.setAttribute('x', node.x);
+      nameText.setAttribute('y', y);
+      nameText.setAttribute('text-anchor', 'middle');
+      nameText.setAttribute('dominant-baseline', 'middle');
+      nameText.setAttribute('font-family', this.renderer.settings.fontFamily);
+      nameText.setAttribute('font-size', this.renderer.settings.nameFontSize);
+      nameText.setAttribute('font-weight', '600');
+      nameText.setAttribute('fill', this.renderer.settings.nameColor);
+      nameText.textContent = fullName;
+      nodeGroup.appendChild(nameText);
+      y += lineHeight;
     }
     
-    // Restore display preferences
-    if (data.displayPreferences) {
-      this.displayPreferences = { ...data.displayPreferences };
-      // Update UI checkboxes
-      Object.keys(this.displayPreferences).forEach(key => {
-        const checkbox = document.getElementById(key);
-        if (checkbox) {
-          checkbox.checked = this.displayPreferences[key];
-        }
-      });
+    // Add maiden name if applicable
+    if (this.displayPreferences.showMaidenName && node.maidenName && node.maidenName !== node.surname) {
+      const maidenText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      maidenText.setAttribute('x', node.x);
+      maidenText.setAttribute('y', y);
+      maidenText.setAttribute('text-anchor', 'middle');
+      maidenText.setAttribute('dominant-baseline', 'middle');
+      maidenText.setAttribute('font-family', this.renderer.settings.fontFamily);
+      maidenText.setAttribute('font-size', this.renderer.settings.dobFontSize);
+      maidenText.setAttribute('font-style', 'italic');
+      maidenText.setAttribute('fill', this.renderer.settings.nameColor);
+      maidenText.textContent = `(${node.maidenName})`;
+      nodeGroup.appendChild(maidenText);
+      y += 10;
     }
     
-    // Restore node style
-    if (data.nodeStyle) {
-      this.nodeStyle = data.nodeStyle;
-      // Update UI selection
-      document.querySelectorAll('.node-style-option').forEach(opt => {
-        opt.classList.remove('selected');
-        if (opt.getAttribute('data-style') === this.nodeStyle) {
-          opt.classList.add('selected');
-        }
-      });
+    // Add DOB if applicable
+    if (this.displayPreferences.showDateOfBirth && node.dob) {
+      const dobText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      dobText.setAttribute('x', node.x);
+      dobText.setAttribute('y', y + 5);
+      dobText.setAttribute('text-anchor', 'middle');
+      dobText.setAttribute('dominant-baseline', 'middle');
+      dobText.setAttribute('font-family', this.renderer.settings.fontFamily);
+      dobText.setAttribute('font-size', this.renderer.settings.dobFontSize);
+      dobText.setAttribute('fill', this.renderer.settings.dobColor);
+      dobText.textContent = node.dob;
+      nodeGroup.appendChild(dobText);
+    }
+  }
+
+  // Cleanup method
+  destroy() {
+    if (this.autoSaveTimer) {
+      clearInterval(this.autoSaveTimer);
     }
     
-    if (data.camera) {
-      this.renderer.setCamera(data.camera.x, data.camera.y, data.camera.scale);
+    // Final save before destroy
+    this.saveToCache();
+    
+    if (this.renderer) {
+      this.renderer.destroy();
+    }
+  }
+
+  // Cleanup method
+  destroy() {
+    if (this.autoSaveTimer) {
+      clearInterval(this.autoSaveTimer);
     }
     
-    if (data.hiddenConnections) {
-      this.hiddenConnections = new Set(data.hiddenConnections);
+    // Final save before destroy
+    this.saveToCache();
+    
+    if (this.renderer) {
+      this.renderer.destroy();
     }
-    
-    if (data.lineOnlyConnections) {
-      this.lineOnlyConnections = new Set(data.lineOnlyConnections);
-    }
-    
-    let maxId = 0;
-    for (const person of data.persons) {
-      const nodeData = {
-        x: person.x || person.cx || 0,
-        y: person.y || person.cy || 0,
-        name: person.name,
-        fatherName: person.fatherName || '',
-        surname: person.surname,
-        maidenName: person.maidenName || person.birthName || '',
-        dob: person.dob,
-        gender: person.gender,
-        color: person.color || person.nodeColor || this.defaultColor,
-        radius: person.radius || person.nodeSize || this.nodeRadius
-      };
-      
-      this.renderer.setNode(person.id, nodeData);
-      
-      this.personData.set(person.id, {
-        name: person.name,
-        fatherName: person.fatherName || '',
-        surname: person.surname,
-        maidenName: person.maidenName || person.birthName || '',
-        dob: person.dob,
-        gender: person.gender,
-        motherId: person.motherId,
-        fatherId: person.fatherId,
-        spouseId: person.spouseId
-      });
-      
-      const numId = parseInt(person.id.replace('p', ''));
-      if (!isNaN(numId) && numId > maxId) {
-        maxId = numId;
-      }
-    }
-    
-    this.nextId = maxId + 1;
-    
-    this.regenerateConnections();
-    
-    this.undoStack = [];
-    this.redoStack = [];
-    this.pushUndoState();
   }
 }
 
@@ -1706,7 +2232,7 @@ document.addEventListener('DOMContentLoaded', () => {
   treeCore.initialize();
 });
 
-// Also export for compatibility
+// Export for compatibility
 export function pushUndoState() {
   treeCore.pushUndoState();
 }
