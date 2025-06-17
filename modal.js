@@ -6,6 +6,16 @@ import { updateSearchableSelects } from './searchableSelect.js';
 
 let isModalOpen = false;
 
+// Get selected gender from radio buttons
+export function getSelectedGender() {
+  const maleRadio = document.getElementById('genderMale');
+  const femaleRadio = document.getElementById('genderFemale');
+  
+  if (maleRadio && maleRadio.checked) return 'male';
+  if (femaleRadio && femaleRadio.checked) return 'female';
+  return '';
+}
+
 export function openModalForEdit(personId) {
   console.log('Opening modal for:', personId || 'new person');
   
@@ -135,19 +145,6 @@ export function isModalCurrentlyOpen() {
   return isModalOpen;
 }
 
-// Export the getSelectedGender function
-export { getSelectedGender };
-
-// Get selected gender from radio buttons
-function getSelectedGender() {
-  const maleRadio = document.getElementById('genderMale');
-  const femaleRadio = document.getElementById('genderFemale');
-  
-  if (maleRadio && maleRadio.checked) return 'male';
-  if (femaleRadio && femaleRadio.checked) return 'female';
-  return '';
-}
-
 // Initialize modal when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
   console.log('Modal initializing...');
@@ -200,23 +197,43 @@ document.addEventListener('DOMContentLoaded', () => {
       
       console.log('Form validation passed, triggering save');
       
-      // Dispatch custom event for tree-core-canvas to handle
-      const saveEvent = new CustomEvent('savePersonFromModal', {
-        detail: {
-          name: nameInput.value.trim(),
-          fatherName: document.getElementById('personFatherName')?.value.trim() || '',
-          surname: document.getElementById('personSurname')?.value.trim() || '',
-          maidenName: document.getElementById('personMaidenName')?.value.trim() || '',
-          dob: document.getElementById('personDob')?.value.trim() || '',
-          gender: gender,
-          motherId: document.querySelector('#motherSelect input[type="hidden"]')?.value || '',
-          fatherId: document.querySelector('#fatherSelect input[type="hidden"]')?.value || '',
-          spouseId: document.querySelector('#spouseSelect input[type="hidden"]')?.value || '',
-          editingId: modal.dataset.editingId || null
-        }
-      });
+      // Get form data
+      const formData = {
+        name: nameInput.value.trim(),
+        fatherName: document.getElementById('personFatherName')?.value.trim() || '',
+        surname: document.getElementById('personSurname')?.value.trim() || '',
+        maidenName: document.getElementById('personMaidenName')?.value.trim() || '',
+        dob: document.getElementById('personDob')?.value.trim() || '',
+        gender: gender,
+        motherId: document.querySelector('#motherSelect input[type="hidden"]')?.value || '',
+        fatherId: document.querySelector('#fatherSelect input[type="hidden"]')?.value || '',
+        spouseId: document.querySelector('#spouseSelect input[type="hidden"]')?.value || '',
+        editingId: modal.dataset.editingId || null
+      };
       
-      document.dispatchEvent(saveEvent);
+      console.log('Form data to save:', formData);
+      
+      // Try to call tree-core-canvas directly first
+      import('./tree-core-canvas.js').then(({ treeCore }) => {
+        console.log('TreeCore imported, calling handleSavePersonFromModal');
+        if (treeCore && typeof treeCore.handleSavePersonFromModal === 'function') {
+          treeCore.handleSavePersonFromModal(formData);
+        } else {
+          console.log('TreeCore not available, dispatching event');
+          // Fallback to event dispatch
+          const saveEvent = new CustomEvent('savePersonFromModal', {
+            detail: formData
+          });
+          document.dispatchEvent(saveEvent);
+        }
+      }).catch(error => {
+        console.error('Error importing tree-core-canvas:', error);
+        // Fallback to event dispatch
+        const saveEvent = new CustomEvent('savePersonFromModal', {
+          detail: formData
+        });
+        document.dispatchEvent(saveEvent);
+      });
     });
     console.log('Save button listener attached');
   }
@@ -274,6 +291,3 @@ document.addEventListener('DOMContentLoaded', () => {
   
   console.log('Modal initialization complete');
 });
-
-// Export gender getter function for use by other modules
-export { getSelectedGender };
