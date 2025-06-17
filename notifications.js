@@ -1,5 +1,4 @@
-// notifications.js
-// Visual notification system for user feedback
+// notifications.js - Enhanced with cache support and better formatting compatibility notifications
 
 class NotificationManager {
   constructor() {
@@ -186,7 +185,19 @@ class NotificationManager {
                <circle cx="12" cy="12" r="10"></circle>
                <line x1="12" y1="16" x2="12" y2="12"></line>
                <line x1="12" y1="8" x2="12.01" y2="8"></line>
-             </svg>`
+             </svg>`,
+      cache: `<svg viewBox="0 0 24 24" fill="none" stroke="#9b59b6" stroke-width="2">
+               <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+               <path d="M21 3v5h-5"/>
+               <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+               <path d="M8 16H3v5"/>
+             </svg>`,
+      legacy: `<svg viewBox="0 0 24 24" fill="none" stroke="#e67e22" stroke-width="2">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                <polyline points="7.5,4.21 12,6.81 16.5,4.21"/>
+                <polyline points="7.5,19.79 7.5,14.6 3,12"/>
+                <polyline points="21,12 16.5,14.6 16.5,19.79"/>
+              </svg>`
     };
     
     return icons[type] || icons.info;
@@ -217,6 +228,145 @@ class NotificationManager {
       showSpinner: true, 
       persistent: true 
     });
+  }
+
+  // Cache-specific notifications
+  cache(title, message, options = {}) {
+    return this.show({ type: 'cache', title, message, duration: 3000, ...options });
+  }
+
+  // Legacy format notifications
+  legacy(title, message, options = {}) {
+    return this.show({ type: 'legacy', title, message, duration: 6000, ...options });
+  }
+
+  // Format conversion notifications
+  conversion(title, message, options = {}) {
+    return this.show({ 
+      type: 'info', 
+      title: `🔄 ${title}`, 
+      message, 
+      duration: 5000, 
+      ...options 
+    });
+  }
+
+  // Auto-save notifications (less intrusive)
+  autoSave(message = 'Auto-saved') {
+    return this.show({
+      type: 'cache',
+      title: '',
+      message,
+      duration: 2000
+    });
+  }
+
+  // Import/Export notifications
+  importSuccess(format, count = null) {
+    const message = count ? `${count} people imported` : 'Family tree imported successfully';
+    return this.success(`${format.toUpperCase()} Import Complete`, message);
+  }
+
+  exportSuccess(format) {
+    return this.success(`${format.toUpperCase()} Export Complete`, 'File has been downloaded');
+  }
+
+  // Backwards compatibility notifications
+  legacyFormatDetected(originalFormat, convertedFormat) {
+    return this.legacy(
+      'Legacy Format Detected',
+      `Converting from ${originalFormat} to ${convertedFormat} format. Your data will be preserved.`
+    );
+  }
+
+  conversionComplete(fromFormat, toFormat) {
+    return this.conversion(
+      'Format Conversion Complete',
+      `Successfully converted from ${fromFormat} to ${toFormat} format`
+    );
+  }
+
+  // Cache status notifications
+  cacheRestored(timestamp) {
+    const timeStr = new Date(timestamp).toLocaleString();
+    return this.cache('Progress Restored', `Last saved: ${timeStr}`);
+  }
+
+  cacheCleared() {
+    return this.cache('Cache Cleared', 'All cached progress has been removed');
+  }
+
+  autoSaveEnabled() {
+    return this.cache('Auto-save Enabled', 'Your progress will be saved automatically');
+  }
+
+  autoSaveDisabled() {
+    return this.cache('Auto-save Disabled', 'Manual saving required');
+  }
+
+  // Batch operations
+  showBatchOperation(operationType, count, duration = 4000) {
+    return this.show({
+      type: 'info',
+      title: `Batch ${operationType}`,
+      message: `Processing ${count} items...`,
+      showSpinner: true,
+      duration
+    });
+  }
+
+  // Connection with progress updates
+  showProgress(title, current, total) {
+    const percentage = Math.round((current / total) * 100);
+    return this.show({
+      type: 'info',
+      title,
+      message: `${current}/${total} (${percentage}%)`,
+      persistent: true
+    });
+  }
+
+  // Error handling with details
+  detailedError(title, message, details = null) {
+    const fullMessage = details ? `${message}\n\nDetails: ${details}` : message;
+    return this.error(title, fullMessage, { duration: 8000 });
+  }
+
+  // Validation errors
+  validationError(field, issue) {
+    return this.warning('Validation Error', `${field}: ${issue}`, { duration: 4000 });
+  }
+
+  // Network-related notifications
+  networkError(operation) {
+    return this.error('Network Error', `Failed to ${operation}. Please check your connection.`);
+  }
+
+  // File operations
+  fileOperationStart(operation, fileName) {
+    return this.loading(`${operation} File`, `Processing ${fileName}...`);
+  }
+
+  fileOperationComplete(operation, fileName, success = true) {
+    if (success) {
+      return this.success(`${operation} Complete`, `${fileName} processed successfully`);
+    } else {
+      return this.error(`${operation} Failed`, `Could not process ${fileName}`);
+    }
+  }
+
+  // Compatibility warnings
+  compatibilityWarning(feature, recommendation) {
+    return this.warning(
+      'Compatibility Notice',
+      `${feature} may not be fully compatible. ${recommendation}`,
+      { duration: 6000 }
+    );
+  }
+
+  // Feature announcements
+  featureAnnouncement(feature, description) {
+    return this.info(`New Feature: ${feature}`, description, { duration: 7000 });
   }
 }
 
