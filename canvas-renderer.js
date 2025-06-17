@@ -322,7 +322,7 @@ export class CanvasRenderer {
   }
 
   // Update node style (circle or rectangle)
-  updateNodeStyle(style) {
+  setNodeStyle(style) {
     this.settings.nodeStyle = style;
     this.needsRedraw = true;
   }
