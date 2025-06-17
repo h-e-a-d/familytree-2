@@ -1,5 +1,6 @@
 // searchableSelect.js
 // Updated to work with Canvas-based tree implementation
+// Enhanced with maiden name support
 
 export function updateSearchableSelects(existingModalData = {}) {
   // Import tree core to access person data
@@ -15,6 +16,7 @@ export function updateSearchableSelects(existingModalData = {}) {
           name: node.name || personData.name || '',
           fatherName: node.fatherName || personData.fatherName || '',
           surname: node.surname || personData.surname || '',
+          maidenName: node.maidenName || personData.maidenName || '', // Changed from birthName
           gender: node.gender || personData.gender || ''
         });
       }
@@ -29,13 +31,17 @@ export function updateSearchableSelects(existingModalData = {}) {
       let options = '<div class="select-option" data-id="">None</div>';
       options += filtered.map(p => {
         const isSelected = p.id === selectedId ? 'selected' : '';
-        // Build display name: Name + Father's Name + Surname
+        // Build display name: Name + Father's Name + Surname (+ Maiden Name if applicable)
         let displayName = p.name;
         if (p.fatherName) {
           displayName += ` ${p.fatherName}`;
         }
         if (p.surname) {
           displayName += ` ${p.surname}`;
+        }
+        // Add maiden name in parentheses if it exists and is different from surname
+        if (p.maidenName && p.maidenName !== p.surname && p.maidenName.trim() !== '') {
+          displayName += ` (${p.maidenName})`;
         }
         return `<div class="select-option" data-id="${p.id}" ${isSelected}>
                   ${displayName.trim()}
@@ -69,6 +75,10 @@ export function updateSearchableSelects(existingModalData = {}) {
           }
           if (selectedPerson.surname) {
             name += ` ${selectedPerson.surname}`;
+          }
+          // Add maiden name in parentheses if it exists and is different from surname
+          if (selectedPerson.maidenName && selectedPerson.maidenName !== selectedPerson.surname && selectedPerson.maidenName.trim() !== '') {
+            name += ` (${selectedPerson.maidenName})`;
           }
           displayText = name.trim();
         }
