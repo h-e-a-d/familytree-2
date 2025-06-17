@@ -1,7 +1,8 @@
 // app.js
-// Enhanced main application logic with sidebar functionality and optimizations
+// Enhanced main application logic with fixed sidebar functionality and settings integration
 
 import { rebuildTableView } from './table.js';
+import { notifications } from './notifications.js';
 
 let currentView = 'graphic'; // 'graphic' or 'table'
 
@@ -70,9 +71,15 @@ function initializeSidebar() {
 
 function triggerZoom(deltaY) {
   const svgArea = document.getElementById('svgArea');
-  if (svgArea) {
+  const graphicView = document.getElementById('graphicView');
+  const canvas = graphicView?.querySelector('canvas');
+  
+  // Try canvas first (for new implementation), then fall back to SVG
+  const target = canvas || svgArea;
+  
+  if (target) {
     // Create a synthetic wheel event
-    const rect = svgArea.getBoundingClientRect();
+    const rect = target.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
     
@@ -84,7 +91,7 @@ function triggerZoom(deltaY) {
       cancelable: true
     });
     
-    svgArea.dispatchEvent(wheelEvent);
+    target.dispatchEvent(wheelEvent);
   }
 }
 
@@ -113,6 +120,7 @@ function toggleView() {
     
     // Rebuild table data when switching to table view
     rebuildTableView();
+    notifications.info('View Changed', 'Switched to table view');
   } else {
     // Switch to graphic view
     currentView = 'graphic';
@@ -140,6 +148,8 @@ function toggleView() {
         }
       });
     }, 100);
+    
+    notifications.info('View Changed', 'Switched to graphic view');
   }
   
   console.log('Switched to view:', currentView);
@@ -148,6 +158,16 @@ function toggleView() {
 function initializeEnhancedSettings() {
   console.log('Initializing enhanced settings...');
   
+  // Wait for tree core to be available
+  setTimeout(() => {
+    setupCollapsibleSections();
+    setupNodeStyleSelection();
+    setupDisplayPreferences();
+    setupNodeAppearance();
+  }, 1500); // Increased delay to ensure tree core is ready
+}
+
+function setupCollapsibleSections() {
   // Collapsible sections
   document.querySelectorAll('.collapsible-header').forEach(header => {
     header.addEventListener('click', () => {
@@ -163,10 +183,16 @@ function initializeEnhancedSettings() {
       }
     });
   });
+}
+
+function setupNodeStyleSelection() {
+  console.log('Setting up node style selection...');
   
-  // Node style selection
+  // Node style selection (FIXED)
   document.querySelectorAll('.node-style-option').forEach(option => {
     option.addEventListener('click', () => {
+      console.log('Node style option clicked:', option.getAttribute('data-style'));
+      
       // Remove selected from all options
       document.querySelectorAll('.node-style-option').forEach(opt => 
         opt.classList.remove('selected')
@@ -179,36 +205,128 @@ function initializeEnhancedSettings() {
       
       // Update the tree core with new style
       import('./tree-core-canvas.js').then(({ treeCore }) => {
-        if (treeCore.renderer) {
-          treeCore.renderer.settings.nodeStyle = style;
-          treeCore.renderer.needsRedraw = true;
+        if (treeCore && treeCore.renderer) {
+          console.log('Updating tree core node style to:', style);
+          treeCore.nodeStyle = style;
+          treeCore.renderer.setNodeStyle(style);
+          treeCore.updateRendererSettings();
           treeCore.pushUndoState();
+          
+          // Show success notification
+          notifications.success('Style Updated', `Node style changed to ${style}`);
+        } else {
+          console.warn('Tree core or renderer not available');
+          notifications.warning('Style Update', 'Tree core not ready, style will be applied when loaded');
         }
+      }).catch(error => {
+        console.error('Error importing tree core:', error);
+        notifications.error('Style Update Failed', 'Could not update node style');
       });
     });
   });
   
-  // Display preferences checkboxes
+  console.log('Node style selection setup complete');
+}
+
+function setupDisplayPreferences() {
+  console.log('Setting up display preferences...');
+  
+  // Display preferences checkboxes (FIXED)
   const preferences = ['showMaidenName', 'showDateOfBirth', 'showFatherName'];
   preferences.forEach(prefId => {
     const checkbox = document.getElementById(prefId);
     if (checkbox) {
+      console.log(`Setting up preference: ${prefId}`);
+      
       checkbox.addEventListener('change', () => {
         console.log(`${prefId} changed to:`, checkbox.checked);
         
         // Update the tree core with new display preferences
         import('./tree-core-canvas.js').then(({ treeCore }) => {
-          if (treeCore.renderer) {
+          if (treeCore && treeCore.displayPreferences) {
             const prefKey = prefId; // e.g., 'showMaidenName'
             treeCore.displayPreferences[prefKey] = checkbox.checked;
-            treeCore.renderer.displayPreferences[prefKey] = checkbox.checked;
-            treeCore.renderer.needsRedraw = true;
+            
+            if (treeCore.renderer) {
+              treeCore.renderer.updateDisplayPreferences(treeCore.displayPreferences);
+              treeCore.updateAllNodesDisplay();
+            }
+            
             treeCore.pushUndoState();
+            
+            // Show notification
+            const label = checkbox.parentNode.querySelector('label').textContent;
+            notifications.info('Display Updated', `${label} ${checkbox.checked ? 'enabled' : 'disabled'}`);
+          } else {
+            console.warn('Tree core not available for display preferences');
+            notifications.warning('Display Update', 'Tree core not ready, preference will be applied when loaded');
           }
+        }).catch(error => {
+          console.error('Error importing tree core for display preferences:', error);
+          notifications.error('Display Update Failed', 'Could not update display preference');
         });
       });
+      
+      console.log(`Preference ${prefId} setup complete`);
+    } else {
+      console.warn(`Preference checkbox ${prefId} not found`);
     }
   });
+  
+  console.log('Display preferences setup complete');
+}
+
+function setupNodeAppearance() {
+  console.log('Setting up node appearance...');
+  
+  // Apply node style button (FIXED)
+  const applyBtn = document.getElementById('applyNodeStyle');
+  if (applyBtn) {
+    applyBtn.addEventListener('click', () => {
+      const colorPicker = document.getElementById('nodeColorPicker');
+      const sizeInput = document.getElementById('nodeSizeInput');
+      
+      if (!colorPicker || !sizeInput) {
+        notifications.error('Settings Error', 'Could not find color or size controls');
+        return;
+      }
+      
+      const color = colorPicker.value;
+      const size = parseInt(sizeInput.value, 10);
+      
+      console.log('Applying node appearance:', { color, size });
+      
+      if (isNaN(size) || size <= 0) {
+        notifications.error('Invalid Input', 'Please enter a valid node size');
+        return;
+      }
+      
+      // Update the tree core with new appearance settings
+      import('./tree-core-canvas.js').then(({ treeCore }) => {
+        if (treeCore) {
+          treeCore.nodeRadius = size;
+          treeCore.defaultColor = color;
+          treeCore.updateRendererSettings();
+          treeCore.updateAllExistingNodes();
+          treeCore.pushUndoState();
+          
+          notifications.success('Appearance Updated', 'Node appearance settings applied');
+        } else {
+          console.warn('Tree core not available for appearance update');
+          notifications.warning('Appearance Update', 'Tree core not ready, settings will be applied when loaded');
+        }
+      }).catch(error => {
+        console.error('Error importing tree core for appearance:', error);
+        notifications.error('Appearance Update Failed', 'Could not update node appearance');
+      });
+    });
+    
+    console.log('Apply node style button setup complete');
+  } else {
+    console.warn('Apply node style button not found');
+  }
+  
+  console.log('Node appearance setup complete');
 }
 
 function initializeViewToggle() {
