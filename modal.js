@@ -135,6 +135,7 @@ export function isModalCurrentlyOpen() {
   return isModalOpen;
 }
 
+// Export the getSelectedGender function
 export { getSelectedGender };
 
 // Get selected gender from radio buttons
