@@ -116,10 +116,81 @@ class TreeCoreCanvas {
       });
     }
     
+    // Listen for save person event from modal
+    document.addEventListener('savePersonFromModal', (e) => {
+      console.log('Received savePersonFromModal event', e.detail);
+      this.handleSavePersonFromModal(e.detail);
+    });
+    
+    // Listen for display preference changes
+    document.addEventListener('displayPreferenceChanged', (e) => {
+      console.log('Display preference changed:', e.detail);
+      const { preference, value } = e.detail;
+      this.displayPreferences[preference] = value;
+      this.updateAllNodesDisplay();
+      this.pushUndoState();
+    });
+    
+    // Listen for node style changes
+    document.addEventListener('nodeStyleChanged', (e) => {
+      console.log('Node style changed:', e.detail);
+      const { style } = e.detail;
+      this.nodeStyle = style;
+      if (this.renderer) {
+        this.renderer.settings.nodeStyle = style;
+        this.renderer.needsRedraw = true;
+      }
+      this.pushUndoState();
+    });
+    
     // Initial state
     this.pushUndoState();
     
     console.log('TreeCoreCanvas initialization complete');
+  }
+
+  // Handle save person from modal event
+  handleSavePersonFromModal(data) {
+    console.log('Handling save person from modal:', data);
+    
+    const personData = {
+      name: data.name,
+      fatherName: data.fatherName,
+      surname: data.surname,
+      maidenName: data.maidenName,
+      dob: data.dob,
+      gender: data.gender,
+      motherId: data.motherId,
+      fatherId: data.fatherId,
+      spouseId: data.spouseId
+    };
+    
+    try {
+      if (data.editingId) {
+        console.log('Updating existing person:', data.editingId);
+        this.updateExistingPerson(data.editingId, personData);
+      } else {
+        console.log('Creating new person');
+        this.createNewPerson(personData);
+      }
+
+      closeModal();
+      this.regenerateConnections();
+      this.pushUndoState();
+      
+      // Update searchable selects
+      import('./searchableSelect.js').then(mod => {
+        if (mod.updateSearchableSelects) {
+          mod.updateSearchableSelects();
+        }
+      });
+      
+      console.log('Person saved successfully');
+      
+    } catch (error) {
+      console.error('Error saving person:', error);
+      alert('Error saving person. Please try again.');
+    }
   }
 
   // New method to setup display preferences
