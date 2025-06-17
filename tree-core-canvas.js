@@ -1,9 +1,10 @@
-// tree-core-canvas.js - Enhanced with maiden name support and display preferences
+// tree-core-canvas.js - Enhanced with fixed settings and notifications
 
 import { CanvasRenderer } from './canvas-renderer.js';
 import { openModalForEdit, closeModal, getSelectedGender } from './modal.js';
 import { rebuildTableView } from './table.js';
 import { exportTree } from './exporter.js';
+import { notifications } from './notifications.js';
 
 class TreeCoreCanvas {
   constructor() {
@@ -104,7 +105,8 @@ class TreeCoreCanvas {
     this.setupStyleModal();
     this.setupLineRemovalModal();
     this.setupViewSwitching();
-    this.setupDisplayPreferences(); // New method for display preferences
+    this.setupDisplayPreferences();
+    this.setupNodeStyleSwitcher();
     
     // Setup form submit handler
     const personForm = document.getElementById('personForm');
@@ -122,31 +124,91 @@ class TreeCoreCanvas {
       this.handleSavePersonFromModal(e.detail);
     });
     
-    // Listen for display preference changes
-    document.addEventListener('displayPreferenceChanged', (e) => {
-      console.log('Display preference changed:', e.detail);
-      const { preference, value } = e.detail;
-      this.displayPreferences[preference] = value;
-      this.updateAllNodesDisplay();
-      this.pushUndoState();
-    });
-    
-    // Listen for node style changes
-    document.addEventListener('nodeStyleChanged', (e) => {
-      console.log('Node style changed:', e.detail);
-      const { style } = e.detail;
-      this.nodeStyle = style;
-      if (this.renderer) {
-        this.renderer.settings.nodeStyle = style;
-        this.renderer.needsRedraw = true;
-      }
-      this.pushUndoState();
-    });
-    
     // Initial state
     this.pushUndoState();
     
     console.log('TreeCoreCanvas initialization complete');
+  }
+
+  // Setup node style switcher (NEW/FIXED)
+  setupNodeStyleSwitcher() {
+    console.log('Setting up node style switcher...');
+    
+    document.querySelectorAll('.node-style-option').forEach(option => {
+      option.addEventListener('click', () => {
+        console.log('Node style option clicked:', option);
+        
+        // Remove selected from all options
+        document.querySelectorAll('.node-style-option').forEach(opt => {
+          opt.classList.remove('selected');
+        });
+        
+        // Add selected to clicked option
+        option.classList.add('selected');
+        
+        const style = option.getAttribute('data-style');
+        console.log('Node style changed to:', style);
+        
+        // Update the node style
+        this.nodeStyle = style;
+        if (this.renderer) {
+          this.renderer.setNodeStyle(style);
+        }
+        
+        // Show notification
+        notifications.success('Style Updated', `Node style changed to ${style}`);
+        
+        // Save state
+        this.pushUndoState();
+      });
+    });
+    
+    console.log('Node style switcher setup complete');
+  }
+
+  // Setup display preferences (FIXED)
+  setupDisplayPreferences() {
+    console.log('Setting up display preferences...');
+    
+    const preferences = ['showMaidenName', 'showDateOfBirth', 'showFatherName'];
+    
+    preferences.forEach(prefId => {
+      const checkbox = document.getElementById(prefId);
+      if (checkbox) {
+        console.log(`Setting up checkbox: ${prefId}`);
+        
+        // Set initial value
+        checkbox.checked = this.displayPreferences[prefId];
+        
+        checkbox.addEventListener('change', () => {
+          const prefKey = prefId;
+          const newValue = checkbox.checked;
+          
+          console.log(`Display preference ${prefKey} changed to:`, newValue);
+          
+          // Update the preference
+          this.displayPreferences[prefKey] = newValue;
+          
+          // Update renderer
+          if (this.renderer) {
+            this.renderer.updateDisplayPreferences(this.displayPreferences);
+          }
+          
+          // Show notification
+          const label = checkbox.parentNode.querySelector('label').textContent;
+          notifications.info('Display Updated', `${label} ${newValue ? 'enabled' : 'disabled'}`);
+          
+          // Save state
+          this.pushUndoState();
+        });
+        
+        console.log(`Checkbox ${prefId} setup complete`);
+      } else {
+        console.warn(`Checkbox ${prefId} not found`);
+      }
+    });
+    
+    console.log('Display preferences setup complete');
   }
 
   // Handle save person from modal event
@@ -169,9 +231,11 @@ class TreeCoreCanvas {
       if (data.editingId) {
         console.log('Updating existing person:', data.editingId);
         this.updateExistingPerson(data.editingId, personData);
+        notifications.success('Person Updated', `${data.name} has been updated`);
       } else {
         console.log('Creating new person');
         this.createNewPerson(personData);
+        notifications.success('Person Added', `${data.name} has been added to the tree`);
       }
 
       closeModal();
@@ -189,41 +253,25 @@ class TreeCoreCanvas {
       
     } catch (error) {
       console.error('Error saving person:', error);
-      alert('Error saving person. Please try again.');
+      notifications.error('Save Failed', 'Error saving person. Please try again.');
     }
   }
 
-  // New method to setup display preferences
-  setupDisplayPreferences() {
-    const preferences = ['showMaidenName', 'showDateOfBirth', 'showFatherName'];
-    
-    preferences.forEach(prefId => {
-      const checkbox = document.getElementById(prefId);
-      if (checkbox) {
-        checkbox.addEventListener('change', () => {
-          const prefKey = prefId; // e.g., 'showMaidenName'
-          this.displayPreferences[prefKey] = checkbox.checked;
-          console.log(`Display preference ${prefKey} changed to:`, checkbox.checked);
-          
-          // Update all existing nodes to reflect the preference change
-          this.updateAllNodesDisplay();
-          this.pushUndoState();
-        });
-      }
-    });
-  }
-
-  // Update all nodes to reflect display preferences
+  // Update all nodes to reflect display preferences (FIXED)
   updateAllNodesDisplay() {
     if (!this.renderer) return;
     
-    // Re-render all nodes with current display preferences
+    console.log('Updating all nodes display with preferences:', this.displayPreferences);
+    
+    // Update renderer display preferences
+    this.renderer.updateDisplayPreferences(this.displayPreferences);
+    
+    // Re-render all nodes
     for (const [id, node] of this.renderer.nodes) {
       const personData = this.getPersonData(id) || {};
       this.renderer.setNode(id, {
         ...node,
-        // Force re-render by updating with current preferences
-        displayPreferences: { ...this.displayPreferences }
+        ...personData
       });
     }
     
@@ -269,6 +317,8 @@ class TreeCoreCanvas {
     this.renderer.settings.nameFontSize = this.fontSize;
     this.renderer.settings.nameColor = this.nameColor;
     this.renderer.settings.dobColor = this.dateColor;
+    this.renderer.settings.nodeStyle = this.nodeStyle;
+    this.renderer.updateDisplayPreferences(this.displayPreferences);
     this.renderer.needsRedraw = true;
   }
 
@@ -462,6 +512,8 @@ class TreeCoreCanvas {
     
     this.renderer.removeConnection(index);
     
+    notifications.info('Line Hidden', 'Connection line hidden (relationship data preserved)');
+    
     console.log(`Hidden connection line between ${connection.from} and ${connection.to} (relationship data preserved)`);
     
     this.closeLineRemovalModal();
@@ -502,36 +554,57 @@ class TreeCoreCanvas {
   }
 
   setupSettings() {
+    console.log('Setting up settings panel...');
+    
+    // Apply node style button (FIXED)
     const applyBtn = document.getElementById('applyNodeStyle');
     if (applyBtn) {
       applyBtn.addEventListener('click', () => {
         const color = document.getElementById('nodeColorPicker').value;
         const size = parseInt(document.getElementById('nodeSizeInput').value, 10);
+        
+        console.log('Applying node style:', { color, size });
+        
         if (!isNaN(size) && size > 0) {
           this.nodeRadius = size;
           this.defaultColor = color;
           this.updateRendererSettings();
+          this.updateAllExistingNodes();
+          notifications.success('Style Applied', 'Node appearance updated');
           this.pushUndoState();
+        } else {
+          notifications.error('Invalid Size', 'Please enter a valid node size');
         }
       });
+      console.log('Apply node style button setup complete');
     }
 
+    // Font settings (FIXED)
     const fontSelect = document.getElementById('fontSelect');
     if (fontSelect) {
       fontSelect.addEventListener('change', (e) => {
         this.fontFamily = e.target.value;
         this.updateRendererSettings();
+        this.updateAllExistingNodes();
+        notifications.success('Font Changed', `Font changed to ${e.target.value}`);
         this.pushUndoState();
       });
+      console.log('Font select setup complete');
     }
 
     const fontSizeInput = document.getElementById('fontSizeInput');
     if (fontSizeInput) {
       fontSizeInput.addEventListener('change', (e) => {
-        this.fontSize = parseInt(e.target.value, 10) || this.fontSize;
-        this.updateRendererSettings();
-        this.pushUndoState();
+        const newSize = parseInt(e.target.value, 10);
+        if (!isNaN(newSize) && newSize > 0) {
+          this.fontSize = newSize;
+          this.updateRendererSettings();
+          this.updateAllExistingNodes();
+          notifications.success('Font Size Changed', `Font size changed to ${newSize}px`);
+          this.pushUndoState();
+        }
       });
+      console.log('Font size input setup complete');
     }
 
     const nameColorPicker = document.getElementById('nameColorPicker');
@@ -539,8 +612,11 @@ class TreeCoreCanvas {
       nameColorPicker.addEventListener('change', (e) => {
         this.nameColor = e.target.value;
         this.updateRendererSettings();
+        this.updateAllExistingNodes();
+        notifications.success('Name Color Changed', 'Name color updated');
         this.pushUndoState();
       });
+      console.log('Name color picker setup complete');
     }
 
     const dateColorPicker = document.getElementById('dateColorPicker');
@@ -548,23 +624,96 @@ class TreeCoreCanvas {
       dateColorPicker.addEventListener('change', (e) => {
         this.dateColor = e.target.value;
         this.updateRendererSettings();
+        this.updateAllExistingNodes();
+        notifications.success('Date Color Changed', 'Date color updated');
         this.pushUndoState();
       });
+      console.log('Date color picker setup complete');
     }
+    
+    console.log('Settings panel setup complete');
+  }
+
+  // Update all existing nodes with new settings (NEW)
+  updateAllExistingNodes() {
+    if (!this.renderer) return;
+    
+    console.log('Updating all existing nodes with new settings');
+    
+    for (const [id, node] of this.renderer.nodes) {
+      const personData = this.getPersonData(id) || {};
+      this.renderer.setNode(id, {
+        ...node,
+        ...personData,
+        // Apply current default settings to nodes that don't have custom settings
+        color: node.color || this.defaultColor,
+        radius: node.radius || this.nodeRadius
+      });
+    }
+    
+    this.renderer.needsRedraw = true;
   }
 
   setupExport() {
+    // SVG Export
     document.getElementById('exportSvg')?.addEventListener('click', () => {
-      alert('Canvas export not yet implemented');
+      notifications.error('Not Available', 'SVG export not yet implemented for canvas renderer');
     });
+    
+    // PNG Export (FIXED with notifications)
     document.getElementById('exportPng')?.addEventListener('click', () => {
-      this.exportCanvasAsPNG();
+      const loadingId = notifications.loading('Exporting...', 'Generating PNG file');
+      
+      try {
+        setTimeout(() => {
+          this.exportCanvasAsPNG();
+          notifications.remove(loadingId);
+          notifications.success('Export Complete', 'PNG file has been downloaded');
+        }, 100);
+      } catch (error) {
+        notifications.remove(loadingId);
+        notifications.error('Export Failed', 'Error generating PNG file');
+        console.error('PNG export error:', error);
+      }
     });
+    
+    // PDF Export
     document.getElementById('exportPdf')?.addEventListener('click', () => {
-      alert('Canvas PDF export not yet implemented');
+      notifications.error('Not Available', 'PDF export not yet implemented for canvas renderer');
     });
-    document.getElementById('saveData')?.addEventListener('click', () => this.saveToJSON());
-    document.getElementById('loadData')?.addEventListener('change', (e) => this.loadFromJSON(e));
+    
+    // JSON Save (FIXED with notifications)
+    document.getElementById('saveData')?.addEventListener('click', () => {
+      const loadingId = notifications.loading('Saving...', 'Generating JSON file');
+      
+      try {
+        setTimeout(() => {
+          this.saveToJSON();
+          notifications.remove(loadingId);
+          notifications.success('Save Complete', 'Family tree saved to JSON file');
+        }, 100);
+      } catch (error) {
+        notifications.remove(loadingId);
+        notifications.error('Save Failed', 'Error saving family tree');
+        console.error('Save error:', error);
+      }
+    });
+    
+    // JSON Load (FIXED with notifications)
+    document.getElementById('loadData')?.addEventListener('change', (e) => {
+      const loadingId = notifications.loading('Loading...', 'Processing JSON file');
+      
+      try {
+        setTimeout(() => {
+          this.loadFromJSON(e);
+          notifications.remove(loadingId);
+        }, 100);
+      } catch (error) {
+        notifications.remove(loadingId);
+        notifications.error('Load Failed', 'Error loading family tree');
+        console.error('Load error:', error);
+      }
+    });
   }
 
   exportCanvasAsPNG() {
@@ -619,16 +768,16 @@ class TreeCoreCanvas {
     const nameInput = document.getElementById('personName').value.trim();
     const fatherNameInput = document.getElementById('personFatherName').value.trim();
     const surnameInput = document.getElementById('personSurname').value.trim();
-    const maidenNameInput = document.getElementById('personMaidenName').value.trim(); // Changed from birthName
+    const maidenNameInput = document.getElementById('personMaidenName').value.trim();
     const dobInput = document.getElementById('personDob').value.trim();
-    const genderInput = getSelectedGender(); // Use the new function
+    const genderInput = getSelectedGender();
 
     const motherId = document.querySelector('#motherSelect input[type="hidden"]')?.value || '';
     const fatherId = document.querySelector('#fatherSelect input[type="hidden"]')?.value || '';
     const spouseId = document.querySelector('#spouseSelect input[type="hidden"]')?.value || '';
 
     if (!nameInput || !genderInput) {
-      alert('Name and Gender are required.');
+      notifications.error('Validation Error', 'Name and Gender are required.');
       return;
     }
 
@@ -639,7 +788,7 @@ class TreeCoreCanvas {
       name: nameInput,
       fatherName: fatherNameInput,
       surname: surnameInput,
-      maidenName: maidenNameInput, // Changed from birthName
+      maidenName: maidenNameInput,
       dob: dobInput,
       gender: genderInput,
       motherId,
@@ -650,8 +799,10 @@ class TreeCoreCanvas {
     try {
       if (editingId) {
         this.updateExistingPerson(editingId, personData);
+        notifications.success('Person Updated', `${nameInput} has been updated`);
       } else {
         this.createNewPerson(personData);
+        notifications.success('Person Added', `${nameInput} has been added to the tree`);
       }
 
       closeModal();
@@ -666,7 +817,7 @@ class TreeCoreCanvas {
       
     } catch (error) {
       console.error('Error saving person:', error);
-      alert('Error saving person. Please try again.');
+      notifications.error('Save Failed', 'Error saving person. Please try again.');
     }
   }
 
@@ -716,7 +867,7 @@ class TreeCoreCanvas {
     this.selectedCircles = this.renderer.getSelectedNodes();
     
     if (this.selectedCircles.size !== 2) {
-      alert('Please select exactly 2 circles to connect.');
+      notifications.warning('Selection Error', 'Please select exactly 2 circles to connect.');
       return;
     }
     
@@ -775,6 +926,7 @@ class TreeCoreCanvas {
       
       this.regenerateConnections();
       this.pushUndoState();
+      notifications.success('Connection Added', 'Line-only connection created');
       console.log(`Created line-only connection between ${this.connectionPersonA} and ${this.connectionPersonB}`);
       this.closeConnectionModal();
       return;
@@ -810,7 +962,7 @@ class TreeCoreCanvas {
           }
           personAData.motherId = this.connectionPersonB;
         } else {
-          alert('Parent gender must be specified to create parent-child relationship.');
+          notifications.error('Connection Error', 'Parent gender must be specified to create parent-child relationship.');
           return;
         }
         break;
@@ -847,6 +999,8 @@ class TreeCoreCanvas {
     
     this.regenerateConnections();
     this.pushUndoState();
+    
+    notifications.success('Connection Added', `Connected as ${relationship}`);
     
     console.log(`Connected ${this.connectionPersonA} and ${this.connectionPersonB} as ${relationship}`);
     
@@ -1015,6 +1169,8 @@ class TreeCoreCanvas {
     this.clearSelection();
     this.regenerateConnections();
     this.pushUndoState();
+    
+    notifications.success('Deleted', `${count} person(s) deleted`);
   }
 
   // Style modal methods
@@ -1022,7 +1178,7 @@ class TreeCoreCanvas {
     this.selectedCircles = this.renderer.getSelectedNodes();
     
     if (this.selectedCircles.size === 0) {
-      alert('Please select at least one circle to style.');
+      notifications.warning('No Selection', 'Please select at least one circle to style.');
       return;
     }
     
@@ -1048,7 +1204,7 @@ class TreeCoreCanvas {
     const size = parseInt(document.getElementById('selectedNodeSize').value, 10);
     
     if (isNaN(size) || size <= 0) {
-      alert('Please enter a valid size.');
+      notifications.error('Invalid Size', 'Please enter a valid size.');
       return;
     }
     
@@ -1064,6 +1220,8 @@ class TreeCoreCanvas {
     
     this.pushUndoState();
     this.closeStyleModal();
+    
+    notifications.success('Styles Applied', `Updated ${this.selectedCircles.size} node(s)`);
     
     console.log('Styles applied successfully');
   }
@@ -1084,8 +1242,16 @@ class TreeCoreCanvas {
       camera: this.renderer.getCamera(),
       hiddenConnections: new Set(this.hiddenConnections),
       lineOnlyConnections: new Set(this.lineOnlyConnections),
-      displayPreferences: { ...this.displayPreferences }, // Include display preferences
-      nodeStyle: this.nodeStyle // Include node style
+      displayPreferences: { ...this.displayPreferences },
+      nodeStyle: this.nodeStyle,
+      settings: {
+        nodeRadius: this.nodeRadius,
+        defaultColor: this.defaultColor,
+        fontFamily: this.fontFamily,
+        fontSize: this.fontSize,
+        nameColor: this.nameColor,
+        dateColor: this.dateColor
+      }
     };
     
     for (const [id, node] of this.renderer.nodes) {
@@ -1101,21 +1267,31 @@ class TreeCoreCanvas {
   }
 
   undo() {
-    if (this.undoStack.length < 2) return;
+    if (this.undoStack.length < 2) {
+      notifications.info('Undo', 'Nothing to undo');
+      return;
+    }
     
     const current = this.undoStack.pop();
     this.redoStack.push(current);
     
     const previous = this.undoStack[this.undoStack.length - 1];
     this.restoreState(previous);
+    
+    notifications.info('Undo', 'Action undone');
   }
 
   redo() {
-    if (this.redoStack.length === 0) return;
+    if (this.redoStack.length === 0) {
+      notifications.info('Redo', 'Nothing to redo');
+      return;
+    }
     
     const next = this.redoStack.pop();
     this.undoStack.push(next);
     this.restoreState(next);
+    
+    notifications.info('Redo', 'Action redone');
   }
 
   restoreState(state) {
@@ -1144,20 +1320,46 @@ class TreeCoreCanvas {
     // Restore node style
     if (state.nodeStyle) {
       this.nodeStyle = state.nodeStyle;
+      // Update UI selection
+      document.querySelectorAll('.node-style-option').forEach(opt => {
+        opt.classList.remove('selected');
+        if (opt.getAttribute('data-style') === this.nodeStyle) {
+          opt.classList.add('selected');
+        }
+      });
+    }
+    
+    // Restore settings
+    if (state.settings) {
+      this.nodeRadius = state.settings.nodeRadius || this.nodeRadius;
+      this.defaultColor = state.settings.defaultColor || this.defaultColor;
+      this.fontFamily = state.settings.fontFamily || this.fontFamily;
+      this.fontSize = state.settings.fontSize || this.fontSize;
+      this.nameColor = state.settings.nameColor || this.nameColor;
+      this.dateColor = state.settings.dateColor || this.dateColor;
+      
+      // Update UI inputs
+      document.getElementById('nodeColorPicker').value = this.defaultColor;
+      document.getElementById('nodeSizeInput').value = this.nodeRadius;
+      document.getElementById('fontSelect').value = this.fontFamily;
+      document.getElementById('fontSizeInput').value = this.fontSize;
+      document.getElementById('nameColorPicker').value = this.nameColor;
+      document.getElementById('dateColorPicker').value = this.dateColor;
     }
     
     if (state.camera) {
       this.renderer.setCamera(state.camera.x, state.camera.y, state.camera.scale);
     }
     
+    this.updateRendererSettings();
     this.regenerateConnections();
     this.clearSelection();
   }
 
-  // Enhanced Save/Load JSON with maiden name and display preferences
+  // Enhanced Save/Load JSON with notifications
   saveToJSON() {
     const data = {
-      version: '2.3', // Increment version for maiden name feature
+      version: '2.4', // Increment version
       settings: {
         nodeRadius: this.nodeRadius,
         defaultColor: this.defaultColor,
@@ -1166,8 +1368,8 @@ class TreeCoreCanvas {
         nameColor: this.nameColor,
         dateColor: this.dateColor
       },
-      displayPreferences: { ...this.displayPreferences }, // Include display preferences
-      nodeStyle: this.nodeStyle, // Include node style
+      displayPreferences: { ...this.displayPreferences },
+      nodeStyle: this.nodeStyle,
       camera: this.renderer.getCamera(),
       hiddenConnections: Array.from(this.hiddenConnections),
       lineOnlyConnections: Array.from(this.lineOnlyConnections),
@@ -1206,9 +1408,10 @@ class TreeCoreCanvas {
       try {
         const data = JSON.parse(evt.target.result);
         this.processLoadedData(data);
+        notifications.success('Load Complete', 'Family tree loaded successfully');
       } catch (error) {
         console.error('Error parsing JSON:', error);
-        alert('Error loading file: Invalid JSON format');
+        notifications.error('Load Failed', 'Invalid JSON format');
       }
     };
     reader.readAsText(file);
@@ -1246,6 +1449,13 @@ class TreeCoreCanvas {
     // Restore node style
     if (data.nodeStyle) {
       this.nodeStyle = data.nodeStyle;
+      // Update UI selection
+      document.querySelectorAll('.node-style-option').forEach(opt => {
+        opt.classList.remove('selected');
+        if (opt.getAttribute('data-style') === this.nodeStyle) {
+          opt.classList.add('selected');
+        }
+      });
     }
     
     if (data.camera) {
@@ -1268,7 +1478,7 @@ class TreeCoreCanvas {
         name: person.name,
         fatherName: person.fatherName || '',
         surname: person.surname,
-        maidenName: person.maidenName || person.birthName || '', // Support both for backward compatibility
+        maidenName: person.maidenName || person.birthName || '',
         dob: person.dob,
         gender: person.gender,
         color: person.color || person.nodeColor || this.defaultColor,
@@ -1281,7 +1491,7 @@ class TreeCoreCanvas {
         name: person.name,
         fatherName: person.fatherName || '',
         surname: person.surname,
-        maidenName: person.maidenName || person.birthName || '', // Support both for backward compatibility
+        maidenName: person.maidenName || person.birthName || '',
         dob: person.dob,
         gender: person.gender,
         motherId: person.motherId,
@@ -1302,8 +1512,6 @@ class TreeCoreCanvas {
     this.undoStack = [];
     this.redoStack = [];
     this.pushUndoState();
-    
-    alert('Family tree loaded successfully');
   }
 }
 
