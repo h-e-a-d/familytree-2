@@ -135,6 +135,8 @@ export function isModalCurrentlyOpen() {
   return isModalOpen;
 }
 
+export { getSelectedGender };
+
 // Get selected gender from radio buttons
 function getSelectedGender() {
   const maleRadio = document.getElementById('genderMale');
@@ -151,6 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   const modal = document.getElementById('personModal');
   const cancelBtn = document.getElementById('cancelModal');
+  const saveBtn = document.getElementById('savePerson');
   const form = document.getElementById('personForm');
   
   // Force modal to be hidden initially
@@ -161,13 +164,9 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('Modal initialized as hidden');
   }
   
-  // Cancel button event listener - using direct event binding
+  // Cancel button event listener
   if (cancelBtn) {
-    // Remove any existing listeners first
-    const newCancelBtn = cancelBtn.cloneNode(true);
-    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
-    
-    newCancelBtn.addEventListener('click', (e) => {
+    cancelBtn.addEventListener('click', (e) => {
       console.log('Cancel button clicked');
       e.preventDefault();
       e.stopPropagation();
@@ -176,21 +175,61 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('Cancel button listener attached');
   }
   
-  // Form submit handler
-  if (form) {
-    form.addEventListener('submit', (e) => {
-      console.log('Form submitted');
+  // Save button event listener
+  if (saveBtn) {
+    saveBtn.addEventListener('click', (e) => {
+      console.log('Save button clicked');
       e.preventDefault();
+      e.stopPropagation();
       
-      // Validate gender selection
+      // Validate required fields
+      const nameInput = document.getElementById('personName');
       const gender = getSelectedGender();
+      
+      if (!nameInput || !nameInput.value.trim()) {
+        alert('Please enter a name.');
+        if (nameInput) nameInput.focus();
+        return;
+      }
+      
       if (!gender) {
         alert('Please select a gender.');
         return;
       }
       
-      // The form submission will be handled by tree-core-canvas.js
-      // Modal will be closed from there after successful save
+      console.log('Form validation passed, triggering save');
+      
+      // Dispatch custom event for tree-core-canvas to handle
+      const saveEvent = new CustomEvent('savePersonFromModal', {
+        detail: {
+          name: nameInput.value.trim(),
+          fatherName: document.getElementById('personFatherName')?.value.trim() || '',
+          surname: document.getElementById('personSurname')?.value.trim() || '',
+          maidenName: document.getElementById('personMaidenName')?.value.trim() || '',
+          dob: document.getElementById('personDob')?.value.trim() || '',
+          gender: gender,
+          motherId: document.querySelector('#motherSelect input[type="hidden"]')?.value || '',
+          fatherId: document.querySelector('#fatherSelect input[type="hidden"]')?.value || '',
+          spouseId: document.querySelector('#spouseSelect input[type="hidden"]')?.value || '',
+          editingId: modal.dataset.editingId || null
+        }
+      });
+      
+      document.dispatchEvent(saveEvent);
+    });
+    console.log('Save button listener attached');
+  }
+  
+  // Form submit handler (fallback)
+  if (form) {
+    form.addEventListener('submit', (e) => {
+      console.log('Form submitted via form submission');
+      e.preventDefault();
+      
+      // Trigger save button click
+      if (saveBtn) {
+        saveBtn.click();
+      }
     });
   }
   
