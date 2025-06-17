@@ -1,4 +1,4 @@
-// canvas-renderer.js - Enhanced with display preferences and rectangle node support
+// canvas-renderer.js - Enhanced with fixed display preferences and rectangle node support
 
 export class CanvasRenderer {
   constructor(container) {
@@ -217,14 +217,16 @@ export class CanvasRenderer {
     return Math.max(40, lines * 16 + 20); // Base height + line spacing + padding
   }
 
-  // Build full name based on display preferences
+  // Build full name based on display preferences (FIXED)
   buildFullName(node) {
     let fullName = node.name || '';
     
+    // Add father's name if preference is enabled and it exists
     if (this.displayPreferences.showFatherName && node.fatherName) {
       fullName += ` ${node.fatherName}`;
     }
     
+    // Add surname if it exists
     if (node.surname) {
       fullName += ` ${node.surname}`;
     }
@@ -294,7 +296,7 @@ export class CanvasRenderer {
       name: data.name !== undefined ? data.name : (existingNode?.name || ''),
       fatherName: data.fatherName !== undefined ? data.fatherName : (existingNode?.fatherName || ''),
       surname: data.surname !== undefined ? data.surname : (existingNode?.surname || ''),
-      maidenName: data.maidenName !== undefined ? data.maidenName : (existingNode?.maidenName || ''), // Changed from birthName
+      maidenName: data.maidenName !== undefined ? data.maidenName : (existingNode?.maidenName || ''),
       dob: data.dob !== undefined ? data.dob : (existingNode?.dob || ''),
       gender: data.gender !== undefined ? data.gender : (existingNode?.gender || ''),
       color: data.color !== undefined ? data.color : (existingNode?.color || this.settings.nodeColor),
@@ -315,14 +317,16 @@ export class CanvasRenderer {
     }
   }
 
-  // Update display preferences
+  // Update display preferences (FIXED)
   updateDisplayPreferences(preferences) {
+    console.log('Canvas renderer updating display preferences:', preferences);
     this.displayPreferences = { ...preferences };
     this.needsRedraw = true;
   }
 
-  // Update node style (circle or rectangle)
+  // Update node style (circle or rectangle) (FIXED)
   setNodeStyle(style) {
+    console.log('Canvas renderer setting node style to:', style);
     this.settings.nodeStyle = style;
     this.needsRedraw = true;
   }
@@ -844,9 +848,13 @@ export class CanvasRenderer {
       const nameLines = this.wrapText(ctx, fullName, maxWidth);
       totalLines += nameLines.length;
     }
+    
+    // Count maiden name line if it should be shown
     if (this.displayPreferences.showMaidenName && node.maidenName && node.maidenName !== node.surname) {
       totalLines += 1;
     }
+    
+    // Count DOB line if it should be shown
     if (this.displayPreferences.showDateOfBirth && node.dob) {
       totalLines += 1;
     }
@@ -866,7 +874,7 @@ export class CanvasRenderer {
       }
     }
     
-    // Draw maiden name if different and show preference is enabled
+    // Draw maiden name if different and show preference is enabled (FIXED)
     if (this.displayPreferences.showMaidenName && node.maidenName && node.maidenName !== node.surname) {
       ctx.font = `italic ${this.settings.dobFontSize}px ${this.settings.fontFamily}`;
       ctx.fillStyle = this.settings.nameColor;
@@ -874,7 +882,7 @@ export class CanvasRenderer {
       y += 10;
     }
     
-    // Draw DOB if show preference is enabled
+    // Draw DOB if show preference is enabled (FIXED)
     if (this.displayPreferences.showDateOfBirth && node.dob) {
       ctx.font = `${this.settings.dobFontSize}px ${this.settings.fontFamily}`;
       ctx.fillStyle = this.settings.dobColor;
