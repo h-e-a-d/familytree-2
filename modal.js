@@ -1,5 +1,6 @@
 // modal.js
 // Updated to work with Canvas-based tree implementation
+// Enhanced with radio button support and maiden name handling
 
 import { updateSearchableSelects } from './searchableSelect.js';
 
@@ -35,9 +36,18 @@ export function openModalForEdit(personId) {
       document.getElementById('personName').value = node?.name || personData?.name || '';
       document.getElementById('personFatherName').value = node?.fatherName || personData?.fatherName || '';
       document.getElementById('personSurname').value = node?.surname || personData?.surname || '';
-      document.getElementById('personBirthName').value = node?.birthName || personData?.birthName || '';
+      document.getElementById('personMaidenName').value = node?.maidenName || personData?.maidenName || '';
       document.getElementById('personDob').value = node?.dob || personData?.dob || '';
-      document.getElementById('personGender').value = node?.gender || personData?.gender || '';
+      
+      // Handle gender radio buttons
+      const gender = node?.gender || personData?.gender || '';
+      const maleRadio = document.getElementById('genderMale');
+      const femaleRadio = document.getElementById('genderFemale');
+      
+      if (maleRadio && femaleRadio) {
+        maleRadio.checked = gender === 'male';
+        femaleRadio.checked = gender === 'female';
+      }
 
       // Extract existing mother/father/spouse IDs
       const existingData = {
@@ -108,15 +118,31 @@ function clearForm() {
   }
 
   // Clear individual inputs manually as well
-  const inputs = ['personName', 'personFatherName', 'personSurname', 'personBirthName', 'personDob', 'personGender'];
+  const inputs = ['personName', 'personFatherName', 'personSurname', 'personMaidenName', 'personDob'];
   inputs.forEach(inputId => {
     const input = document.getElementById(inputId);
     if (input) input.value = '';
   });
+
+  // Clear radio buttons
+  const maleRadio = document.getElementById('genderMale');
+  const femaleRadio = document.getElementById('genderFemale');
+  if (maleRadio) maleRadio.checked = false;
+  if (femaleRadio) femaleRadio.checked = false;
 }
 
 export function isModalCurrentlyOpen() {
   return isModalOpen;
+}
+
+// Get selected gender from radio buttons
+function getSelectedGender() {
+  const maleRadio = document.getElementById('genderMale');
+  const femaleRadio = document.getElementById('genderFemale');
+  
+  if (maleRadio && maleRadio.checked) return 'male';
+  if (femaleRadio && femaleRadio.checked) return 'female';
+  return '';
 }
 
 // Initialize modal when DOM is ready
@@ -155,6 +181,14 @@ document.addEventListener('DOMContentLoaded', () => {
     form.addEventListener('submit', (e) => {
       console.log('Form submitted');
       e.preventDefault();
+      
+      // Validate gender selection
+      const gender = getSelectedGender();
+      if (!gender) {
+        alert('Please select a gender.');
+        return;
+      }
+      
       // The form submission will be handled by tree-core-canvas.js
       // Modal will be closed from there after successful save
     });
@@ -178,5 +212,28 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
   
+  // Add listeners for radio button changes
+  const maleRadio = document.getElementById('genderMale');
+  const femaleRadio = document.getElementById('genderFemale');
+  
+  if (maleRadio) {
+    maleRadio.addEventListener('change', () => {
+      if (maleRadio.checked) {
+        console.log('Gender changed to male');
+      }
+    });
+  }
+  
+  if (femaleRadio) {
+    femaleRadio.addEventListener('change', () => {
+      if (femaleRadio.checked) {
+        console.log('Gender changed to female');
+      }
+    });
+  }
+  
   console.log('Modal initialization complete');
 });
+
+// Export gender getter function for use by other modules
+export { getSelectedGender };
