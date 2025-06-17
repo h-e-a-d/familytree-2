@@ -1,5 +1,6 @@
 // table.js
 // Updated to work with Canvas-based tree implementation
+// Enhanced with maiden name support
 
 export function rebuildTableView() {
   import('./tree-core-canvas.js').then(({ treeCore }) => {
@@ -23,7 +24,7 @@ export function rebuildTableView() {
         name: node.name || personData.name || '',
         fatherName: node.fatherName || personData.fatherName || '',
         surname: node.surname || personData.surname || '',
-        birthName: node.birthName || personData.birthName || '',
+        maidenName: node.maidenName || personData.maidenName || '', // Changed from birthName
         dob: node.dob || personData.dob || '',
         gender: node.gender || personData.gender || '',
         motherId: personData.motherId || '',
@@ -39,7 +40,7 @@ export function rebuildTableView() {
           r.name.toLowerCase().includes(searchTerm) ||
           r.fatherName.toLowerCase().includes(searchTerm) ||
           r.surname.toLowerCase().includes(searchTerm) ||
-          r.birthName.toLowerCase().includes(searchTerm) ||
+          r.maidenName.toLowerCase().includes(searchTerm) || // Changed from birthName
           r.dob.toLowerCase().includes(searchTerm)
         );
       });
@@ -92,10 +93,10 @@ export function rebuildTableView() {
       surnameTd.textContent = r.surname;
       tr.appendChild(surnameTd);
 
-      // Birth Name
-      const birthNameTd = document.createElement('td');
-      birthNameTd.textContent = r.birthName;
-      tr.appendChild(birthNameTd);
+      // Maiden Name (changed from Birth Name)
+      const maidenNameTd = document.createElement('td');
+      maidenNameTd.textContent = r.maidenName;
+      tr.appendChild(maidenNameTd);
 
       // DOB
       const dobTd = document.createElement('td');
