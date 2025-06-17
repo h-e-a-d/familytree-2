@@ -4,6 +4,17 @@
   padding: 0;
   box-sizing: border-box;
 }
+
+/* Hide scrollbars globally while maintaining functionality */
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+*::-webkit-scrollbar {
+  display: none; /* WebKit */
+}
+
 html, body {
   height: 100%;
   font-family: 'Inter', sans-serif;
@@ -30,7 +41,16 @@ html, body {
   /* Allow normal touch behavior for table scrolling */
   touch-action: auto;
   overflow-y: auto;
+  /* Hide scrollbar but maintain scroll functionality */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
+
+#graphicView::-webkit-scrollbar,
+#tableView::-webkit-scrollbar {
+  display: none;
+}
+
 #svgArea {
   width: 100%;
   height: 100%;
@@ -101,6 +121,13 @@ html, body {
   z-index: 999;
   /* Allow normal touch behavior in settings */
   touch-action: auto;
+  /* Hide scrollbar */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+#settingsPanel::-webkit-scrollbar {
+  display: none;
 }
 
 #settingsPanel h3 { 
@@ -472,6 +499,13 @@ html, body {
   box-shadow: 0 20px 60px rgba(0,0,0,0.3);
   /* Allow normal touch behavior in modal content */
   touch-action: auto;
+  /* Hide scrollbar */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.modal-content::-webkit-scrollbar {
+  display: none;
 }
 
 .modal-content h2 {
@@ -610,6 +644,13 @@ html, body {
   z-index: 1002; 
   box-shadow: 0 4px 16px rgba(0,0,0,0.1);
   margin-top: 2px;
+  /* Hide scrollbar */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.searchable-select .options::-webkit-scrollbar {
+  display: none;
 }
 
 .searchable-select .options.hidden { 
