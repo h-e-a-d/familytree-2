@@ -1,4 +1,4 @@
-// tree-core-canvas.js - Enhanced with backwards compatibility and caching functionality
+// tree-core-canvas.js - Fixed version with backwards compatibility and caching functionality
 
 import { CanvasRenderer } from './canvas-renderer.js';
 import { openModalForEdit, closeModal, getSelectedGender } from './modal.js';
@@ -789,10 +789,7 @@ class TreeCoreCanvas {
     reader.readAsText(file);
   }
 
-  // Rest of the methods remain the same as the original implementation...
-  // [Include all the existing methods from the original tree-core-canvas.js]
-
-  // Setup node style switcher (existing method)
+  // Setup node style switcher
   setupNodeStyleSwitcher() {
     console.log('Setting up node style switcher...');
     
@@ -823,44 +820,7 @@ class TreeCoreCanvas {
     console.log('Node style switcher setup complete');
   }
 
-  // Enhanced pushUndoState with auto-save
-  pushUndoState() {
-    const state = {
-      nodes: new Map(),
-      personData: new Map(this.personData || []),
-      camera: this.renderer ? this.renderer.getCamera() : { x: 0, y: 0, scale: 1 },
-      hiddenConnections: new Set(this.hiddenConnections),
-      lineOnlyConnections: new Set(this.lineOnlyConnections),
-      displayPreferences: { ...this.displayPreferences },
-      nodeStyle: this.nodeStyle,
-      settings: {
-        nodeRadius: this.nodeRadius,
-        defaultColor: this.defaultColor,
-        fontFamily: this.fontFamily,
-        fontSize: this.fontSize,
-        nameColor: this.nameColor,
-        dateColor: this.dateColor
-      }
-    };
-    
-    if (this.renderer) {
-      for (const [id, node] of this.renderer.nodes) {
-        state.nodes.set(id, { ...node });
-      }
-    }
-    
-    this.undoStack.push(state);
-    if (this.undoStack.length > this.maxUndoSize) {
-      this.undoStack.shift();
-    }
-    
-    this.redoStack = [];
-    
-    // Auto-save after state change
-    setTimeout(() => this.autoSave(), 100);
-  }
-
-  // Setup display preferences (FIXED)
+  // Setup display preferences
   setupDisplayPreferences() {
     console.log('Setting up display preferences...');
     
@@ -951,7 +911,7 @@ class TreeCoreCanvas {
     }
   }
 
-  // Update all nodes to reflect display preferences (FIXED)
+  // Update all nodes to reflect display preferences
   updateAllNodesDisplay() {
     if (!this.renderer) return;
     
@@ -1250,7 +1210,7 @@ class TreeCoreCanvas {
   setupSettings() {
     console.log('Setting up settings panel...');
     
-    // Apply node style button (FIXED)
+    // Apply node style button
     const applyBtn = document.getElementById('applyNodeStyle');
     if (applyBtn) {
       applyBtn.addEventListener('click', () => {
@@ -1273,7 +1233,7 @@ class TreeCoreCanvas {
       console.log('Apply node style button setup complete');
     }
 
-    // Font settings (FIXED)
+    // Font settings
     const fontSelect = document.getElementById('fontSelect');
     if (fontSelect) {
       fontSelect.addEventListener('change', (e) => {
@@ -1328,7 +1288,7 @@ class TreeCoreCanvas {
     console.log('Settings panel setup complete');
   }
 
-  // Update all existing nodes with new settings (NEW)
+  // Update all existing nodes with new settings
   updateAllExistingNodes() {
     if (!this.renderer) return;
     
@@ -1349,7 +1309,7 @@ class TreeCoreCanvas {
   }
 
   setupExport() {
-    // SVG Export (FIXED with notifications)
+    // SVG Export
     document.getElementById('exportSvg')?.addEventListener('click', () => {
       const loadingId = notifications.loading('Exporting...', 'Generating SVG file');
       
@@ -1366,7 +1326,7 @@ class TreeCoreCanvas {
       }
     });
     
-    // PNG Export (FIXED with notifications)
+    // PNG Export
     document.getElementById('exportPng')?.addEventListener('click', () => {
       const loadingId = notifications.loading('Exporting...', 'Generating PNG file');
       
@@ -1388,7 +1348,7 @@ class TreeCoreCanvas {
       notifications.error('Not Available', 'PDF export not yet implemented for canvas renderer');
     });
     
-    // JSON Save (FIXED with notifications)
+    // JSON Save
     document.getElementById('saveData')?.addEventListener('click', () => {
       const loadingId = notifications.loading('Saving...', 'Generating JSON file');
       
@@ -1405,7 +1365,7 @@ class TreeCoreCanvas {
       }
     });
     
-    // JSON Load (FIXED with notifications)
+    // JSON Load
     document.getElementById('loadData')?.addEventListener('change', (e) => {
       const loadingId = notifications.loading('Loading...', 'Processing JSON file');
       
@@ -1538,6 +1498,10 @@ class TreeCoreCanvas {
     this.personData.set(id, { ...data });
     
     this.renderer.setNode(id, nodeData);
+  }
+
+  getPersonData(id) {
+    return this.personData?.get(id) || {};
   }
 
   // Connection management methods
@@ -2000,6 +1964,46 @@ class TreeCoreCanvas {
     
     this.updateRendererSettings();
     this.regenerateConnections();
+    this.clearSelection();
+  }
+
+  // Enhanced pushUndoState with auto-save
+  pushUndoState() {
+    const state = {
+      nodes: new Map(),
+      personData: new Map(this.personData || []),
+      camera: this.renderer ? this.renderer.getCamera() : { x: 0, y: 0, scale: 1 },
+      hiddenConnections: new Set(this.hiddenConnections),
+      lineOnlyConnections: new Set(this.lineOnlyConnections),
+      displayPreferences: { ...this.displayPreferences },
+      nodeStyle: this.nodeStyle,
+      settings: {
+        nodeRadius: this.nodeRadius,
+        defaultColor: this.defaultColor,
+        fontFamily: this.fontFamily,
+        fontSize: this.fontSize,
+        nameColor: this.nameColor,
+        dateColor: this.dateColor
+      }
+    };
+    
+    if (this.renderer) {
+      for (const [id, node] of this.renderer.nodes) {
+        state.nodes.set(id, { ...node });
+      }
+    }
+    
+    this.undoStack.push(state);
+    if (this.undoStack.length > this.maxUndoSize) {
+      this.undoStack.shift();
+    }
+    
+    this.redoStack = [];
+    
+    // Auto-save after state change
+    setTimeout(() => this.autoSave(), 100);
+  }
+
   exportCanvasAsPNG() {
     try {
       // Use the improved export method from canvas renderer
@@ -2192,20 +2196,6 @@ class TreeCoreCanvas {
       dobText.setAttribute('fill', this.renderer.settings.dobColor);
       dobText.textContent = node.dob;
       nodeGroup.appendChild(dobText);
-    }
-  }
-
-  // Cleanup method
-  destroy() {
-    if (this.autoSaveTimer) {
-      clearInterval(this.autoSaveTimer);
-    }
-    
-    // Final save before destroy
-    this.saveToCache();
-    
-    if (this.renderer) {
-      this.renderer.destroy();
     }
   }
 
