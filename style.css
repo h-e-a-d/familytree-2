@@ -509,6 +509,61 @@ html, body {
   padding: 20px 0 0 0;
   margin-top: 20px;
   z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.form-actions-right {
+  display: flex;
+  gap: 12px;
+}
+
+/* Delete Button Styles */
+.btn-danger {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-danger:hover {
+  background-color: #c0392b;
+}
+
+.btn-danger-outline {
+  background-color: transparent;
+  color: #e74c3c;
+  border: 2px solid #e74c3c;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.btn-danger-outline:hover {
+  background-color: #e74c3c;
+  color: white;
+}
+
+/* Clear All Section */
+.clear-all-section {
+  border-top: 2px solid #e9ecef;
+  margin-top: 16px;
+  padding-top: 16px;
+}
+
+.clear-all-section h4 {
+  color: #e74c3c;
+  margin-bottom: 12px;
 }
 
 /* Enhanced Settings Panel */
@@ -1299,18 +1354,15 @@ html, body {
   background-color: #f8f9fa; 
 }
 
-.form-actions { 
-  display: flex; 
-  justify-content: flex-end; 
-  gap: 12px; 
-  margin-top: 24px;
-  padding-top: 20px;
-  border-top: 1px solid #e9ecef;
-}
-
-.form-actions button { 
-  padding: 10px 20px; 
+.form-actions button#cancelModal,
+.form-actions button#cancelStyleModal,
+.form-actions button#cancelConnectionModal,
+.form-actions button#cancelDeletePerson,
+.form-actions button#cancelClearAll { 
+  background: #6c757d; 
+  color: #fff; 
   border: none; 
+  padding: 10px 20px; 
   border-radius: 6px; 
   font-size: 14px; 
   font-weight: 500;
@@ -1318,16 +1370,11 @@ html, body {
   transition: all 0.2s ease;
 }
 
-.form-actions button#cancelModal,
-.form-actions button#cancelStyleModal,
-.form-actions button#cancelConnectionModal { 
-  background: #6c757d; 
-  color: #fff; 
-}
-
 .form-actions button#cancelModal:hover,
 .form-actions button#cancelStyleModal:hover,
-.form-actions button#cancelConnectionModal:hover {
+.form-actions button#cancelConnectionModal:hover,
+.form-actions button#cancelDeletePerson:hover,
+.form-actions button#cancelClearAll:hover {
   background: #5a6268;
 }
 
@@ -1335,11 +1382,36 @@ html, body {
 .form-actions button#applySelectedStyle { 
   background: #2ecc71; 
   color: #fff; 
+  border: none; 
+  padding: 10px 20px; 
+  border-radius: 6px; 
+  font-size: 14px; 
+  font-weight: 500;
+  cursor: pointer; 
+  transition: all 0.2s ease;
 }
 
 .form-actions button#savePerson:hover,
 .form-actions button#applySelectedStyle:hover {
   background: #27ae60;
+}
+
+.form-actions button#confirmDeletePerson,
+.form-actions button#confirmClearAll {
+  background: #e74c3c; 
+  color: #fff; 
+  border: none; 
+  padding: 10px 20px; 
+  border-radius: 6px; 
+  font-size: 14px; 
+  font-weight: 500;
+  cursor: pointer; 
+  transition: all 0.2s ease;
+}
+
+.form-actions button#confirmDeletePerson:hover,
+.form-actions button#confirmClearAll:hover {
+  background: #c0392b;
 }
 
 /* SVG Styles - Updated for text inside circles */
