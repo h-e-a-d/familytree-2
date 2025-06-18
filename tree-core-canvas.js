@@ -1,4 +1,4 @@
-// tree-core-canvas.js - Updated with search integration and advanced export functionality
+// tree-core-canvas.js - Updated with center selected, fix cache connections, and clear all functionality
 
 import { CanvasRenderer } from './canvas-renderer.js';
 import { openModalForEdit, closeModal, getSelectedGender } from './modal.js';
@@ -116,6 +116,7 @@ class TreeCoreCanvas {
     this.setupDisplayPreferences();
     this.setupNodeStyleSwitcher();
     this.setupCaching();
+    this.setupClearAllFunctionality(); // NEW: Clear all functionality
     
     // Setup form submit handler
     const personForm = document.getElementById('personForm');
@@ -149,7 +150,193 @@ class TreeCoreCanvas {
     console.log('TreeCoreCanvas initialization complete');
   }
 
-  // ================== CACHING FUNCTIONALITY ==================
+  // ================== NEW: CENTER SELECTED NODE FUNCTIONALITY ==================
+
+  centerSelectedNode() {
+    const selectedNodes = this.renderer.getSelectedNodes();
+    
+    if (selectedNodes.size === 0) {
+      notifications.warning('No Selection', 'Please select a node to center');
+      return;
+    }
+    
+    if (selectedNodes.size > 1) {
+      notifications.info('Multiple Selected', 'Centering on first selected node');
+    }
+    
+    const firstSelectedId = Array.from(selectedNodes)[0];
+    const node = this.renderer.nodes.get(firstSelectedId);
+    
+    if (!node) {
+      notifications.error('Node Not Found', 'Selected node could not be found');
+      return;
+    }
+    
+    // Center the camera on the selected node
+    this.centerOnNode(node);
+    
+    // Get person display name for notification
+    const personData = this.getPersonData(firstSelectedId) || {};
+    let displayName = node.name || personData.name || 'Unknown';
+    if (node.surname || personData.surname) {
+      displayName += ` ${node.surname || personData.surname}`;
+    }
+    
+    notifications.success('Node Centered', `Centered on ${displayName}`);
+    console.log('Centered on node:', firstSelectedId);
+  }
+
+  centerOnNode(node) {
+    if (!this.renderer || !this.renderer.canvas) return;
+    
+    const canvas = this.renderer.canvas;
+    const canvasWidth = canvas.width / this.renderer.dpr;
+    const canvasHeight = canvas.height / this.renderer.dpr;
+    
+    // Calculate new camera position to center the node
+    const targetScale = Math.max(this.renderer.camera.scale, 1); // Ensure readable zoom level
+    const newCameraX = canvasWidth / 2 - node.x * targetScale;
+    const newCameraY = canvasHeight / 2 - node.y * targetScale;
+    
+    // Animate to the new position
+    this.animateCamera({
+      x: newCameraX,
+      y: newCameraY,
+      scale: targetScale
+    });
+  }
+
+  animateCamera(targetCamera) {
+    if (!this.renderer) return;
+    
+    const startCamera = { ...this.renderer.camera };
+    const duration = 800; // ms
+    const startTime = performance.now();
+    
+    const animate = (currentTime) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      // Easing function (ease-out cubic)
+      const eased = 1 - Math.pow(1 - progress, 3);
+      
+      // Interpolate camera position
+      this.renderer.camera.x = startCamera.x + (targetCamera.x - startCamera.x) * eased;
+      this.renderer.camera.y = startCamera.y + (targetCamera.y - startCamera.y) * eased;
+      this.renderer.camera.scale = startCamera.scale + (targetCamera.scale - startCamera.scale) * eased;
+      
+      this.renderer.needsRedraw = true;
+      
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+    
+    requestAnimationFrame(animate);
+  }
+
+  // ================== NEW: CLEAR ALL FUNCTIONALITY ==================
+
+  setupClearAllFunctionality() {
+    console.log('Setting up clear all functionality...');
+    
+    const clearAllBtn = document.getElementById('clearAllBtn');
+    const clearAllConfirmModal = document.getElementById('clearAllConfirmModal');
+    const cancelClearAllBtn = document.getElementById('cancelClearAll');
+    const confirmClearAllBtn = document.getElementById('confirmClearAll');
+    
+    if (clearAllBtn) {
+      clearAllBtn.addEventListener('click', () => {
+        console.log('Clear all button clicked');
+        this.openClearAllConfirmModal();
+      });
+      console.log('Clear all button setup complete');
+    }
+    
+    if (cancelClearAllBtn) {
+      cancelClearAllBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.closeClearAllConfirmModal();
+      });
+    }
+    
+    if (confirmClearAllBtn) {
+      confirmClearAllBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.confirmClearAll();
+      });
+    }
+    
+    if (clearAllConfirmModal) {
+      clearAllConfirmModal.addEventListener('click', (e) => {
+        if (e.target === clearAllConfirmModal) {
+          this.closeClearAllConfirmModal();
+        }
+      });
+    }
+    
+    console.log('Clear all functionality setup complete');
+  }
+
+  openClearAllConfirmModal() {
+    const clearAllConfirmModal = document.getElementById('clearAllConfirmModal');
+    if (clearAllConfirmModal) {
+      clearAllConfirmModal.classList.remove('hidden');
+      clearAllConfirmModal.style.display = 'flex';
+    }
+  }
+
+  closeClearAllConfirmModal() {
+    const clearAllConfirmModal = document.getElementById('clearAllConfirmModal');
+    if (clearAllConfirmModal) {
+      clearAllConfirmModal.classList.add('hidden');
+      clearAllConfirmModal.style.display = 'none';
+    }
+  }
+
+  confirmClearAll() {
+    console.log('Confirming clear all operation');
+    
+    // Clear all data
+    if (this.renderer) {
+      this.renderer.nodes.clear();
+      this.renderer.clearConnections();
+      this.renderer.clearSelection();
+      this.renderer.needsRedraw = true;
+    }
+    
+    // Clear person data and other state
+    this.personData = new Map();
+    this.hiddenConnections = new Set();
+    this.lineOnlyConnections = new Set();
+    this.selectedCircles = new Set();
+    this.nextId = 1;
+    
+    // Clear undo/redo stacks
+    this.undoStack = [];
+    this.redoStack = [];
+    
+    // Clear cache
+    this.clearCache();
+    
+    // Update UI
+    this.updateActionButtons();
+    
+    // Close modal
+    this.closeClearAllConfirmModal();
+    
+    // Show notification
+    notifications.success('All Data Cleared', 'Family tree has been completely cleared');
+    
+    // Push new empty state
+    this.pushUndoState();
+    
+    console.log('All data cleared successfully');
+  }
+
+  // ================== ENHANCED CACHING FUNCTIONALITY ==================
 
   setupCaching() {
     console.log('Setting up caching functionality...');
@@ -359,7 +546,6 @@ class TreeCoreCanvas {
       }
       keysToRemove.forEach(key => localStorage.removeItem(key));
       
-      notifications.success('Cache Cleared', 'All cached progress has been cleared');
       console.log('Cache cleared');
     } catch (error) {
       console.error('Failed to clear cache:', error);
@@ -389,8 +575,13 @@ class TreeCoreCanvas {
       </div>
     `;
     
-    // Insert before the last section
-    settingsPanel.appendChild(cacheSection);
+    // Insert before the clear all section
+    const clearAllSection = settingsPanel.querySelector('.clear-all-section');
+    if (clearAllSection) {
+      settingsPanel.insertBefore(cacheSection, clearAllSection);
+    } else {
+      settingsPanel.appendChild(cacheSection);
+    }
     
     // Wire up events
     document.getElementById('manualSaveBtn')?.addEventListener('click', () => {
@@ -404,6 +595,7 @@ class TreeCoreCanvas {
     document.getElementById('clearCacheBtn')?.addEventListener('click', () => {
       if (confirm('Are you sure you want to clear all cached progress? This cannot be undone.')) {
         this.clearCache();
+        notifications.success('Cache Cleared', 'All cached progress has been cleared');
       }
     });
     
@@ -421,7 +613,7 @@ class TreeCoreCanvas {
     });
   }
 
-  // ================== BACKWARDS COMPATIBILITY ==================
+  // ================== IMPROVED CACHE LOADING WITH CONNECTION FIX ==================
 
   checkForLegacyData() {
     // Check if there's any indication of legacy data to import
@@ -431,7 +623,7 @@ class TreeCoreCanvas {
     // or offer to import from uploaded files
   }
 
-  // Process legacy JSON format (from the uploaded file)
+  // FIXED: Process legacy JSON format (from the uploaded file)
   processLegacyData(data) {
     console.log('Processing legacy data format:', data);
     
@@ -523,7 +715,7 @@ class TreeCoreCanvas {
     }
   }
 
-  // Enhanced loadFromJSON to handle both formats
+  // FIXED: Enhanced loadFromJSON to handle both formats with proper connection restoration
   processLoadedData(data) {
     console.log('Processing loaded data, version:', data.version);
     
@@ -586,12 +778,11 @@ class TreeCoreCanvas {
       this.lineOnlyConnections = new Set(data.lineOnlyConnections);
     }
     
-    // Restore person data
+    // FIXED: Restore person data FIRST before processing persons
     if (data.personData && Array.isArray(data.personData)) {
       // Handle array format (from cache)
-      for (const [id, personData] of data.personData) {
-        this.personData.set(id, personData);
-      }
+      this.personData = new Map(data.personData);
+      console.log('Restored personData:', this.personData.size, 'entries');
     }
     
     // Restore next ID
@@ -602,6 +793,8 @@ class TreeCoreCanvas {
     // Process persons
     let maxId = 0;
     const persons = data.persons || [];
+    console.log('Processing', persons.length, 'persons');
+    
     for (const person of persons) {
       const nodeData = {
         x: person.x || person.cx || 0,
@@ -618,7 +811,7 @@ class TreeCoreCanvas {
       
       this.renderer.setNode(person.id, nodeData);
       
-      // Store/update person data
+      // FIXED: Only update person data if it's not already loaded from cache
       if (!this.personData.has(person.id)) {
         this.personData.set(person.id, {
           name: person.name || '',
@@ -643,6 +836,10 @@ class TreeCoreCanvas {
       this.nextId = maxId + 1;
     }
     
+    console.log('PersonData after processing:', this.personData.size, 'entries');
+    console.log('Sample personData entries:', Array.from(this.personData.entries()).slice(0, 3));
+    
+    // FIXED: Regenerate connections AFTER all person data is loaded
     this.regenerateConnections();
     
     this.undoStack = [];
@@ -651,6 +848,8 @@ class TreeCoreCanvas {
     
     // Save to cache after successful load
     this.saveToCache();
+    
+    console.log('Data loading complete with', this.renderer.connections.length, 'connections');
   }
 
   // Enhanced JSON export with backwards compatibility markers
@@ -674,6 +873,7 @@ class TreeCoreCanvas {
       hiddenConnections: Array.from(this.hiddenConnections),
       lineOnlyConnections: Array.from(this.lineOnlyConnections),
       persons: this.getPersonsArray(),
+      personData: Array.from(this.personData.entries()), // FIXED: Ensure personData is properly exported
       
       // Legacy compatibility section
       legacy_format: {
@@ -1450,6 +1650,7 @@ class TreeCoreCanvas {
         this.closeStyleModal();
         this.closeConnectionModal();
         this.closeLineRemovalModal();
+        this.closeClearAllConfirmModal();
       }
     });
   }
@@ -1757,20 +1958,37 @@ class TreeCoreCanvas {
     return personId;
   }
 
+  // FIXED: Enhanced regenerateConnections with better debugging
   regenerateConnections() {
+    console.log('Regenerating connections...');
+    console.log('PersonData entries:', this.personData ? this.personData.size : 0);
+    
     this.renderer.clearConnections();
     
-    for (const [childId, childData] of (this.personData || new Map())) {
+    if (!this.personData || this.personData.size === 0) {
+      console.log('No personData available for connections');
+      return;
+    }
+    
+    let connectionsAdded = 0;
+    
+    for (const [childId, childData] of this.personData) {
+      console.log(`Processing connections for ${childId}:`, childData);
+      
       if (childData.motherId) {
         const connectionKey = this.getConnectionKey(childId, childData.motherId);
         if (!this.hiddenConnections.has(connectionKey)) {
           this.renderer.addConnection(childId, childData.motherId, 'parent');
+          connectionsAdded++;
+          console.log(`Added mother connection: ${childId} -> ${childData.motherId}`);
         }
       }
       if (childData.fatherId) {
         const connectionKey = this.getConnectionKey(childId, childData.fatherId);
         if (!this.hiddenConnections.has(connectionKey)) {
           this.renderer.addConnection(childId, childData.fatherId, 'parent');
+          connectionsAdded++;
+          console.log(`Added father connection: ${childId} -> ${childData.fatherId}`);
         }
       }
       if (childData.spouseId) {
@@ -1778,6 +1996,8 @@ class TreeCoreCanvas {
           const connectionKey = this.getConnectionKey(childId, childData.spouseId);
           if (!this.hiddenConnections.has(connectionKey)) {
             this.renderer.addConnection(childId, childData.spouseId, 'spouse');
+            connectionsAdded++;
+            console.log(`Added spouse connection: ${childId} -> ${childData.spouseId}`);
           }
         }
       }
@@ -1787,8 +2007,12 @@ class TreeCoreCanvas {
       if (!this.hiddenConnections.has(connectionKey)) {
         const [id1, id2] = connectionKey.split('-');
         this.renderer.addConnection(id1, id2, 'line-only');
+        connectionsAdded++;
+        console.log(`Added line-only connection: ${id1} -> ${id2}`);
       }
     }
+    
+    console.log(`Regenerated ${connectionsAdded} connections total`);
   }
 
   getConnectionKey(id1, id2) {
