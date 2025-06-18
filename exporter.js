@@ -1,4 +1,5 @@
 // exporter.js - Enhanced with notification support, GEDCOM, and PDF layout export
+// FIXED: PDF export issues resolved
 
 import { notifications } from './notifications.js';
 
@@ -87,39 +88,36 @@ export function exportTree(format) {
                   notifications.success('Export Complete', 'PNG file has been downloaded successfully');
                 });   
               } else if (format === 'pdf') {
-                // Dynamic import for PDF library
-                import('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js')
-                  .then((module) => {
-                    try {
-                      const { jsPDF } = module.jspdf;
-                      const imgData = canvas.toDataURL('image/png');
-                      const imgWidth = canvas.width / scale;
-                      const imgHeight = canvas.height / scale;
-                      
-                      // Choose orientation based on aspect ratio
-                      const orientation = imgWidth > imgHeight ? 'landscape' : 'portrait';
-                      const pdf = new jsPDF({ 
-                        orientation: orientation, 
-                        unit: 'pt', 
-                        format: [imgWidth, imgHeight] 
-                      });
-                      
-                      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-                      pdf.save('family-tree.pdf');
-                      
-                      notifications.remove(loadingId);
-                      notifications.success('Export Complete', 'PDF file has been downloaded successfully');
-                    } catch (pdfError) {
-                      console.error('Error creating PDF:', pdfError);
-                      notifications.remove(loadingId);
-                      notifications.error('PDF Export Failed', 'Error creating PDF file');
-                    }
-                  })
-                  .catch(err => {
-                    console.error('Error loading jsPDF:', err);
+                // FIXED: Improved PDF export with proper jsPDF loading
+                loadJsPDF().then((jsPDF) => {
+                  try {
+                    const imgData = canvas.toDataURL('image/png');
+                    const imgWidth = canvas.width / scale;
+                    const imgHeight = canvas.height / scale;
+                    
+                    // Choose orientation based on aspect ratio
+                    const orientation = imgWidth > imgHeight ? 'landscape' : 'portrait';
+                    const pdf = new jsPDF({ 
+                      orientation: orientation, 
+                      unit: 'pt', 
+                      format: [imgWidth, imgHeight] 
+                    });
+                    
+                    pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+                    pdf.save('family-tree.pdf');
+                    
                     notifications.remove(loadingId);
-                    notifications.error('PDF Export Failed', 'Could not load PDF library');
-                  });
+                    notifications.success('Export Complete', 'PDF file has been downloaded successfully');
+                  } catch (pdfError) {
+                    console.error('Error creating PDF:', pdfError);
+                    notifications.remove(loadingId);
+                    notifications.error('PDF Export Failed', 'Error creating PDF file');
+                  }
+                }).catch(err => {
+                  console.error('Error loading jsPDF:', err);
+                  notifications.remove(loadingId);
+                  notifications.error('PDF Export Failed', 'Could not load PDF library');
+                });
               }
             } catch (canvasError) {
               console.error('Error processing canvas:', canvasError);
@@ -148,6 +146,167 @@ export function exportTree(format) {
     console.error('Export error:', error);
     notifications.remove(loadingId);
     notifications.error('Export Failed', 'Failed to export family tree');
+  }
+}
+
+// FIXED: Improved jsPDF loading function
+async function loadJsPDF() {
+  try {
+    // Try different CDN URLs and loading methods
+    const cdnUrls = [
+      'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+      'https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js',
+      'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js'
+    ];
+    
+    for (const url of cdnUrls) {
+      try {
+        console.log('Attempting to load jsPDF from:', url);
+        
+        // Try dynamic import first
+        try {
+          const module = await import(url);
+          if (module.jsPDF) {
+            console.log('jsPDF loaded via dynamic import');
+            return module.jsPDF;
+          }
+          if (module.default && module.default.jsPDF) {
+            console.log('jsPDF loaded via default export');
+            return module.default.jsPDF;
+          }
+        } catch (importError) {
+          console.log('Dynamic import failed, trying script loading');
+        }
+        
+        // Fallback to script loading
+        const jsPDF = await loadJsPDFViaScript(url);
+        if (jsPDF) {
+          console.log('jsPDF loaded via script tag');
+          return jsPDF;
+        }
+        
+      } catch (error) {
+        console.log(`Failed to load from ${url}:`, error);
+        continue;
+      }
+    }
+    
+    throw new Error('All jsPDF loading methods failed');
+  } catch (error) {
+    console.error('Error loading jsPDF:', error);
+    throw error;
+  }
+}
+
+// Load jsPDF via script tag
+function loadJsPDFViaScript(url) {
+  return new Promise((resolve, reject) => {
+    // Check if jsPDF is already available globally
+    if (window.jsPDF) {
+      resolve(window.jsPDF);
+      return;
+    }
+    
+    const script = document.createElement('script');
+    script.src = url;
+    script.onload = () => {
+      if (window.jsPDF) {
+        resolve(window.jsPDF);
+      } else {
+        reject(new Error('jsPDF not found after script load'));
+      }
+    };
+    script.onerror = () => {
+      reject(new Error('Failed to load jsPDF script'));
+    };
+    document.head.appendChild(script);
+  });
+}
+
+// Enhanced canvas-based PDF export
+export async function exportCanvasPDF() {
+  const loadingId = notifications.loading('Exporting PDF...', 'Generating PDF from canvas');
+  
+  try {
+    // Import tree core to access canvas renderer
+    const { treeCore } = await import('./tree-core-canvas.js');
+    
+    if (!treeCore.renderer) {
+      notifications.remove(loadingId);
+      notifications.warning('No Data', 'No family tree canvas available to export');
+      return;
+    }
+    
+    // Get canvas image
+    const exportCanvas = treeCore.renderer.exportAsImage('png');
+    const imgData = exportCanvas.toDataURL('image/png');
+    
+    // Load jsPDF
+    const jsPDF = await loadJsPDF();
+    
+    // Calculate PDF dimensions
+    const imgWidth = exportCanvas.width;
+    const imgHeight = exportCanvas.height;
+    const aspectRatio = imgWidth / imgHeight;
+    
+    // Choose orientation and size based on aspect ratio
+    let pdfWidth, pdfHeight, orientation;
+    if (aspectRatio > 1.4) {
+      // Wide image - use landscape A4
+      orientation = 'landscape';
+      pdfWidth = 842; // A4 landscape width in points
+      pdfHeight = 595; // A4 landscape height in points
+    } else {
+      // Tall or square image - use portrait A4
+      orientation = 'portrait';
+      pdfWidth = 595; // A4 portrait width in points
+      pdfHeight = 842; // A4 portrait height in points
+    }
+    
+    // Calculate scaling to fit image in PDF
+    const scaleX = pdfWidth / imgWidth;
+    const scaleY = pdfHeight / imgHeight;
+    const scale = Math.min(scaleX, scaleY) * 0.9; // 90% to leave some margin
+    
+    const finalWidth = imgWidth * scale;
+    const finalHeight = imgHeight * scale;
+    
+    // Center the image
+    const offsetX = (pdfWidth - finalWidth) / 2;
+    const offsetY = (pdfHeight - finalHeight) / 2;
+    
+    // Create PDF
+    const pdf = new jsPDF({
+      orientation: orientation,
+      unit: 'pt',
+      format: 'a4'
+    });
+    
+    // Add title
+    pdf.setFontSize(16);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Family Tree', pdfWidth / 2, 30, { align: 'center' });
+    
+    // Add generation date
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'normal');
+    const dateStr = new Date().toLocaleDateString();
+    pdf.text(`Generated on: ${dateStr}`, pdfWidth / 2, 50, { align: 'center' });
+    
+    // Add image with some top margin for title
+    const imageY = Math.max(offsetY, 70);
+    pdf.addImage(imgData, 'PNG', offsetX, imageY, finalWidth, finalHeight);
+    
+    // Save PDF
+    pdf.save(`family-tree-${new Date().toISOString().split('T')[0]}.pdf`);
+    
+    notifications.remove(loadingId);
+    notifications.success('PDF Export Complete', 'PDF file has been downloaded successfully');
+    
+  } catch (error) {
+    console.error('Canvas PDF export error:', error);
+    notifications.remove(loadingId);
+    notifications.error('PDF Export Failed', 'Error generating PDF from canvas');
   }
 }
 
@@ -194,9 +353,8 @@ export async function exportPDFLayout() {
       return;
     }
     
-    // Dynamic import for PDF library
-    const jsPDFModule = await import('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
-    const { jsPDF } = jsPDFModule.jspdf;
+    // FIXED: Load jsPDF with improved error handling
+    const jsPDF = await loadJsPDF();
     
     // Create PDF with A4 format
     const pdf = new jsPDF({
