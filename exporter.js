@@ -152,27 +152,33 @@ export function exportTree(format) {
 // FIXED: Improved jsPDF loading function
 async function loadJsPDF() {
   try {
-    // Try different CDN URLs and loading methods
+    // First check if jsPDF is already available
+    const existingJsPDF = findJsPDFGlobal();
+    if (existingJsPDF) {
+      console.log('jsPDF already available');
+      return existingJsPDF;
+    }
+    
+    // Try different CDN URLs and versions
     const cdnUrls = [
       'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
-      'https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js',
-      'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js'
+      'https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js',
+      'https://cdn.jsdelivr.net/npm/jspdf@latest/dist/jspdf.umd.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.5.3/jspdf.min.js', // Older version fallback
+      'https://unpkg.com/jspdf@1.5.3/dist/jspdf.min.js'
     ];
     
     for (const url of cdnUrls) {
       try {
         console.log('Attempting to load jsPDF from:', url);
         
-        // Try dynamic import first
+        // First try dynamic import
         try {
           const module = await import(url);
-          if (module.jsPDF) {
+          const jsPDF = module.jsPDF || module.default?.jsPDF || module.default;
+          if (jsPDF && typeof jsPDF === 'function') {
             console.log('jsPDF loaded via dynamic import');
-            return module.jsPDF;
-          }
-          if (module.default && module.default.jsPDF) {
-            console.log('jsPDF loaded via default export');
-            return module.default.jsPDF;
+            return jsPDF;
           }
         } catch (importError) {
           console.log('Dynamic import failed, trying script loading');
@@ -186,12 +192,21 @@ async function loadJsPDF() {
         }
         
       } catch (error) {
-        console.log(`Failed to load from ${url}:`, error);
+        console.log(`Failed to load from ${url}:`, error.message);
         continue;
       }
     }
     
-    throw new Error('All jsPDF loading methods failed');
+    // Last resort: try a different approach with a more reliable version
+    console.log('Trying fallback method with reliable version...');
+    try {
+      return await loadJsPDFSimple();
+    } catch (fallbackError) {
+      console.error('Fallback method also failed:', fallbackError);
+    }
+    
+    throw new Error('All jsPDF loading methods failed. Please check your internet connection.');
+    
   } catch (error) {
     console.error('Error loading jsPDF:', error);
     throw error;
@@ -201,20 +216,27 @@ async function loadJsPDF() {
 // Load jsPDF via script tag
 function loadJsPDFViaScript(url) {
   return new Promise((resolve, reject) => {
-    // Check if jsPDF is already available globally
-    if (window.jsPDF) {
-      resolve(window.jsPDF);
+    // Check if jsPDF is already available globally in various forms
+    const existingJsPDF = findJsPDFGlobal();
+    if (existingJsPDF) {
+      resolve(existingJsPDF);
       return;
     }
     
     const script = document.createElement('script');
     script.src = url;
     script.onload = () => {
-      if (window.jsPDF) {
-        resolve(window.jsPDF);
-      } else {
-        reject(new Error('jsPDF not found after script load'));
-      }
+      // Give the script a moment to initialize
+      setTimeout(() => {
+        const jsPDF = findJsPDFGlobal();
+        if (jsPDF) {
+          console.log('jsPDF found after script load');
+          resolve(jsPDF);
+        } else {
+          console.log('Available globals after script load:', Object.keys(window).filter(k => k.toLowerCase().includes('pdf')));
+          reject(new Error('jsPDF not found after script load'));
+        }
+      }, 100);
     };
     script.onerror = () => {
       reject(new Error('Failed to load jsPDF script'));
@@ -222,6 +244,110 @@ function loadJsPDFViaScript(url) {
     document.head.appendChild(script);
   });
 }
+
+// Helper function to find jsPDF in various global locations
+function findJsPDFGlobal() {
+  // Check common global variable names for jsPDF
+  const possiblePaths = [
+    'jsPDF',           // Most common
+    'jspdf.jsPDF',     // Namespaced version
+    'jsPDF.jsPDF',     // Double namespaced
+    'window.jsPDF',    // Explicit window
+    'jspdf',           // Lowercase version
+    'jsPdf',           // Alternative casing
+    'JSPDF'            // All caps version
+  ];
+  
+  for (const path of possiblePaths) {
+    try {
+      const parts = path.split('.');
+      let obj = window;
+      
+      for (const part of parts) {
+        if (part === 'window') continue;
+        obj = obj[part];
+        if (!obj) break;
+      }
+      
+      if (obj && typeof obj === 'function') {
+        console.log(`Found jsPDF at: ${path}`);
+        return obj;
+      }
+    } catch (e) {
+      continue;
+    }
+  }
+  
+  // Also try to check if it's available as a constructor
+  try {
+    if (window.jsPDF && window.jsPDF.API) {
+      console.log('Found jsPDF with API property');
+      return window.jsPDF;
+    }
+  } catch (e) {
+    // Ignore
+  }
+  
+  return null;
+}
+
+// Simple fallback jsPDF loader using a known working version
+function loadJsPDFSimple() {
+  return new Promise((resolve, reject) => {
+    // Use a known stable version
+    const scriptUrl = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.5.3/jspdf.min.js';
+    
+    // Remove any existing script first
+    const existingScript = document.querySelector(`script[src*="jspdf"]`);
+    if (existingScript) {
+      existingScript.remove();
+    }
+    
+    const script = document.createElement('script');
+    script.src = scriptUrl;
+    
+    script.onload = () => {
+      // Wait a bit longer for older version
+      setTimeout(() => {
+        // This older version typically exposes as window.jsPDF directly
+        if (window.jsPDF && typeof window.jsPDF === 'function') {
+          console.log('✅ Fallback jsPDF (v1.5.3) loaded successfully');
+          resolve(window.jsPDF);
+        } else {
+          console.log('❌ Fallback jsPDF not found');
+          console.log('Available window properties:', Object.keys(window).filter(k => k.includes('PDF')));
+          reject(new Error('Fallback jsPDF loading failed'));
+        }
+      }, 200);
+    };
+    
+    script.onerror = () => {
+      reject(new Error('Failed to load fallback jsPDF script'));
+    };
+    
+    console.log('Loading fallback jsPDF from:', scriptUrl);
+    document.head.appendChild(script);
+  });
+}
+
+// Debug function to test jsPDF loading
+window.testJsPDFLoading = async function() {
+  console.log('Testing jsPDF loading...');
+  try {
+    const jsPDF = await loadJsPDF();
+    console.log('✅ jsPDF loaded successfully:', typeof jsPDF);
+    
+    // Test creating a simple PDF
+    const doc = new jsPDF();
+    doc.text('Test PDF', 10, 10);
+    console.log('✅ jsPDF test creation successful');
+    
+    return true;
+  } catch (error) {
+    console.error('❌ jsPDF loading failed:', error);
+    return false;
+  }
+};
 
 // Enhanced canvas-based PDF export
 export async function exportCanvasPDF() {
@@ -373,7 +499,25 @@ export async function exportPDFLayout() {
   } catch (error) {
     console.error('PDF Layout export error:', error);
     notifications.remove(loadingId);
-    notifications.error('PDF Layout Export Failed', 'Error generating formatted PDF document');
+    
+    // Provide more helpful error messages and alternatives
+    if (error.message.includes('jsPDF loading methods failed')) {
+      notifications.error('PDF Export Failed', 
+        'Unable to load PDF library. Please check your internet connection or try again later.');
+      
+      // Offer an alternative
+      setTimeout(() => {
+        notifications.info('Alternative Available', 
+          'Would you like to export as PNG instead? You can convert PNG to PDF using online tools like SmallPDF or ILovePDF.',
+          { 
+            duration: 8000,
+            persistent: false
+          });
+      }, 2000);
+      
+    } else {
+      notifications.error('PDF Layout Export Failed', 'Error generating formatted PDF document');
+    }
   }
 }
 
@@ -908,4 +1052,29 @@ export function showExportSuccess(format) {
 // Export error notification helper
 export function showExportError(format, message) {
   notifications.error('Export Failed', `Failed to export ${format.toUpperCase()}: ${message}`);
+}
+
+// Make test function available globally for debugging
+if (typeof window !== 'undefined') {
+  window.testJsPDFLoading = async function() {
+    console.log('🔍 Testing jsPDF loading...');
+    try {
+      const jsPDF = await loadJsPDF();
+      console.log('✅ jsPDF loaded successfully:', typeof jsPDF);
+      
+      // Test creating a simple PDF
+      const doc = new jsPDF();
+      doc.text('Test PDF', 10, 10);
+      console.log('✅ jsPDF test creation successful');
+      
+      notifications.success('jsPDF Test', 'PDF library loaded and tested successfully!');
+      return true;
+    } catch (error) {
+      console.error('❌ jsPDF loading failed:', error);
+      notifications.error('jsPDF Test Failed', error.message);
+      return false;
+    }
+  };
+  
+  console.log('🛠️ PDF Debug: Type testJsPDFLoading() in console to test PDF library loading');
 }
