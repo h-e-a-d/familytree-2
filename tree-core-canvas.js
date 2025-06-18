@@ -3,7 +3,7 @@
 import { CanvasRenderer } from './canvas-renderer.js';
 import { openModalForEdit, closeModal, getSelectedGender } from './modal.js';
 import { rebuildTableView } from './table.js';
-import { exportTree, exportGEDCOM, exportPDFLayout } from './exporter.js';
+import { exportTree, exportGEDCOM, exportPDFLayout, exportCanvasPDF } from './exporter.js';
 import { notifications } from './notifications.js';
 
 class TreeCoreCanvas {
@@ -1343,9 +1343,20 @@ class TreeCoreCanvas {
       }
     });
     
-    // PDF Export
+    // PDF Export - FIXED: Now implemented for canvas renderer
     document.getElementById('exportPdf')?.addEventListener('click', () => {
-      notifications.error('Not Available', 'PDF export not yet implemented for canvas renderer');
+      const loadingId = notifications.loading('Exporting...', 'Generating PDF file');
+      
+      try {
+        setTimeout(() => {
+          this.exportCanvasAsPDF();
+          notifications.remove(loadingId);
+        }, 100);
+      } catch (error) {
+        notifications.remove(loadingId);
+        notifications.error('Export Failed', 'Error generating PDF file');
+        console.error('PDF export error:', error);
+      }
     });
     
     // JSON Save
@@ -1406,6 +1417,18 @@ class TreeCoreCanvas {
     });
     
     console.log('Advanced export setup complete');
+  }
+
+  // FIXED: Implement basic PDF export for canvas
+  async exportCanvasAsPDF() {
+    try {
+      // Import the enhanced PDF export function
+      const { exportCanvasPDF } = await import('./exporter.js');
+      await exportCanvasPDF();
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+      notifications.error('Export Failed', 'Could not export PDF: ' + error.message);
+    }
   }
 
   setupKeyboard() {
