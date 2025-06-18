@@ -395,7 +395,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Delete confirmation modal event listeners
+  // Setup delete confirmation modal event listeners
+  setupDeleteConfirmationModal();
+  
+  console.log('Modal initialization complete');
+});
+
+// Separate function to setup delete confirmation modal
+function setupDeleteConfirmationModal() {
+  console.log('Setting up delete confirmation modal...');
+  
   const deleteConfirmModal = document.getElementById('deleteConfirmModal');
   const cancelDeleteBtn = document.getElementById('cancelDeletePerson');
   const confirmDeleteBtn = document.getElementById('confirmDeletePerson');
@@ -403,29 +412,42 @@ document.addEventListener('DOMContentLoaded', () => {
   // Cancel delete
   if (cancelDeleteBtn) {
     cancelDeleteBtn.addEventListener('click', (e) => {
+      console.log('Cancel delete button clicked');
       e.preventDefault();
       e.stopPropagation();
       closeDeleteConfirmModal();
     });
+    console.log('Cancel delete button listener attached');
   }
 
   // Confirm delete
   if (confirmDeleteBtn) {
     confirmDeleteBtn.addEventListener('click', (e) => {
+      console.log('Confirm delete button clicked');
       e.preventDefault();
       e.stopPropagation();
       confirmDeletePerson();
     });
+    console.log('Confirm delete button listener attached');
   }
 
   // Close delete modal when clicking outside
   if (deleteConfirmModal) {
     deleteConfirmModal.addEventListener('click', (e) => {
       if (e.target === deleteConfirmModal) {
+        console.log('Clicked outside delete confirmation modal');
         closeDeleteConfirmModal();
       }
     });
+    console.log('Delete confirmation modal click-outside listener attached');
   }
-  
-  console.log('Modal initialization complete');
-});
+
+  // Prevent modal content clicks from closing modal
+  const deleteModalContent = deleteConfirmModal?.querySelector('.modal-content');
+  if (deleteModalContent) {
+    deleteModalContent.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+    console.log('Delete modal content click prevention attached');
+  }
+}
