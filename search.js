@@ -1,4 +1,4 @@
-// search.js - Family Tree Search Functionality
+// search.js - Family Tree Search Functionality with improved centering
 
 import { notifications } from './notifications.js';
 
@@ -349,8 +349,8 @@ class FamilyTreeSearch {
         return;
       }
       
-      // Center the camera on the selected person
-      this.centerOnPerson(treeCore.renderer, node);
+      // IMPROVED: Center the camera on the selected person with better positioning
+      this.centerOnPersonImproved(treeCore.renderer, node, personId);
       
       // Select the person
       treeCore.renderer.clearSelection();
@@ -375,49 +375,148 @@ class FamilyTreeSearch {
     }
   }
 
-  centerOnPerson(renderer, node) {
-    // Calculate center position
+  // IMPROVED: Better centering algorithm that ensures the node is always properly centered
+  centerOnPersonImproved(renderer, node, personId) {
+    if (!renderer || !renderer.canvas) {
+      console.error('Renderer or canvas not available');
+      return;
+    }
+    
     const canvas = renderer.canvas;
     const canvasWidth = canvas.width / renderer.dpr;
     const canvasHeight = canvas.height / renderer.dpr;
     
-    // Calculate new camera position to center the node
-    const newCameraX = canvasWidth / 2 - node.x * renderer.camera.scale;
-    const newCameraY = canvasHeight / 2 - node.y * renderer.camera.scale;
+    console.log('Canvas dimensions:', canvasWidth, 'x', canvasHeight);
+    console.log('Node position:', node.x, node.y);
+    console.log('Current camera:', renderer.camera);
     
-    // Animate to the new position
-    this.animateCamera(renderer, {
-      x: newCameraX,
-      y: newCameraY,
-      scale: Math.max(renderer.camera.scale, 1) // Ensure reasonable zoom level
-    });
+    // Ensure we have a reasonable zoom level (not too close, not too far)
+    let targetScale = renderer.camera.scale;
+    
+    // If current scale is too small (zoomed out too much), zoom in to a reasonable level
+    if (targetScale < 0.8) {
+      targetScale = 1.0;
+    }
+    // If current scale is too large (zoomed in too much), zoom out a bit
+    else if (targetScale > 3.0) {
+      targetScale = 2.0;
+    }
+    
+    // Calculate the exact center position
+    // We want the node to be at the center of the visible canvas
+    const targetCameraX = (canvasWidth / 2) - (node.x * targetScale);
+    const targetCameraY = (canvasHeight / 2) - (node.y * targetScale);
+    
+    console.log('Target camera position:', targetCameraX, targetCameraY, 'scale:', targetScale);
+    
+    // Animate to the new position with improved easing
+    this.animateCameraImproved(renderer, {
+      x: targetCameraX,
+      y: targetCameraY,
+      scale: targetScale
+    }, node, personId);
   }
 
-  animateCamera(renderer, targetCamera) {
+  // IMPROVED: Enhanced animation with validation to ensure centering works
+  animateCameraImproved(renderer, targetCamera, node, personId) {
     const startCamera = { ...renderer.camera };
-    const duration = 800; // ms
+    const duration = 1000; // Slightly longer duration for smoother animation
     const startTime = performance.now();
+    
+    console.log('Starting camera animation from:', startCamera, 'to:', targetCamera);
     
     const animate = (currentTime) => {
       const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / duration, 1);
       
-      // Easing function (ease-out)
-      const eased = 1 - Math.pow(1 - progress, 3);
+      // Improved easing function (ease-in-out cubic)
+      const eased = progress < 0.5
+        ? 4 * progress * progress * progress
+        : 1 - Math.pow(-2 * progress + 2, 3) / 2;
       
       // Interpolate camera position
-      renderer.camera.x = startCamera.x + (targetCamera.x - startCamera.x) * eased;
-      renderer.camera.y = startCamera.y + (targetCamera.y - startCamera.y) * eased;
-      renderer.camera.scale = startCamera.scale + (targetCamera.scale - startCamera.scale) * eased;
+      const newX = startCamera.x + (targetCamera.x - startCamera.x) * eased;
+      const newY = startCamera.y + (targetCamera.y - startCamera.y) * eased;
+      const newScale = startCamera.scale + (targetCamera.scale - startCamera.scale) * eased;
+      
+      // Apply new camera position
+      renderer.camera.x = newX;
+      renderer.camera.y = newY;
+      renderer.camera.scale = newScale;
       
       renderer.needsRedraw = true;
       
+      // Continue animation or finish
       if (progress < 1) {
         requestAnimationFrame(animate);
+      } else {
+        // Animation complete - verify the node is centered
+        console.log('Animation complete. Final camera:', renderer.camera);
+        this.validateCentering(renderer, node, personId);
       }
     };
     
     requestAnimationFrame(animate);
+  }
+
+  // NEW: Validation function to ensure the node is properly centered
+  validateCentering(renderer, node, personId) {
+    const canvas = renderer.canvas;
+    const canvasWidth = canvas.width / renderer.dpr;
+    const canvasHeight = canvas.height / renderer.dpr;
+    
+    // Calculate where the node should appear on screen
+    const screenX = (node.x * renderer.camera.scale) + renderer.camera.x;
+    const screenY = (node.y * renderer.camera.scale) + renderer.camera.y;
+    
+    const centerX = canvasWidth / 2;
+    const centerY = canvasHeight / 2;
+    
+    // Check if the node is reasonably close to center (within 50 pixels)
+    const distanceFromCenter = Math.sqrt(
+      Math.pow(screenX - centerX, 2) + Math.pow(screenY - centerY, 2)
+    );
+    
+    console.log('Validation - Node screen position:', screenX, screenY);
+    console.log('Validation - Canvas center:', centerX, centerY);
+    console.log('Validation - Distance from center:', distanceFromCenter);
+    
+    if (distanceFromCenter > 50) {
+      console.warn('Node not properly centered, attempting correction');
+      
+      // If not centered properly, try a direct correction
+      const correctionX = centerX - screenX;
+      const correctionY = centerY - screenY;
+      
+      renderer.camera.x += correctionX;
+      renderer.camera.y += correctionY;
+      renderer.needsRedraw = true;
+      
+      console.log('Applied correction:', correctionX, correctionY);
+    } else {
+      console.log('Node successfully centered');
+    }
+  }
+
+  // Enhanced public method for external centering (used by center button)
+  centerOnSelectedNode(renderer, selectedNodeIds) {
+    if (!selectedNodeIds || selectedNodeIds.size === 0) {
+      console.warn('No selected nodes to center on');
+      return false;
+    }
+    
+    // Get the first selected node
+    const firstSelectedId = Array.from(selectedNodeIds)[0];
+    const node = renderer.nodes.get(firstSelectedId);
+    
+    if (!node) {
+      console.error('Selected node not found:', firstSelectedId);
+      return false;
+    }
+    
+    console.log('Centering on selected node:', firstSelectedId);
+    this.centerOnPersonImproved(renderer, node, firstSelectedId);
+    return true;
   }
 
   // Public methods for external use
@@ -433,6 +532,36 @@ class FamilyTreeSearch {
     this.showSearch();
     this.searchField.value = query;
     this.performSearch(query);
+  }
+
+  // IMPROVED: Better error handling and validation for search selection
+  async selectPersonById(personId) {
+    try {
+      const { treeCore } = await import('./tree-core-canvas.js');
+      
+      if (!treeCore.renderer || !treeCore.renderer.nodes) {
+        throw new Error('Tree renderer not available');
+      }
+      
+      const node = treeCore.renderer.nodes.get(personId);
+      if (!node) {
+        throw new Error(`Person with ID ${personId} not found`);
+      }
+      
+      // Use the improved centering method
+      this.centerOnPersonImproved(treeCore.renderer, node, personId);
+      
+      // Select the person
+      treeCore.renderer.clearSelection();
+      treeCore.renderer.selectedNodes.add(personId);
+      treeCore.renderer.needsRedraw = true;
+      
+      return true;
+    } catch (error) {
+      console.error('Error selecting person by ID:', error);
+      notifications.error('Selection Error', error.message);
+      return false;
+    }
   }
 }
 
@@ -457,3 +586,26 @@ document.addEventListener('keydown', (e) => {
     }
   }
 });
+
+// Enhanced global utility functions
+window.familyTreeSearchUtils = {
+  // Search for a person and center on them
+  findAndCenter: (query) => {
+    familyTreeSearch.searchFor(query);
+  },
+  
+  // Center on a specific person by ID
+  centerOnPerson: (personId) => {
+    return familyTreeSearch.selectPersonById(personId);
+  },
+  
+  // Focus the search field
+  focusSearch: () => {
+    familyTreeSearch.focusSearch();
+  },
+  
+  // Get current search suggestions
+  getCurrentSuggestions: () => {
+    return familyTreeSearch.currentSuggestions;
+  }
+};
