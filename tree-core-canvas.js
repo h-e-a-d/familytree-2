@@ -1,9 +1,9 @@
-// tree-core-canvas.js - Fixed version with backwards compatibility and caching functionality
+// tree-core-canvas.js - Updated with search integration and advanced export functionality
 
 import { CanvasRenderer } from './canvas-renderer.js';
 import { openModalForEdit, closeModal, getSelectedGender } from './modal.js';
 import { rebuildTableView } from './table.js';
-import { exportTree } from './exporter.js';
+import { exportTree, exportGEDCOM, exportPDFLayout } from './exporter.js';
 import { notifications } from './notifications.js';
 
 class TreeCoreCanvas {
@@ -108,6 +108,7 @@ class TreeCoreCanvas {
     this.setupButtons();
     this.setupSettings();
     this.setupExport();
+    this.setupAdvancedExport(); // New advanced export setup
     this.setupKeyboard();
     this.setupStyleModal();
     this.setupLineRemovalModal();
@@ -1119,7 +1120,6 @@ class TreeCoreCanvas {
     const modal = document.createElement('div');
     modal.id = 'lineRemovalModal';
     modal.className = 'modal hidden';
-    modal.style.display = 'none';
 
     modal.innerHTML = `
       <div class="modal-content">
@@ -1380,6 +1380,32 @@ class TreeCoreCanvas {
         console.error('Load error:', error);
       }
     });
+  }
+
+  // ================== ADVANCED EXPORT FUNCTIONALITY ==================
+  
+  setupAdvancedExport() {
+    console.log('Setting up advanced export functionality...');
+    
+    // GEDCOM Export
+    document.getElementById('exportGedcom')?.addEventListener('click', () => {
+      console.log('GEDCOM export button clicked');
+      exportGEDCOM().catch(error => {
+        console.error('GEDCOM export error:', error);
+        notifications.error('GEDCOM Export Failed', 'Error exporting GEDCOM file');
+      });
+    });
+    
+    // PDF Layout Export
+    document.getElementById('exportPdfLayout')?.addEventListener('click', () => {
+      console.log('PDF Layout export button clicked');
+      exportPDFLayout().catch(error => {
+        console.error('PDF Layout export error:', error);
+        notifications.error('PDF Layout Export Failed', 'Error exporting PDF layout');
+      });
+    });
+    
+    console.log('Advanced export setup complete');
   }
 
   setupKeyboard() {
