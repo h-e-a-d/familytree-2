@@ -36,6 +36,8 @@ export function openModalForEdit(personId) {
       modal.dataset.editingId = personId;
       currentEditingId = personId;
 
+      console.log('Setting editing ID to:', personId);
+
       // Show delete button for editing mode
       if (deleteBtn) {
         deleteBtn.classList.remove('hidden');
@@ -80,6 +82,8 @@ export function openModalForEdit(personId) {
       titleEl.textContent = 'Add Person';
       delete modal.dataset.editingId;
       currentEditingId = null;
+
+      console.log('Clearing editing ID for new person');
 
       // Hide delete button for new person mode
       if (deleteBtn) {
@@ -126,7 +130,7 @@ export function closeModal() {
     container.innerHTML = '';
   });
 
-  // Hide the modal
+  // Hide the modal and clear all editing state
   modal.classList.add('hidden');
   modal.style.display = 'none';
   delete modal.dataset.editingId;
@@ -162,6 +166,12 @@ export function isModalCurrentlyOpen() {
 
 // Delete person functionality
 function openDeleteConfirmModal() {
+  console.log('Opening delete confirmation modal');
+  console.log('Current editing ID:', currentEditingId);
+  
+  const modal = document.getElementById('personModal');
+  console.log('Modal dataset editing ID:', modal?.dataset.editingId);
+  
   const deleteModal = document.getElementById('deleteConfirmModal');
   if (deleteModal) {
     deleteModal.classList.remove('hidden');
@@ -178,15 +188,22 @@ function closeDeleteConfirmModal() {
 }
 
 function confirmDeletePerson() {
-  if (!currentEditingId) {
+  // Get the editing ID from modal dataset or currentEditingId
+  const modal = document.getElementById('personModal');
+  const editingId = modal?.dataset.editingId || currentEditingId;
+  
+  if (!editingId) {
     console.error('No person selected for deletion');
+    closeDeleteConfirmModal();
     return;
   }
 
+  console.log('Deleting person with ID:', editingId);
+
   // Import tree core to delete person
   import('./tree-core-canvas.js').then(({ treeCore }) => {
-    const personData = treeCore.getPersonData(currentEditingId);
-    const node = treeCore.renderer?.nodes.get(currentEditingId);
+    const personData = treeCore.getPersonData(editingId);
+    const node = treeCore.renderer?.nodes.get(editingId);
     
     // Get person name for notification
     let personName = 'Unknown';
@@ -195,8 +212,8 @@ function confirmDeletePerson() {
     }
 
     // Delete the person
-    treeCore.renderer.removeNode(currentEditingId);
-    treeCore.personData?.delete(currentEditingId);
+    treeCore.renderer.removeNode(editingId);
+    treeCore.personData?.delete(editingId);
     
     // Regenerate connections and save state
     treeCore.regenerateConnections();
@@ -211,7 +228,12 @@ function confirmDeletePerson() {
     closeDeleteConfirmModal();
     closeModal();
     
-    console.log(`Deleted person: ${currentEditingId}`);
+    console.log(`Deleted person: ${editingId}`);
+  }).catch(error => {
+    console.error('Error deleting person:', error);
+    import('./notifications.js').then(({ notifications }) => {
+      notifications.error('Delete Failed', 'Could not delete person. Please try again.');
+    });
   });
 }
 
@@ -248,6 +270,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if (deleteBtn) {
     deleteBtn.addEventListener('click', (e) => {
       console.log('Delete button clicked');
+      console.log('Current editing ID:', currentEditingId);
+      console.log('Modal dataset editing ID:', modal?.dataset.editingId);
       e.preventDefault();
       e.stopPropagation();
       openDeleteConfirmModal();
