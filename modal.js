@@ -1,10 +1,11 @@
 // modal.js
 // Updated to work with Canvas-based tree implementation
-// Enhanced with radio button support and maiden name handling
+// Enhanced with radio button support, maiden name handling, and delete functionality
 
 import { updateSearchableSelects } from './searchableSelect.js';
 
 let isModalOpen = false;
+let currentEditingId = null;
 
 // Get selected gender from radio buttons
 export function getSelectedGender() {
@@ -21,6 +22,7 @@ export function openModalForEdit(personId) {
   
   const modal = document.getElementById('personModal');
   const titleEl = document.getElementById('modalTitle');
+  const deleteBtn = document.getElementById('deletePersonBtn');
 
   if (!modal || !titleEl) {
     console.error('Modal elements not found');
@@ -32,6 +34,12 @@ export function openModalForEdit(personId) {
     if (personId) {
       titleEl.textContent = 'Edit Person';
       modal.dataset.editingId = personId;
+      currentEditingId = personId;
+
+      // Show delete button for editing mode
+      if (deleteBtn) {
+        deleteBtn.classList.remove('hidden');
+      }
 
       // Get person data from canvas implementation
       const personData = treeCore.getPersonData(personId);
@@ -71,6 +79,12 @@ export function openModalForEdit(personId) {
     } else {
       titleEl.textContent = 'Add Person';
       delete modal.dataset.editingId;
+      currentEditingId = null;
+
+      // Hide delete button for new person mode
+      if (deleteBtn) {
+        deleteBtn.classList.add('hidden');
+      }
 
       // Clear all form fields
       clearForm();
@@ -116,6 +130,7 @@ export function closeModal() {
   modal.classList.add('hidden');
   modal.style.display = 'none';
   delete modal.dataset.editingId;
+  currentEditingId = null;
   isModalOpen = false;
   
   console.log('Modal closed successfully');
@@ -145,6 +160,61 @@ export function isModalCurrentlyOpen() {
   return isModalOpen;
 }
 
+// Delete person functionality
+function openDeleteConfirmModal() {
+  const deleteModal = document.getElementById('deleteConfirmModal');
+  if (deleteModal) {
+    deleteModal.classList.remove('hidden');
+    deleteModal.style.display = 'flex';
+  }
+}
+
+function closeDeleteConfirmModal() {
+  const deleteModal = document.getElementById('deleteConfirmModal');
+  if (deleteModal) {
+    deleteModal.classList.add('hidden');
+    deleteModal.style.display = 'none';
+  }
+}
+
+function confirmDeletePerson() {
+  if (!currentEditingId) {
+    console.error('No person selected for deletion');
+    return;
+  }
+
+  // Import tree core to delete person
+  import('./tree-core-canvas.js').then(({ treeCore }) => {
+    const personData = treeCore.getPersonData(currentEditingId);
+    const node = treeCore.renderer?.nodes.get(currentEditingId);
+    
+    // Get person name for notification
+    let personName = 'Unknown';
+    if (node?.name || personData?.name) {
+      personName = `${node?.name || personData?.name} ${node?.surname || personData?.surname || ''}`.trim();
+    }
+
+    // Delete the person
+    treeCore.renderer.removeNode(currentEditingId);
+    treeCore.personData?.delete(currentEditingId);
+    
+    // Regenerate connections and save state
+    treeCore.regenerateConnections();
+    treeCore.pushUndoState();
+    
+    // Show notification
+    import('./notifications.js').then(({ notifications }) => {
+      notifications.success('Person Deleted', `${personName} has been deleted from the tree`);
+    });
+    
+    // Close both modals
+    closeDeleteConfirmModal();
+    closeModal();
+    
+    console.log(`Deleted person: ${currentEditingId}`);
+  });
+}
+
 // Initialize modal when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
   console.log('Modal initializing...');
@@ -152,6 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const modal = document.getElementById('personModal');
   const cancelBtn = document.getElementById('cancelModal');
   const saveBtn = document.getElementById('savePerson');
+  const deleteBtn = document.getElementById('deletePersonBtn');
   const form = document.getElementById('personForm');
   
   // Force modal to be hidden initially
@@ -171,6 +242,17 @@ document.addEventListener('DOMContentLoaded', () => {
       closeModal();
     });
     console.log('Cancel button listener attached');
+  }
+
+  // Delete button event listener
+  if (deleteBtn) {
+    deleteBtn.addEventListener('click', (e) => {
+      console.log('Delete button clicked');
+      e.preventDefault();
+      e.stopPropagation();
+      openDeleteConfirmModal();
+    });
+    console.log('Delete button listener attached');
   }
   
   // Save button event listener
@@ -285,6 +367,38 @@ document.addEventListener('DOMContentLoaded', () => {
     femaleRadio.addEventListener('change', () => {
       if (femaleRadio.checked) {
         console.log('Gender changed to female');
+      }
+    });
+  }
+
+  // Delete confirmation modal event listeners
+  const deleteConfirmModal = document.getElementById('deleteConfirmModal');
+  const cancelDeleteBtn = document.getElementById('cancelDeletePerson');
+  const confirmDeleteBtn = document.getElementById('confirmDeletePerson');
+
+  // Cancel delete
+  if (cancelDeleteBtn) {
+    cancelDeleteBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeDeleteConfirmModal();
+    });
+  }
+
+  // Confirm delete
+  if (confirmDeleteBtn) {
+    confirmDeleteBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      confirmDeletePerson();
+    });
+  }
+
+  // Close delete modal when clicking outside
+  if (deleteConfirmModal) {
+    deleteConfirmModal.addEventListener('click', (e) => {
+      if (e.target === deleteConfirmModal) {
+        closeDeleteConfirmModal();
       }
     });
   }
