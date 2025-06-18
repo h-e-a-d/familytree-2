@@ -1169,6 +1169,13 @@ html, body {
   touch-action: auto;
 }
 
+/* Higher z-index for confirmation modals that should appear above other modals */
+#deleteConfirmModal,
+#clearAllConfirmModal {
+  z-index: 1050 !important;
+  background: rgba(0,0,0,0.7) !important;
+}
+
 .modal-content { 
   background: #fff; 
   padding: 28px; 
