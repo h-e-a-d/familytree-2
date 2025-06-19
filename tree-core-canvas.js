@@ -1,4 +1,4 @@
-// tree-core-canvas.js - Updated with center selected, fix cache connections, and clear all functionality
+// tree-core-canvas.js - FIXED: Enhanced connection caching and restoration
 
 import { CanvasRenderer } from './canvas-renderer.js';
 import { openModalForEdit, closeModal, getSelectedGender } from './modal.js';
@@ -51,11 +51,12 @@ class TreeCoreCanvas {
     // ID counter
     this.nextId = 1;
     
-    // Caching
+    // FIXED: Enhanced caching system
     this.cacheKey = 'familyTreeCanvas_state';
     this.autoSaveInterval = 30000; // Auto-save every 30 seconds
     this.autoSaveTimer = null;
     this.lastSaveTime = null;
+    this.cacheVersion = '2.6'; // Incremented for enhanced caching
   }
 
   initialize() {
@@ -108,7 +109,7 @@ class TreeCoreCanvas {
     this.setupButtons();
     this.setupSettings();
     this.setupExport();
-    this.setupAdvancedExport(); // New advanced export setup
+    this.setupAdvancedExport();
     this.setupKeyboard();
     this.setupStyleModal();
     this.setupLineRemovalModal();
@@ -116,7 +117,7 @@ class TreeCoreCanvas {
     this.setupDisplayPreferences();
     this.setupNodeStyleSwitcher();
     this.setupCaching();
-    this.setupClearAllFunctionality(); // NEW: Clear all functionality
+    this.setupClearAllFunctionality();
     
     // Setup form submit handler
     const personForm = document.getElementById('personForm');
@@ -134,7 +135,7 @@ class TreeCoreCanvas {
       this.handleSavePersonFromModal(e.detail);
     });
     
-    // Try to load cached state first, then check for legacy format
+    // FIXED: Enhanced cache loading with better connection restoration
     this.loadCachedState().then((loaded) => {
       if (!loaded) {
         // No cached state, check if there's a way to load legacy data
@@ -147,10 +148,13 @@ class TreeCoreCanvas {
       }
     });
     
+    // Make globally accessible for debugging
+    window.treeCore = this;
+    
     console.log('TreeCoreCanvas initialization complete');
   }
 
-  // ================== NEW: CENTER SELECTED NODE FUNCTIONALITY ==================
+  // ================== CENTER SELECTED NODE FUNCTIONALITY ==================
 
   centerSelectedNode() {
     const selectedNodes = this.renderer.getSelectedNodes();
@@ -235,7 +239,7 @@ class TreeCoreCanvas {
     requestAnimationFrame(animate);
   }
 
-  // ================== NEW: CLEAR ALL FUNCTIONALITY ==================
+  // ================== CLEAR ALL FUNCTIONALITY ==================
 
   setupClearAllFunctionality() {
     console.log('Setting up clear all functionality...');
@@ -336,10 +340,10 @@ class TreeCoreCanvas {
     console.log('All data cleared successfully');
   }
 
-  // ================== ENHANCED CACHING FUNCTIONALITY ==================
+  // ================== FIXED: ENHANCED CACHING FUNCTIONALITY ==================
 
   setupCaching() {
-    console.log('Setting up caching functionality...');
+    console.log('Setting up enhanced caching functionality...');
     
     // Start auto-save timer
     this.startAutoSave();
@@ -359,7 +363,7 @@ class TreeCoreCanvas {
     // Add cache management UI
     this.addCacheManagementUI();
     
-    console.log('Caching setup complete');
+    console.log('Enhanced caching setup complete');
   }
 
   startAutoSave() {
@@ -393,6 +397,7 @@ class TreeCoreCanvas {
     }
   }
 
+  // FIXED: Enhanced saveToCache with comprehensive relationship data preservation
   saveToCache() {
     try {
       const state = this.getCurrentState();
@@ -416,7 +421,7 @@ class TreeCoreCanvas {
       // Clean old backups (keep only last 3)
       this.cleanOldBackups();
       
-      console.log('State saved to cache');
+      console.log('Enhanced state saved to cache with relationship data');
       return true;
     } catch (error) {
       console.error('Failed to save to cache:', error);
@@ -424,6 +429,94 @@ class TreeCoreCanvas {
     }
   }
 
+  // FIXED: Enhanced getCurrentState with comprehensive relationship data capture
+  getCurrentState() {
+    console.log('Saving current state with enhanced relationship data...');
+    
+    // Get all person data with relationship information
+    const personsWithRelationships = [];
+    if (this.renderer && this.renderer.nodes) {
+      for (const [id, node] of this.renderer.nodes) {
+        const personData = this.personData?.get(id) || {};
+        
+        // Ensure all relationship data is captured
+        const personState = {
+          id,
+          x: node.x,
+          y: node.y,
+          name: node.name || personData.name || '',
+          fatherName: node.fatherName || personData.fatherName || '',
+          surname: node.surname || personData.surname || '',
+          maidenName: node.maidenName || personData.maidenName || '',
+          dob: node.dob || personData.dob || '',
+          gender: node.gender || personData.gender || '',
+          color: node.color || this.defaultColor,
+          radius: node.radius || this.nodeRadius,
+          
+          // CRITICAL: Ensure relationship data is saved
+          motherId: personData.motherId || '',
+          fatherId: personData.fatherId || '',
+          spouseId: personData.spouseId || ''
+        };
+        
+        console.log(`Saving person ${id} with relationships:`, {
+          motherId: personState.motherId,
+          fatherId: personState.fatherId,
+          spouseId: personState.spouseId
+        });
+        
+        personsWithRelationships.push(personState);
+      }
+    }
+    
+    const state = {
+      version: this.cacheVersion,
+      timestamp: Date.now(),
+      cacheFormat: 'enhanced', // Mark as enhanced format
+      settings: {
+        nodeRadius: this.nodeRadius,
+        defaultColor: this.defaultColor,
+        fontFamily: this.fontFamily,
+        fontSize: this.fontSize,
+        nameColor: this.nameColor,
+        dateColor: this.dateColor
+      },
+      displayPreferences: { ...this.displayPreferences },
+      nodeStyle: this.nodeStyle,
+      camera: this.renderer ? this.renderer.getCamera() : { x: 0, y: 0, scale: 1 },
+      
+      // Enhanced connection preservation
+      hiddenConnections: Array.from(this.hiddenConnections),
+      lineOnlyConnections: Array.from(this.lineOnlyConnections),
+      
+      // Save persons with embedded relationship data
+      persons: personsWithRelationships,
+      
+      // Also save personData separately as backup
+      personDataBackup: this.personData ? Array.from(this.personData.entries()) : [],
+      
+      // Save current connections for verification
+      currentConnections: this.renderer ? this.renderer.connections.map(conn => ({
+        from: conn.from,
+        to: conn.to,
+        type: conn.type
+      })) : [],
+      
+      nextId: this.nextId
+    };
+    
+    console.log('Enhanced state prepared for saving:', {
+      personsCount: state.persons.length,
+      connectionsCount: state.currentConnections.length,
+      hiddenConnectionsCount: state.hiddenConnections.length,
+      lineOnlyConnectionsCount: state.lineOnlyConnections.length,
+      relationshipDataPoints: state.persons.filter(p => p.motherId || p.fatherId || p.spouseId).length
+    });
+    
+    return state;
+  }
+
+  // FIXED: Enhanced loadCachedState with detailed debugging
   async loadCachedState() {
     try {
       const cachedState = localStorage.getItem(this.cacheKey);
@@ -433,7 +526,12 @@ class TreeCoreCanvas {
       }
       
       const state = JSON.parse(cachedState);
-      console.log('Loading cached state:', state);
+      console.log('Loading cached state:', {
+        version: state.version,
+        cacheFormat: state.cacheFormat,
+        personsCount: state.persons?.length || 0,
+        connectionsCount: state.currentConnections?.length || 0
+      });
       
       // Detect format and load accordingly
       if (state.version || state.persons) {
@@ -457,37 +555,409 @@ class TreeCoreCanvas {
     }
   }
 
-  getCurrentState() {
-    return {
-      version: '2.5', // Increment version for caching
-      timestamp: Date.now(),
-      settings: {
-        nodeRadius: this.nodeRadius,
-        defaultColor: this.defaultColor,
-        fontFamily: this.fontFamily,
-        fontSize: this.fontSize,
-        nameColor: this.nameColor,
-        dateColor: this.dateColor
-      },
-      displayPreferences: { ...this.displayPreferences },
-      nodeStyle: this.nodeStyle,
-      camera: this.renderer ? this.renderer.getCamera() : { x: 0, y: 0, scale: 1 },
-      hiddenConnections: Array.from(this.hiddenConnections),
-      lineOnlyConnections: Array.from(this.lineOnlyConnections),
-      persons: this.getPersonsArray(),
-      personData: this.personData ? Array.from(this.personData.entries()) : [],
-      nextId: this.nextId
-    };
+  // FIXED: Enhanced processLoadedData with guaranteed relationship restoration
+  processLoadedData(data) {
+    console.log('Processing loaded data with enhanced relationship restoration...');
+    console.log('Data version:', data.version, 'Cache format:', data.cacheFormat || 'legacy');
+    
+    // Detect and handle different formats
+    if (data.people && !data.persons) {
+      // Legacy format
+      return this.processLegacyData(data);
+    }
+    
+    // Clear current state
+    this.renderer.nodes.clear();
+    this.renderer.clearConnections();
+    this.personData = new Map();
+    this.hiddenConnections = new Set();
+    this.lineOnlyConnections = new Set();
+    
+    // Restore settings
+    if (data.settings) {
+      this.nodeRadius = data.settings.nodeRadius || this.nodeRadius;
+      this.defaultColor = data.settings.defaultColor || this.defaultColor;
+      this.fontFamily = data.settings.fontFamily || this.fontFamily;
+      this.fontSize = data.settings.fontSize || this.fontSize;
+      this.nameColor = data.settings.nameColor || this.nameColor;
+      this.dateColor = data.settings.dateColor || this.dateColor;
+      this.updateRendererSettings();
+    }
+    
+    // Restore display preferences
+    if (data.displayPreferences) {
+      this.displayPreferences = { ...data.displayPreferences };
+      Object.keys(this.displayPreferences).forEach(key => {
+        const checkbox = document.getElementById(key);
+        if (checkbox) {
+          checkbox.checked = this.displayPreferences[key];
+        }
+      });
+    }
+    
+    // Restore node style
+    if (data.nodeStyle) {
+      this.nodeStyle = data.nodeStyle;
+      document.querySelectorAll('.node-style-option').forEach(opt => {
+        opt.classList.remove('selected');
+        if (opt.getAttribute('data-style') === this.nodeStyle) {
+          opt.classList.add('selected');
+        }
+      });
+    }
+    
+    // Restore camera
+    if (data.camera && this.renderer) {
+      this.renderer.setCamera(data.camera.x, data.camera.y, data.camera.scale);
+    }
+    
+    // Restore hidden/line-only connections
+    if (data.hiddenConnections) {
+      this.hiddenConnections = new Set(data.hiddenConnections);
+      console.log('Restored hidden connections:', this.hiddenConnections.size);
+    }
+    if (data.lineOnlyConnections) {
+      this.lineOnlyConnections = new Set(data.lineOnlyConnections);
+      console.log('Restored line-only connections:', this.lineOnlyConnections.size);
+    }
+    
+    // Restore next ID
+    if (data.nextId) {
+      this.nextId = data.nextId;
+    }
+    
+    // CRITICAL: Process persons and restore relationship data
+    const persons = data.persons || [];
+    console.log('Processing', persons.length, 'persons with relationship data');
+    
+    let maxId = 0;
+    let relationshipsFound = 0;
+    
+    for (const person of persons) {
+      // Create node data
+      const nodeData = {
+        x: person.x || person.cx || 0,
+        y: person.y || person.cy || 0,
+        name: person.name || '',
+        fatherName: person.fatherName || person.father_name || '',
+        surname: person.surname || '',
+        maidenName: person.maidenName || person.birthName || person.birth_name || '',
+        dob: person.dob || '',
+        gender: person.gender || '',
+        color: person.color || person.nodeColor || person.fill || this.defaultColor,
+        radius: person.radius || person.nodeSize || person.r || this.nodeRadius
+      };
+      
+      this.renderer.setNode(person.id, nodeData);
+      
+      // CRITICAL: Restore relationship data properly
+      const relationshipData = {
+        name: person.name || '',
+        fatherName: person.fatherName || person.father_name || '',
+        surname: person.surname || '',
+        maidenName: person.maidenName || person.birthName || person.birth_name || '',
+        dob: person.dob || '',
+        gender: person.gender || '',
+        motherId: person.motherId || person.mother_id || '',
+        fatherId: person.fatherId || person.father_id || '',
+        spouseId: person.spouseId || person.spouse_id || ''
+      };
+      
+      // Count relationships for debugging
+      if (relationshipData.motherId) relationshipsFound++;
+      if (relationshipData.fatherId) relationshipsFound++;
+      if (relationshipData.spouseId) relationshipsFound++;
+      
+      this.personData.set(person.id, relationshipData);
+      
+      console.log(`Restored person ${person.id} with relationships:`, {
+        motherId: relationshipData.motherId,
+        fatherId: relationshipData.fatherId,
+        spouseId: relationshipData.spouseId
+      });
+      
+      // Track max ID
+      const numId = parseInt(person.id.replace('p', ''));
+      if (!isNaN(numId) && numId > maxId) {
+        maxId = numId;
+      }
+    }
+    
+    if (maxId >= this.nextId) {
+      this.nextId = maxId + 1;
+    }
+    
+    console.log('PersonData restoration complete:', {
+      personDataSize: this.personData.size,
+      relationshipsFound: relationshipsFound,
+      hiddenConnections: this.hiddenConnections.size,
+      lineOnlyConnections: this.lineOnlyConnections.size
+    });
+    
+    // CRITICAL: Regenerate connections AFTER all data is loaded
+    console.log('Regenerating connections from restored relationship data...');
+    this.regenerateConnections();
+    
+    // Verify connections were created
+    const finalConnectionCount = this.renderer.connections.length;
+    console.log('Final connection count after restoration:', finalConnectionCount);
+    
+    if (finalConnectionCount === 0 && relationshipsFound > 0) {
+      console.warn('WARNING: No connections generated despite relationship data being present!');
+      
+      // Attempt backup restoration
+      if (data.personDataBackup) {
+        console.log('Attempting backup restoration...');
+        this.personData = new Map(data.personDataBackup);
+        this.regenerateConnections();
+        console.log('Backup restoration complete, connections:', this.renderer.connections.length);
+      }
+    }
+    
+    // Reset undo/redo
+    this.undoStack = [];
+    this.redoStack = [];
+    this.pushUndoState();
+    
+    // Save to cache after successful load
+    this.saveToCache();
+    
+    console.log('Enhanced data loading complete with', this.renderer.connections.length, 'connections');
+  }
+
+  // FIXED: Enhanced regenerateConnections with comprehensive debugging
+  regenerateConnections() {
+    console.log('=== ENHANCED CONNECTION REGENERATION ===');
+    console.log('PersonData entries:', this.personData ? this.personData.size : 0);
+    console.log('Hidden connections:', this.hiddenConnections.size);
+    console.log('Line-only connections:', this.lineOnlyConnections.size);
+    
+    this.renderer.clearConnections();
+    
+    if (!this.personData || this.personData.size === 0) {
+      console.log('No personData available for connections');
+      return;
+    }
+    
+    let connectionsAdded = 0;
+    let skippedConnections = 0;
+    
+    // Debug: Log all person data first
+    console.log('Available person data:');
+    for (const [id, data] of this.personData) {
+      if (data.motherId || data.fatherId || data.spouseId) {
+        console.log(`  ${id}:`, {
+          motherId: data.motherId,
+          fatherId: data.fatherId,
+          spouseId: data.spouseId
+        });
+      }
+    }
+    
+    // Generate family relationship connections
+    for (const [childId, childData] of this.personData) {
+      // Mother connections
+      if (childData.motherId) {
+        const connectionKey = this.getConnectionKey(childId, childData.motherId);
+        if (!this.hiddenConnections.has(connectionKey)) {
+          // Verify both nodes exist
+          if (this.renderer.nodes.has(childId) && this.renderer.nodes.has(childData.motherId)) {
+            this.renderer.addConnection(childId, childData.motherId, 'parent');
+            connectionsAdded++;
+            console.log(`✓ Added mother connection: ${childId} -> ${childData.motherId}`);
+          } else {
+            console.warn(`✗ Skipped mother connection ${childId} -> ${childData.motherId} - missing node`);
+            skippedConnections++;
+          }
+        } else {
+          console.log(`○ Skipped hidden mother connection: ${childId} -> ${childData.motherId}`);
+          skippedConnections++;
+        }
+      }
+      
+      // Father connections
+      if (childData.fatherId) {
+        const connectionKey = this.getConnectionKey(childId, childData.fatherId);
+        if (!this.hiddenConnections.has(connectionKey)) {
+          // Verify both nodes exist
+          if (this.renderer.nodes.has(childId) && this.renderer.nodes.has(childData.fatherId)) {
+            this.renderer.addConnection(childId, childData.fatherId, 'parent');
+            connectionsAdded++;
+            console.log(`✓ Added father connection: ${childId} -> ${childData.fatherId}`);
+          } else {
+            console.warn(`✗ Skipped father connection ${childId} -> ${childData.fatherId} - missing node`);
+            skippedConnections++;
+          }
+        } else {
+          console.log(`○ Skipped hidden father connection: ${childId} -> ${childData.fatherId}`);
+          skippedConnections++;
+        }
+      }
+      
+      // Spouse connections (only add once per pair)
+      if (childData.spouseId && childId < childData.spouseId) {
+        const connectionKey = this.getConnectionKey(childId, childData.spouseId);
+        if (!this.hiddenConnections.has(connectionKey)) {
+          // Verify both nodes exist
+          if (this.renderer.nodes.has(childId) && this.renderer.nodes.has(childData.spouseId)) {
+            this.renderer.addConnection(childId, childData.spouseId, 'spouse');
+            connectionsAdded++;
+            console.log(`✓ Added spouse connection: ${childId} -> ${childData.spouseId}`);
+          } else {
+            console.warn(`✗ Skipped spouse connection ${childId} -> ${childData.spouseId} - missing node`);
+            skippedConnections++;
+          }
+        } else {
+          console.log(`○ Skipped hidden spouse connection: ${childId} -> ${childData.spouseId}`);
+          skippedConnections++;
+        }
+      }
+    }
+    
+    // Generate line-only connections
+    console.log('Processing line-only connections...');
+    for (const connectionKey of this.lineOnlyConnections) {
+      if (!this.hiddenConnections.has(connectionKey)) {
+        const [id1, id2] = connectionKey.split('-');
+        // Verify both nodes exist
+        if (this.renderer.nodes.has(id1) && this.renderer.nodes.has(id2)) {
+          this.renderer.addConnection(id1, id2, 'line-only');
+          connectionsAdded++;
+          console.log(`✓ Added line-only connection: ${id1} -> ${id2}`);
+        } else {
+          console.warn(`✗ Skipped line-only connection ${id1} -> ${id2} - missing node`);
+          skippedConnections++;
+        }
+      } else {
+        console.log(`○ Skipped hidden line-only connection: ${connectionKey}`);
+        skippedConnections++;
+      }
+    }
+    
+    console.log(`=== CONNECTION REGENERATION COMPLETE ===`);
+    console.log(`Connections added: ${connectionsAdded}`);
+    console.log(`Connections skipped: ${skippedConnections}`);
+    console.log(`Total connections in renderer: ${this.renderer.connections.length}`);
+    console.log('==========================================');
+    
+    // Force redraw
+    this.renderer.needsRedraw = true;
+  }
+
+  // FIXED: Enhanced debugging and troubleshooting methods
+  debugCacheState() {
+    console.log('=== ENHANCED CACHE DEBUG INFO ===');
+    
+    // Check localStorage
+    const cachedState = localStorage.getItem(this.cacheKey);
+    if (cachedState) {
+      try {
+        const parsed = JSON.parse(cachedState);
+        console.log('Cached state found:', {
+          version: parsed.version,
+          cacheFormat: parsed.cacheFormat,
+          personsCount: parsed.persons?.length || 0,
+          personDataBackupCount: parsed.personDataBackup?.length || 0,
+          connectionsCount: parsed.currentConnections?.length || 0,
+          hiddenConnectionsCount: parsed.hiddenConnections?.length || 0,
+          lineOnlyConnectionsCount: parsed.lineOnlyConnections?.length || 0
+        });
+        
+        // Check if persons have relationship data
+        if (parsed.persons) {
+          const personsWithRelationships = parsed.persons.filter(p => 
+            p.motherId || p.fatherId || p.spouseId
+          );
+          console.log(`Persons with relationships in cache: ${personsWithRelationships.length}`);
+          
+          personsWithRelationships.forEach(p => {
+            console.log(`  ${p.id}:`, {
+              motherId: p.motherId,
+              fatherId: p.fatherId,
+              spouseId: p.spouseId
+            });
+          });
+        }
+      } catch (error) {
+        console.error('Error parsing cached state:', error);
+      }
+    } else {
+      console.log('No cached state found');
+    }
+    
+    // Check current state
+    console.log('Current state:', {
+      nodeCount: this.renderer?.nodes.size || 0,
+      personDataCount: this.personData?.size || 0,
+      connectionCount: this.renderer?.connections.length || 0,
+      hiddenConnectionsCount: this.hiddenConnections.size,
+      lineOnlyConnectionsCount: this.lineOnlyConnections.size
+    });
+    
+    // Check current relationships
+    if (this.personData) {
+      const currentRelationships = Array.from(this.personData.entries()).filter(([id, data]) => 
+        data.motherId || data.fatherId || data.spouseId
+      );
+      console.log(`Current persons with relationships: ${currentRelationships.length}`);
+      
+      currentRelationships.forEach(([id, data]) => {
+        console.log(`  ${id}:`, {
+          motherId: data.motherId,
+          fatherId: data.fatherId,
+          spouseId: data.spouseId
+        });
+      });
+    }
+    
+    console.log('=================================');
+  }
+
+  forceRegenerateConnections() {
+    console.log('Force regenerating connections...');
+    
+    // First, debug current state
+    this.debugCacheState();
+    
+    // Try to regenerate
+    this.regenerateConnections();
+    
+    // If still no connections, try to restore from cache backup
+    if (this.renderer.connections.length === 0) {
+      console.log('No connections generated, attempting to restore from cache backup...');
+      
+      const cachedState = localStorage.getItem(this.cacheKey);
+      if (cachedState) {
+        try {
+          const parsed = JSON.parse(cachedState);
+          if (parsed.personDataBackup) {
+            console.log('Restoring from personData backup...');
+            this.personData = new Map(parsed.personDataBackup);
+            this.regenerateConnections();
+          }
+        } catch (error) {
+          console.error('Error restoring from backup:', error);
+        }
+      }
+    }
+    
+    // Save the corrected state
+    this.saveToCache();
+    
+    console.log('Force regeneration complete, final connection count:', this.renderer.connections.length);
   }
 
   getCompressedState() {
     // Return only essential data for large states
     return {
-      version: '2.5',
+      version: this.cacheVersion,
       timestamp: Date.now(),
+      cacheFormat: 'compressed',
       persons: this.getPersonsArray(),
       personData: this.personData ? Array.from(this.personData.entries()) : [],
-      nextId: this.nextId
+      nextId: this.nextId,
+      hiddenConnections: Array.from(this.hiddenConnections),
+      lineOnlyConnections: Array.from(this.lineOnlyConnections)
     };
   }
 
@@ -573,6 +1043,10 @@ class TreeCoreCanvas {
         <label for="autoSaveToggle">Auto-save enabled:</label>
         <input type="checkbox" id="autoSaveToggle" checked>
       </div>
+      <div class="setting-group">
+        <button id="debugCacheBtn" style="flex: 1; background: #9b59b6;">Debug Cache</button>
+        <button id="fixConnectionsBtn" style="flex: 1; background: #f39c12;">Fix Connections</button>
+      </div>
     `;
     
     // Insert before the clear all section
@@ -611,19 +1085,23 @@ class TreeCoreCanvas {
         notifications.info('Auto-save Off', 'Automatic saving disabled');
       }
     });
-  }
-
-  // ================== IMPROVED CACHE LOADING WITH CONNECTION FIX ==================
-
-  checkForLegacyData() {
-    // Check if there's any indication of legacy data to import
-    console.log('Checking for legacy data...');
     
-    // This could be extended to check for specific legacy cache keys
-    // or offer to import from uploaded files
+    document.getElementById('debugCacheBtn')?.addEventListener('click', () => {
+      this.debugCacheState();
+      notifications.info('Cache Debug', 'Check console for detailed cache information');
+    });
+    
+    document.getElementById('fixConnectionsBtn')?.addEventListener('click', () => {
+      this.forceRegenerateConnections();
+      notifications.success('Connections Fixed', 'Attempted to restore all connections');
+    });
   }
 
-  // FIXED: Process legacy JSON format (from the uploaded file)
+  // Continue with rest of existing methods...
+  checkForLegacyData() {
+    console.log('Checking for legacy data...');
+  }
+
   processLegacyData(data) {
     console.log('Processing legacy data format:', data);
     
@@ -653,11 +1131,11 @@ class TreeCoreCanvas {
           name: person.name || '',
           fatherName: person.father_name || '',
           surname: person.surname || '',
-          maidenName: person.birth_name || '', // Convert birth_name to maidenName
+          maidenName: person.birth_name || '',
           dob: person.dob || '',
           gender: person.gender || '',
-          color: person.fill || this.defaultColor, // Convert fill to color
-          radius: person.r || this.nodeRadius // Convert r to radius
+          color: person.fill || this.defaultColor,
+          radius: person.r || this.nodeRadius
         };
         
         this.renderer.setNode(person.id, nodeData);
@@ -715,149 +1193,12 @@ class TreeCoreCanvas {
     }
   }
 
-  // FIXED: Enhanced loadFromJSON to handle both formats with proper connection restoration
-  processLoadedData(data) {
-    console.log('Processing loaded data, version:', data.version);
-    
-    // Detect and handle different formats
-    if (data.people && !data.persons) {
-      // Legacy format
-      return this.processLegacyData(data);
-    }
-    
-    // New format processing (existing code with enhancements)
-    this.renderer.nodes.clear();
-    this.renderer.clearConnections();
-    this.personData = new Map();
-    this.hiddenConnections = new Set();
-    this.lineOnlyConnections = new Set();
-    
-    // Restore settings
-    if (data.settings) {
-      this.nodeRadius = data.settings.nodeRadius || this.nodeRadius;
-      this.defaultColor = data.settings.defaultColor || this.defaultColor;
-      this.fontFamily = data.settings.fontFamily || this.fontFamily;
-      this.fontSize = data.settings.fontSize || this.fontSize;
-      this.nameColor = data.settings.nameColor || this.nameColor;
-      this.dateColor = data.settings.dateColor || this.dateColor;
-      this.updateRendererSettings();
-    }
-    
-    // Restore display preferences
-    if (data.displayPreferences) {
-      this.displayPreferences = { ...data.displayPreferences };
-      Object.keys(this.displayPreferences).forEach(key => {
-        const checkbox = document.getElementById(key);
-        if (checkbox) {
-          checkbox.checked = this.displayPreferences[key];
-        }
-      });
-    }
-    
-    // Restore node style
-    if (data.nodeStyle) {
-      this.nodeStyle = data.nodeStyle;
-      document.querySelectorAll('.node-style-option').forEach(opt => {
-        opt.classList.remove('selected');
-        if (opt.getAttribute('data-style') === this.nodeStyle) {
-          opt.classList.add('selected');
-        }
-      });
-    }
-    
-    // Restore camera
-    if (data.camera && this.renderer) {
-      this.renderer.setCamera(data.camera.x, data.camera.y, data.camera.scale);
-    }
-    
-    // Restore hidden/line-only connections
-    if (data.hiddenConnections) {
-      this.hiddenConnections = new Set(data.hiddenConnections);
-    }
-    if (data.lineOnlyConnections) {
-      this.lineOnlyConnections = new Set(data.lineOnlyConnections);
-    }
-    
-    // FIXED: Restore person data FIRST before processing persons
-    if (data.personData && Array.isArray(data.personData)) {
-      // Handle array format (from cache)
-      this.personData = new Map(data.personData);
-      console.log('Restored personData:', this.personData.size, 'entries');
-    }
-    
-    // Restore next ID
-    if (data.nextId) {
-      this.nextId = data.nextId;
-    }
-    
-    // Process persons
-    let maxId = 0;
-    const persons = data.persons || [];
-    console.log('Processing', persons.length, 'persons');
-    
-    for (const person of persons) {
-      const nodeData = {
-        x: person.x || person.cx || 0,
-        y: person.y || person.cy || 0,
-        name: person.name || '',
-        fatherName: person.fatherName || person.father_name || '',
-        surname: person.surname || '',
-        maidenName: person.maidenName || person.birthName || person.birth_name || '',
-        dob: person.dob || '',
-        gender: person.gender || '',
-        color: person.color || person.nodeColor || person.fill || this.defaultColor,
-        radius: person.radius || person.nodeSize || person.r || this.nodeRadius
-      };
-      
-      this.renderer.setNode(person.id, nodeData);
-      
-      // FIXED: Only update person data if it's not already loaded from cache
-      if (!this.personData.has(person.id)) {
-        this.personData.set(person.id, {
-          name: person.name || '',
-          fatherName: person.fatherName || person.father_name || '',
-          surname: person.surname || '',
-          maidenName: person.maidenName || person.birthName || person.birth_name || '',
-          dob: person.dob || '',
-          gender: person.gender || '',
-          motherId: person.motherId || person.mother_id || '',
-          fatherId: person.fatherId || person.father_id || '',
-          spouseId: person.spouseId || person.spouse_id || ''
-        });
-      }
-      
-      const numId = parseInt(person.id.replace('p', ''));
-      if (!isNaN(numId) && numId > maxId) {
-        maxId = numId;
-      }
-    }
-    
-    if (maxId >= this.nextId) {
-      this.nextId = maxId + 1;
-    }
-    
-    console.log('PersonData after processing:', this.personData.size, 'entries');
-    console.log('Sample personData entries:', Array.from(this.personData.entries()).slice(0, 3));
-    
-    // FIXED: Regenerate connections AFTER all person data is loaded
-    this.regenerateConnections();
-    
-    this.undoStack = [];
-    this.redoStack = [];
-    this.pushUndoState();
-    
-    // Save to cache after successful load
-    this.saveToCache();
-    
-    console.log('Data loading complete with', this.renderer.connections.length, 'connections');
-  }
-
   // Enhanced JSON export with backwards compatibility markers
   saveToJSON() {
     const data = {
-      version: '2.5',
+      version: this.cacheVersion,
       timestamp: Date.now(),
-      format: 'MapMyRoots_Canvas',
+      format: 'MapMyRoots_Canvas_Enhanced',
       backwards_compatible: true,
       settings: {
         nodeRadius: this.nodeRadius,
@@ -873,7 +1214,7 @@ class TreeCoreCanvas {
       hiddenConnections: Array.from(this.hiddenConnections),
       lineOnlyConnections: Array.from(this.lineOnlyConnections),
       persons: this.getPersonsArray(),
-      personData: Array.from(this.personData.entries()), // FIXED: Ensure personData is properly exported
+      personData: Array.from(this.personData.entries()),
       
       // Legacy compatibility section
       legacy_format: {
@@ -990,7 +1331,7 @@ class TreeCoreCanvas {
     reader.readAsText(file);
   }
 
-  // Setup node style switcher
+  // Continue with all other existing methods...
   setupNodeStyleSwitcher() {
     console.log('Setting up node style switcher...');
     
@@ -1014,14 +1355,13 @@ class TreeCoreCanvas {
         
         notifications.success('Style Updated', `Node style changed to ${style}`);
         this.pushUndoState();
-        this.autoSave(); // Auto-save after style change
+        this.autoSave();
       });
     });
     
     console.log('Node style switcher setup complete');
   }
 
-  // Setup display preferences
   setupDisplayPreferences() {
     console.log('Setting up display preferences...');
     
@@ -1112,7 +1452,6 @@ class TreeCoreCanvas {
     }
   }
 
-  // Update all nodes to reflect display preferences
   updateAllNodesDisplay() {
     if (!this.renderer) return;
     
@@ -1488,7 +1827,6 @@ class TreeCoreCanvas {
     console.log('Settings panel setup complete');
   }
 
-  // Update all existing nodes with new settings
   updateAllExistingNodes() {
     if (!this.renderer) return;
     
@@ -1543,7 +1881,7 @@ class TreeCoreCanvas {
       }
     });
     
-    // PDF Export - FIXED: Now implemented for canvas renderer
+    // PDF Export
     document.getElementById('exportPdf')?.addEventListener('click', () => {
       const loadingId = notifications.loading('Exporting...', 'Generating PDF file');
       
@@ -1593,8 +1931,6 @@ class TreeCoreCanvas {
     });
   }
 
-  // ================== ADVANCED EXPORT FUNCTIONALITY ==================
-  
   setupAdvancedExport() {
     console.log('Setting up advanced export functionality...');
     
@@ -1619,10 +1955,8 @@ class TreeCoreCanvas {
     console.log('Advanced export setup complete');
   }
 
-  // FIXED: Implement basic PDF export for canvas
   async exportCanvasAsPDF() {
     try {
-      // Import the enhanced PDF export function
       const { exportCanvasPDF } = await import('./exporter.js');
       await exportCanvasPDF();
     } catch (error) {
@@ -1956,63 +2290,6 @@ class TreeCoreCanvas {
     }
     
     return personId;
-  }
-
-  // FIXED: Enhanced regenerateConnections with better debugging
-  regenerateConnections() {
-    console.log('Regenerating connections...');
-    console.log('PersonData entries:', this.personData ? this.personData.size : 0);
-    
-    this.renderer.clearConnections();
-    
-    if (!this.personData || this.personData.size === 0) {
-      console.log('No personData available for connections');
-      return;
-    }
-    
-    let connectionsAdded = 0;
-    
-    for (const [childId, childData] of this.personData) {
-      console.log(`Processing connections for ${childId}:`, childData);
-      
-      if (childData.motherId) {
-        const connectionKey = this.getConnectionKey(childId, childData.motherId);
-        if (!this.hiddenConnections.has(connectionKey)) {
-          this.renderer.addConnection(childId, childData.motherId, 'parent');
-          connectionsAdded++;
-          console.log(`Added mother connection: ${childId} -> ${childData.motherId}`);
-        }
-      }
-      if (childData.fatherId) {
-        const connectionKey = this.getConnectionKey(childId, childData.fatherId);
-        if (!this.hiddenConnections.has(connectionKey)) {
-          this.renderer.addConnection(childId, childData.fatherId, 'parent');
-          connectionsAdded++;
-          console.log(`Added father connection: ${childId} -> ${childData.fatherId}`);
-        }
-      }
-      if (childData.spouseId) {
-        if (childId < childData.spouseId) {
-          const connectionKey = this.getConnectionKey(childId, childData.spouseId);
-          if (!this.hiddenConnections.has(connectionKey)) {
-            this.renderer.addConnection(childId, childData.spouseId, 'spouse');
-            connectionsAdded++;
-            console.log(`Added spouse connection: ${childId} -> ${childData.spouseId}`);
-          }
-        }
-      }
-    }
-    
-    for (const connectionKey of this.lineOnlyConnections) {
-      if (!this.hiddenConnections.has(connectionKey)) {
-        const [id1, id2] = connectionKey.split('-');
-        this.renderer.addConnection(id1, id2, 'line-only');
-        connectionsAdded++;
-        console.log(`Added line-only connection: ${id1} -> ${id2}`);
-      }
-    }
-    
-    console.log(`Regenerated ${connectionsAdded} connections total`);
   }
 
   getConnectionKey(id1, id2) {
@@ -2502,4 +2779,88 @@ export function pushUndoState() {
 
 export function generateAllConnections() {
   treeCore.regenerateConnections();
+}
+
+// Enhanced debug commands available globally
+if (typeof window !== 'undefined') {
+  // Debug commands for connection caching issues
+  window.debugCache = function() {
+    if (window.treeCore) {
+      window.treeCore.debugCacheState();
+    } else {
+      console.error('TreeCore not found');
+    }
+  };
+
+  window.fixConnections = function() {
+    if (window.treeCore) {
+      window.treeCore.forceRegenerateConnections();
+    } else {
+      console.error('TreeCore not found');
+    }
+  };
+
+  window.showRelationships = function() {
+    if (window.treeCore) {
+      const core = window.treeCore;
+      
+      console.log('=== CURRENT RELATIONSHIPS ===');
+      if (core.personData) {
+        for (const [id, data] of core.personData) {
+          if (data.motherId || data.fatherId || data.spouseId) {
+            console.log(`${id} (${data.name}):`, {
+              mother: data.motherId ? `${data.motherId} (${core.personData.get(data.motherId)?.name || 'Unknown'})` : 'None',
+              father: data.fatherId ? `${data.fatherId} (${core.personData.get(data.fatherId)?.name || 'Unknown'})` : 'None',
+              spouse: data.spouseId ? `${data.spouseId} (${core.personData.get(data.spouseId)?.name || 'Unknown'})` : 'None'
+            });
+          }
+        }
+      }
+      console.log('=============================');
+    } else {
+      console.error('TreeCore not found');
+    }
+  };
+
+  window.clearCacheAndReload = function() {
+    if (confirm('This will clear all cached data and reload the page. Continue?')) {
+      localStorage.removeItem('familyTreeCanvas_state');
+      // Clear backup caches too
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('familyTreeCanvas_state_backup_')) {
+          localStorage.removeItem(key);
+        }
+      });
+      location.reload();
+    }
+  };
+
+  window.testConnections = function() {
+    if (window.treeCore) {
+      const core = window.treeCore;
+      
+      console.log('=== CONNECTION TEST ===');
+      console.log('Before regeneration:', core.renderer.connections.length, 'connections');
+      
+      core.regenerateConnections();
+      
+      console.log('After regeneration:', core.renderer.connections.length, 'connections');
+      console.log('Connection details:', core.renderer.connections);
+      console.log('======================');
+    } else {
+      console.error('TreeCore not found');
+    }
+  };
+
+  console.log('🔧 Enhanced Tree Core Debug Commands:');
+  console.log('- debugCache() - Show detailed cache state');
+  console.log('- fixConnections() - Force regenerate all connections');
+  console.log('- showRelationships() - Display current family relationships');
+  console.log('- clearCacheAndReload() - Clear all cache and reload page');
+  console.log('- testConnections() - Test connection regeneration process');
+  console.log('');
+  console.log('💡 If connections disappear after page refresh:');
+  console.log('1. Run debugCache() to check cache state');
+  console.log('2. Run fixConnections() to restore missing connections');
+  console.log('3. If problem persists, run clearCacheAndReload()');
 }
