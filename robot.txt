@@ -1,0 +1,155 @@
+# robots.txt for MapMyRoots - Free Family Tree Builder
+# https://mapmyroots.com/robots.txt
+
+# Allow all search engines to crawl the main content
+User-agent: *
+Allow: /
+
+# Disallow access to private/admin areas (if they exist in future)
+Disallow: /admin/
+Disallow: /private/
+Disallow: /api/
+Disallow: /backend/
+Disallow: /dashboard/
+
+# Disallow access to configuration and system files
+Disallow: /.env
+Disallow: /.git/
+Disallow: /config/
+Disallow: /logs/
+Disallow: /temp/
+Disallow: /tmp/
+
+# Disallow access to file types that shouldn't be indexed
+Disallow: /*.json$
+Disallow: /*.log$
+Disallow: /*.sql$
+Disallow: /*.txt$
+Disallow: /*.xml$
+
+# Allow specific important files
+Allow: /sitemap.xml
+Allow: /robots.txt
+Allow: /favicon.ico
+
+# Disallow dynamic/generated content that might cause crawl issues
+Disallow: /search?
+Disallow: /*?*utm_*
+Disallow: /*?*sessionid*
+Disallow: /*?*sid*
+
+# Allow all CSS, JS, and image files for proper rendering
+Allow: /*.css
+Allow: /*.js
+Allow: /*.png
+Allow: /*.jpg
+Allow: /*.jpeg
+Allow: /*.gif
+Allow: /*.svg
+Allow: /*.webp
+Allow: /*.ico
+Allow: /*.woff
+Allow: /*.woff2
+Allow: /*.ttf
+
+# Special rules for specific bots
+
+# Google
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 1
+
+# Bing
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+# Yahoo
+User-agent: Slurp
+Allow: /
+Crawl-delay: 2
+
+# Yandex
+User-agent: YandexBot
+Allow: /
+Crawl-delay: 2
+
+# DuckDuckGo
+User-agent: DuckDuckBot
+Allow: /
+Crawl-delay: 1
+
+# Facebook (for Open Graph previews)
+User-agent: facebookexternalhit
+Allow: /
+
+# Twitter (for Twitter Card previews)  
+User-agent: Twitterbot
+Allow: /
+
+# LinkedIn (for LinkedIn previews)
+User-agent: LinkedInBot
+Allow: /
+
+# Pinterest
+User-agent: Pinterest
+Allow: /
+
+# Block aggressive crawlers that might overload the server
+User-agent: SemrushBot
+Crawl-delay: 10
+
+User-agent: AhrefsBot
+Crawl-delay: 10
+
+User-agent: MJ12bot
+Crawl-delay: 10
+
+# Block malicious bots
+User-agent: SiteSnagger
+Disallow: /
+
+User-agent: WebZip
+Disallow: /
+
+User-agent: WebCopier
+Disallow: /
+
+User-agent: WebReaper
+Disallow: /
+
+User-agent: HTTrack
+Disallow: /
+
+User-agent: Offline Explorer
+Disallow: /
+
+User-agent: Teleport
+Disallow: /
+
+User-agent: TeleportPro
+Disallow: /
+
+User-agent: WebStripper
+Disallow: /
+
+User-agent: WebSauger
+Disallow: /
+
+User-agent: WebMirror
+Disallow: /
+
+User-agent: larbin
+Disallow: /
+
+User-agent: Wget
+Disallow: /
+
+# Sitemap location
+Sitemap: https://mapmyroots.com/sitemap.xml
+
+# Additional sitemaps (if you create specialized ones)
+Sitemap: https://mapmyroots.com/sitemap-glossary.xml
+
+# Note: This robots.txt is designed for a family tree building website
+# that wants good SEO visibility while protecting sensitive areas.
