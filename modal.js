@@ -234,6 +234,19 @@ function showModalWithAnimation(modal) {
   modal.classList.add('modal-enhanced');
   isModalOpen = true;
   
+  // CRITICAL FIX: Reset all button states when modal opens
+  const modalButtons = modal.querySelectorAll('button');
+  modalButtons.forEach(btn => {
+    btn.disabled = false;
+    btn.classList.remove('loading');
+    btn.removeAttribute('aria-label');
+    // Clear any stored loading states
+    if (btn.hasAttribute('data-original-text')) {
+      btn.removeAttribute('data-original-text');
+    }
+  });
+  console.log('✅ Modal opened: All buttons reset to enabled state');
+  
   // Enhanced focus management
   setTimeout(() => {
     const firstInput = document.getElementById('personName');
@@ -290,8 +303,17 @@ export function closeModal() {
     currentEditingId = null;
     isModalOpen = false;
     
-    // Clear any loading states
+    // Clear any loading states and ensure buttons are enabled
     clearButtonLoadingStates();
+    
+    // Safety check: ensure all modal buttons are properly enabled
+    const modalButtons = document.querySelectorAll('#personModal button, #deleteConfirmModal button');
+    modalButtons.forEach(btn => {
+      btn.disabled = false;
+      btn.classList.remove('loading');
+      btn.removeAttribute('aria-label');
+    });
+    console.log('🔄 All modal buttons reset to enabled state');
     
     devLog('Modal closed successfully');
   }, 300);
@@ -339,6 +361,18 @@ function openDeleteConfirmModal() {
     deleteModal.classList.remove('hidden');
     deleteModal.classList.add('modal-enhanced');
     deleteModal.style.display = 'flex';
+    
+    // CRITICAL FIX: Reset all button states when delete modal opens
+    const deleteModalButtons = deleteModal.querySelectorAll('button');
+    deleteModalButtons.forEach(btn => {
+      btn.disabled = false;
+      btn.classList.remove('loading');
+      btn.removeAttribute('aria-label');
+      if (btn.hasAttribute('data-original-text')) {
+        btn.removeAttribute('data-original-text');
+      }
+    });
+    console.log('✅ Delete modal opened: All buttons reset to enabled state');
     
     // Focus the cancel button by default for safety
     setTimeout(() => {

@@ -402,6 +402,11 @@ class ModalUXEnhancer {
     });
 
     // Add loading state functionality for specific buttons
+    // DISABLED: This automatic button loading management conflicts with modal.js
+    // The buttons (savePerson, confirmDeletePerson, applySelectedStyle) are already
+    // properly managed by their respective modal handlers in modal.js
+    // Keeping this code would cause the critical bug where buttons become permanently disabled
+    /*
     if (button.id === 'savePerson' || 
         button.id === 'confirmDeletePerson' || 
         button.id === 'applySelectedStyle') {
@@ -415,6 +420,7 @@ class ModalUXEnhancer {
         }, 3000);
       });
     }
+    */
 
     // Improve button accessibility
     if (!button.getAttribute('aria-label') && button.textContent) {
