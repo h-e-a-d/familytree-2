@@ -1637,24 +1637,28 @@ class TreeCoreCanvas {
           const existingNodes = Array.from(this.renderer.nodes.values());
           let x = 300, y = 300;
           
-          // Simple center-screen positioning for new nodes
+          // Smart positioning: place new nodes near existing content
           if (existingNodes.length > 0) {
-            // Get current camera position to determine screen center
-            const camera = this.renderer.getCamera();
-            const viewportWidth = 800;  // Approximate viewport width
-            const viewportHeight = 600; // Approximate viewport height
-            
-            // Calculate world coordinates for screen center
-            // Camera coordinates are inverted, so we need to account for that
-            const screenCenterX = -camera.x + (viewportWidth / 2);
-            const screenCenterY = -camera.y + (viewportHeight / 2);
-            
-            // Add small random offset to avoid overlapping if multiple nodes created
-            const offset = existingNodes.length * 30;
-            x = screenCenterX + offset;
-            y = screenCenterY + offset;
-            
-            console.log(`📍 Positioning new node at screen center (${x}, ${y}) with camera:`, camera);
+            const bounds = this.renderer.getContentBounds();
+            if (bounds) {
+              // Position new nodes near existing content with some spacing
+              const spacing = 150;
+              const gridSpacing = 120;
+              
+              // Position to the right of existing content in a column
+              const column = Math.floor(existingNodes.length / 6); // New column every 6 nodes
+              const row = existingNodes.length % 6; // Position within column
+              
+              x = bounds.x + bounds.width + spacing + (column * gridSpacing);
+              y = bounds.y + (row * gridSpacing);
+              
+              console.log(`📍 Positioning new node near existing content at (${x}, ${y}), bounds:`, bounds);
+            } else {
+              console.log('⚠️ Could not get content bounds, using fallback positioning');
+              // Fallback: position at a reasonable default location
+              x = 400 + (existingNodes.length % 4) * 150;
+              y = 300 + Math.floor(existingNodes.length / 4) * 150;
+            }
           }
           
           nodeData = {
@@ -1674,8 +1678,10 @@ class TreeCoreCanvas {
           this.renderer.setNode(personId, nodeData);
           console.log('➕ Created new node:', personId, 'at position:', x, y);
           
-          // Node is positioned at screen center, no camera adjustment needed
-          console.log('✅ New node created at screen center, no camera movement required');
+          // Center camera on the newly created node using the search centering method
+          setTimeout(() => {
+            this.centerOnNodeImproved(personId);
+          }, 100); // Small delay to ensure node is fully rendered
         }
       } else {
         console.warn('⚠️ Renderer not available, node will be created when renderer initializes');
@@ -1967,6 +1973,102 @@ function devError(...args) {
 }
 // Replace all console.log, console.warn, console.error with devLog, devWarn, devError
 // ... existing code ...
+
+  // ENHANCED: Camera centering method using search algorithm
+  centerOnNodeImproved(personId) {
+    if (!this.renderer || !personId) {
+      console.warn('Cannot center on node: renderer or personId missing');
+      return;
+    }
+
+    const node = this.renderer.nodes.get(personId);
+    if (!node) {
+      console.warn(`Cannot center on node: node ${personId} not found`);
+      return;
+    }
+
+    // Get canvas dimensions (same as search.js method)
+    const canvas = this.renderer.canvas;
+    const canvasWidth = canvas.width / this.renderer.dpr;
+    const canvasHeight = canvas.height / this.renderer.dpr;
+
+    // Smart zoom level adjustment (same as search.js)
+    let targetScale = this.renderer.camera.scale;
+    if (targetScale < 0.8) {
+      targetScale = 1.0;
+    } else if (targetScale > 3.0) {
+      targetScale = 2.0;
+    }
+
+    // Calculate exact center position (same formula as search.js)
+    const targetCameraX = (canvasWidth / 2) - (node.x * targetScale);
+    const targetCameraY = (canvasHeight / 2) - (node.y * targetScale);
+
+    console.log(`🎯 Centering camera on node ${personId} at (${node.x}, ${node.y})`);
+    console.log(`📐 Canvas dimensions: ${canvasWidth}x${canvasHeight}`);
+    console.log(`🔍 Target camera position: (${targetCameraX}, ${targetCameraY}) scale: ${targetScale}`);
+
+    // Animate camera to center position (enhanced version from search.js)
+    this.animateCameraImproved({
+      x: targetCameraX,
+      y: targetCameraY,
+      scale: targetScale
+    }, node, personId);
+  }
+
+  // ENHANCED: Camera animation method using search algorithm
+  animateCameraImproved(targetCamera, node, personId) {
+    const renderer = this.renderer;
+    const startTime = performance.now();
+    const duration = 1000; // 1 second animation (same as search)
+    const startCamera = {
+      x: renderer.camera.x,
+      y: renderer.camera.y,
+      scale: renderer.camera.scale
+    };
+
+    const animate = (currentTime) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      // Cubic ease-in-out (same as search.js)
+      const eased = progress < 0.5
+        ? 4 * progress * progress * progress
+        : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+
+      // Interpolate camera position
+      renderer.camera.x = startCamera.x + (targetCamera.x - startCamera.x) * eased;
+      renderer.camera.y = startCamera.y + (targetCamera.y - startCamera.y) * eased;
+      renderer.camera.scale = startCamera.scale + (targetCamera.scale - startCamera.scale) * eased;
+
+      renderer.needsRedraw = true;
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        // Post-animation validation (same as search.js)
+        console.log(`✅ Camera animation complete for node ${personId}`);
+        console.log(`📍 Final camera position: (${renderer.camera.x}, ${renderer.camera.y}) scale: ${renderer.camera.scale}`);
+        
+        // Validate centering
+        const canvas = renderer.canvas;
+        const canvasWidth = canvas.width / renderer.dpr;
+        const canvasHeight = canvas.height / renderer.dpr;
+        const expectedX = (canvasWidth / 2) - (node.x * renderer.camera.scale);
+        const expectedY = (canvasHeight / 2) - (node.y * renderer.camera.scale);
+        
+        if (Math.abs(renderer.camera.x - expectedX) > 1 || Math.abs(renderer.camera.y - expectedY) > 1) {
+          console.warn('⚠️ Camera centering validation failed, applying correction');
+          renderer.camera.x = expectedX;
+          renderer.camera.y = expectedY;
+          renderer.needsRedraw = true;
+        }
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }
+}
 
 // Export the TreeCoreCanvas class
 export { TreeCoreCanvas };
