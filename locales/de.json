@@ -1,0 +1,94 @@
+{
+  "meta": {
+    "title": "MapMyRoots - Kostenloser Stammbaum-Generator und Online-Genealogie-Software",
+    "description": "Erstellen Sie schöne, interaktive Stammbäume mit MapMyRoots - der kostenlosen Online-Genealogie-Software. Bauen Sie unbegrenzte Stammbäume, visualisieren Sie Ahnenforschung, verbinden Sie Verwandte und bewahren Sie Ihre Familiengeschichte für immer auf. Keine versteckten Kosten, intuitive Drag-and-Drop-Oberfläche.",
+    "keywords": "kostenloser Stammbaum-Ersteller, Online-Genealogie-Software, interaktiver Stammbaum-Generator, Familiengeschichte-Visualisierungstool, Ahnenforschung-Tracking, Stammbaum-Mapping, Erbe-Bewahrung, genealogische Forschung, Stammbaum-Ersteller, Online-Genealogie, Familienverbindungen",
+    "og": {
+      "title": "MapMyRoots - Kostenloser Online-Stammbaum-Generator und Genealogie-Software",
+      "description": "Erstellen Sie beeindruckende interaktive Stammbäume mit unserer kostenlosen Drag-and-Drop-Genealogie-Software. Verbinden Sie Generationen, bewahren Sie Erinnerungen und entdecken Sie Ihre Familiengeschichte. Keine Registrierung erforderlich."
+    },
+    "twitter": {
+      "title": "MapMyRoots - Kostenloser Online-Stammbaum-Generator und Genealogie-Software",
+      "description": "Erstellen Sie beeindruckende interaktive Stammbäume mit unserer kostenlosen Drag-and-Drop-Genealogie-Software. Verbinden Sie Generationen, bewahren Sie Erinnerungen und entdecken Sie Ihre Familiengeschichte."
+    }
+  },
+  "languages": {
+    "english": "English",
+    "spanish": "Español",
+    "russian": "Русский",
+    "german": "Deutsch"
+  },
+  "accessibility": {
+    "skip_to_content": "Zum Hauptinhalt springen"
+  },
+  "nav": {
+    "features": "Funktionen",
+    "how_it_works": "Wie es funktioniert",
+    "examples": "Beispiele",
+    "reviews": "Bewertungen",
+    "glossary": "Glossar",
+    "faq": "FAQ",
+    "start_building": "Kostenlos starten"
+  },
+  "hero": {
+    "title": "Kostenloser Stammbaum-Generator und Genealogie-Software",
+    "subtitle": "Erstellen Sie schöne, interaktive Stammbäume mit unserer intuitiven Drag-and-Drop-Oberfläche. Bauen Sie unbegrenzte Stammbäume, bewahren Sie Erinnerungen und entdecken Sie Ihr Familien-Erbe - völlig kostenlos für immer.",
+    "trust": {
+      "families": "Familien vertrauen uns",
+      "free": "Kostenlos für immer",
+      "rating": "Benutzerbewertung"
+    },
+    "buttons": {
+      "start_building": "Kostenlos starten",
+      "watch_demo": "Demo ansehen (2 Min)"
+    },
+    "note": "✓ Keine Registrierung erforderlich ✓ Keine Kreditkarte erforderlich ✓ Jederzeit exportieren"
+  },
+  "builder": {
+    "settings": {
+      "title": "Stammbaum-Einstellungen",
+      "node_style": "Knoten-Stil",
+      "style_circle": "Kreis",
+      "style_rectangle": "Rechteck",
+      "display_preferences": "Anzeige-Einstellungen",
+      "show_maiden_name": "Mädchenname anzeigen",
+      "show_date_of_birth": "Geburtsdatum anzeigen",
+      "show_father_name": "Vatername anzeigen",
+      "node_appearance": "Knoten-Erscheinungsbild",
+      "node_color": "Knoten-Farbe:",
+      "node_size": "Knoten-Größe:",
+      "apply": "Anwenden",
+      "node_outline": "Knoten-Umriss",
+      "show_outline": "Umriss anzeigen",
+      "outline_thickness": "Umriss-Dicke:",
+      "outline_color": "Umriss-Farbe:",
+      "connector_lines": "Verbindungslinien",
+      "family_connections": "Familienverbindungen",
+      "spouse_connections": "Ehepartner-Verbindungen",
+      "line_only_connections": "Nur-Linien-Verbindungen",
+      "line_style": "Linien-Stil:",
+      "line_thickness": "Linien-Dicke:",
+      "line_color": "Linien-Farbe:",
+      "style_solid": "Durchgezogen",
+      "style_dashed": "Gestrichelt",
+      "style_dotted": "Gepunktet",
+      "style_dash_dot": "Strich-Punkt",
+      "text_settings": "Text-Einstellungen",
+      "font": "Schriftart:",
+      "font_size": "Schriftgröße:",
+      "name_color": "Namen-Farbe:",
+      "date_color": "Datum-Farbe:",
+      "basic_export": "Grundlegender Export",
+      "advanced_export": "Erweiterter Export",
+      "pdf_layout": "PDF-Layout",
+      "export_formats": "Grundlegend: SVG (Vektor), PNG (Bild), PDF (Dokument)<br>Erweitert: GEDCOM (Genealogie), PDF mit Layouts",
+      "data_management": "Datenverwaltung",
+      "save_family_tree": "Stammbaum speichern",
+      "load_family_tree": "Stammbaum laden",
+      "format_support": "Unterstützt sowohl neue als auch Legacy-Format-Dateien",
+      "reset": "Zurücksetzen",
+      "clear_all_data": "Alle Daten löschen",
+      "clear_warning": "Warnung: Dies löscht alle Stammbaum-Daten dauerhaft"
+    }
+  }
+} 

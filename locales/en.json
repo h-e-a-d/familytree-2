@@ -1,0 +1,573 @@
+{
+  "meta": {
+    "title": "MapMyRoots - Free Family Tree Builder & Online Genealogy Software",
+    "description": "Create beautiful, interactive family trees with MapMyRoots - the free online genealogy software. Build unlimited family trees, visualize ancestry, connect relatives, and preserve your family history forever. No hidden costs, intuitive drag-and-drop interface.",
+    "keywords": "free family tree maker, genealogy software online, interactive family tree builder, family history visualization tool, ancestry tracking, lineage mapping, heritage preservation, genealogical research, family tree creator, online genealogy, family connections",
+    "og": {
+      "title": "MapMyRoots - Free Online Family Tree Builder & Genealogy Software",
+      "description": "Build stunning interactive family trees with our free drag-and-drop genealogy software. Connect generations, preserve memories, and discover your family story. No registration required."
+    },
+    "twitter": {
+      "title": "MapMyRoots - Free Online Family Tree Builder & Genealogy Software",
+      "description": "Build stunning interactive family trees with our free drag-and-drop genealogy software. Connect generations, preserve memories, and discover your family story."
+    }
+  },
+  "languages": {
+    "english": "English",
+    "spanish": "Español",
+    "russian": "Русский",
+    "german": "Deutsch"
+  },
+  "accessibility": {
+    "skip_to_content": "Skip to main content"
+  },
+  "nav": {
+    "features": "Features",
+    "how_it_works": "How It Works",
+    "examples": "Examples",
+    "reviews": "Reviews",
+    "glossary": "Glossary",
+    "faq": "FAQ",
+    "start_building": "Start Building Free"
+  },
+  "hero": {
+    "title": "Free Family Tree Builder & Genealogy Software",
+    "subtitle": "Create beautiful, interactive family trees with our intuitive drag-and-drop interface. Build unlimited family trees, preserve memories, and discover your family heritage - completely free forever.",
+    "trust": {
+      "families": "Families Trust Us",
+      "free": "Free Forever",
+      "rating": "User Rating"
+    },
+    "buttons": {
+      "start_building": "Start Building Free",
+      "watch_demo": "Watch Demo (2 min)"
+    },
+    "note": "✓ No registration required ✓ No credit card needed ✓ Export anytime"
+  },
+  "about": {
+    "title": "What is MapMyRoots?",
+    "description": "MapMyRoots is a <strong>free online family tree creation tool</strong> that helps you visualize and preserve your family history. Unlike expensive genealogy services, we focus on making family tree building simple, beautiful, and accessible to everyone.",
+    "points": {
+      "purpose": {
+        "title": "🎯 Purpose-Built for Family Trees",
+        "description": "Designed specifically for creating visual family trees, not overwhelming genealogy research"
+      },
+      "free": {
+        "title": "💰 Completely Free",
+        "description": "No subscription fees, premium tiers, or hidden costs. All features included forever"
+      },
+      "control": {
+        "title": "🔒 Your Data, Your Control",
+        "description": "Export your family trees anytime in multiple formats. No vendor lock-in"
+      }
+    },
+    "demo": {
+      "title": "Interactive Family Tree Preview",
+      "description": "See how easy it is to build beautiful family trees",
+      "link": "Try Live Demo →"
+    }
+  },
+  "features": {
+    "title": "Powerful Family Tree Features",
+    "subtitle": "Everything you need to create comprehensive family trees and preserve your family history",
+    "cards": {
+      "drag_drop": {
+        "title": "Intuitive Drag & Drop Interface",
+        "description": "Build family trees effortlessly with our intuitive drag-and-drop interface. Add, move, and connect family members with simple gestures. Perfect for genealogy beginners and experts alike."
+      },
+      "interactive": {
+        "title": "Interactive Family Tree Canvas",
+        "description": "Beautiful, responsive family trees with smooth animations, zoom controls, and multiple viewing modes. Works perfectly on desktop, tablet, and mobile devices."
+      },
+      "profiles": {
+        "title": "Detailed Family Profiles",
+        "description": "Store comprehensive information for each family member including names, birth/death dates, relationships, photos, and personal notes. Build rich family histories."
+      },
+      "views": {
+        "title": "Multiple View Modes",
+        "description": "Switch between visual tree view and organized table view. Sort, filter, and search your family data in the way that works best for your genealogy research."
+      },
+      "export": {
+        "title": "Export & Share Options",
+        "description": "Export your family tree as high-resolution images, PDFs for printing, or JSON data for backup. Share your family history with relatives worldwide."
+      },
+      "free": {
+        "title": "100% Free Forever",
+        "description": "No hidden costs, subscription fees, or premium features. Build unlimited family trees and preserve your family history forever, completely free."
+      }
+    }
+  },
+  "examples": {
+    "title": "Family Tree Examples & Use Cases",
+    "subtitle": "See how families use MapMyRoots for different purposes",
+    "cards": {
+      "reunions": {
+        "title": "Family Reunions",
+        "description": "Perfect for family reunions - create large-format trees to display at events and help relatives connect"
+      },
+      "school": {
+        "title": "School Projects",
+        "description": "Students love using MapMyRoots for genealogy assignments and family history projects"
+      },
+      "memorial": {
+        "title": "Memorial Gifts",
+        "description": "Create beautiful family trees as memorial gifts or to preserve the legacy of elderly relatives"
+      }
+    }
+  },
+  "how_it_works": {
+    "title": "How to Build Your Family Tree",
+    "subtitle": "Get started in minutes with our simple 3-step process",
+    "steps": {
+      "add": {
+        "title": "Add Family Members",
+        "description": "Start by adding yourself and begin building outward. Add parents, siblings, children, and extended family with detailed profiles including photos and personal information."
+      },
+      "connect": {
+        "title": "Connect Relationships",
+        "description": "Use our simple connection tools to link family members. Define relationships like parent-child, spouse, or custom connections. The family tree updates automatically."
+      },
+      "customize": {
+        "title": "Customize & Share",
+        "description": "Personalize your tree with colors and styles. Export as beautiful high-resolution images, PDFs for printing, or share your family history digitally with loved ones."
+      }
+    }
+  },
+  "comparison": {
+    "title": "Why Choose MapMyRoots?",
+    "subtitle": "See how we compare to other family tree software",
+    "header": {
+      "feature": "Feature"
+    },
+    "rows": {
+      "cost": "Monthly Cost",
+      "cost_us": "✅ Free Forever",
+      "cost_ancestry": "❌ $24.99/month",
+      "cost_heritage": "❌ $12.95/month",
+      "builder": "Family Tree Builder",
+      "builder_us": "✅ Advanced",
+      "builder_others": "✅ Basic",
+      "export": "Export Options",
+      "export_us": "✅ All Formats",
+      "export_others": "❌ Limited",
+      "registration": "No Registration",
+      "registration_us": "✅ Start Immediately",
+      "registration_others": "❌ Required"
+    }
+  },
+  "testimonials": {
+    "title": "What Families Say About MapMyRoots",
+    "subtitle": "Join over 15,000 families preserving their heritage with our free family tree software",
+    "sarah": {
+      "text": "\"This tool made creating our family tree so much easier than I expected. The drag-and-drop interface is intuitive and the results are beautiful. My grandmother was thrilled to see four generations displayed so clearly.\"",
+      "name": "Sarah Martinez",
+      "title": "Family Historian • Used for 3 generations"
+    },
+    "david": {
+      "text": "\"We used this for our family reunion and it was a huge hit! Being able to print out large format trees and save them digitally was perfect for sharing with relatives around the world. Best genealogy tool I've found.\"",
+      "name": "David Johnson",
+      "title": "Genealogy Enthusiast • 50+ person family tree"
+    },
+    "maria": {
+      "text": "\"The canvas-based interface is so smooth and responsive. I love how I can zoom in and out, drag people around, and everything just works perfectly on both my computer and tablet. Much better than expensive alternatives.\"",
+      "name": "Maria Rodriguez",
+      "title": "Family Coordinator • Mobile user"
+    }
+  },
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "subtitle": "Everything you need to know about MapMyRoots family tree software",
+    "free": {
+      "question": "Is MapMyRoots completely free to use?",
+      "answer": "Yes, MapMyRoots is completely free with no hidden costs, subscription fees, or premium tiers. You can create unlimited family trees and access all features forever. We believe family history preservation should be accessible to everyone."
+    },
+    "compare": {
+      "question": "How does MapMyRoots compare to Ancestry.com or MyHeritage?",
+      "answer": "Unlike paid services like Ancestry.com ($24.99/month) or MyHeritage ($12.95/month), MapMyRoots is completely free and focuses on family tree visualization rather than genealogical research. You own your data and can export it anytime in multiple formats."
+    },
+    "export": {
+      "question": "What file formats can I export my family tree in?",
+      "answer": "You can export your family tree as high-resolution images (PNG, JPG), PDF documents perfect for printing, or JSON data for backup and sharing with other genealogy software. No restrictions or watermarks."
+    },
+    "register": {
+      "question": "Do I need to register or create an account?",
+      "answer": "No registration required! You can start building your family tree immediately. However, creating a free account lets you save your trees online and access them from any device."
+    },
+    "mobile": {
+      "question": "Can I use MapMyRoots on mobile devices?",
+      "answer": "Yes, MapMyRoots works perfectly on desktop computers, tablets, and mobile phones. The responsive design adapts to your screen size while maintaining full functionality."
+    },
+    "limit": {
+      "question": "How many people can I add to my family tree?",
+      "answer": "There's no limit! You can add as many family members as you want and create multiple family trees. Users have successfully created trees with hundreds of family members."
+    }
+  },
+  "cta": {
+    "title": "Start Building Your Family Tree Today",
+    "description": "Join over 15,000 families who have already discovered their heritage. Create your first family tree in minutes, completely free with no registration required.",
+    "features": {
+      "credit_card": "✓ No credit card needed",
+      "download": "✓ No software to download",
+      "devices": "✓ Works on all devices",
+      "export": "✓ Export anytime"
+    },
+    "button": "Start Building Free Now"
+  },
+  "footer": {
+    "description": "Free family tree builder and genealogy software. Preserve your family history forever.",
+    "stats": {
+      "families": "15,000+ families served",
+      "rating": "4.8★ average rating"
+    },
+    "product": {
+      "title": "Product",
+      "features": "Features",
+      "builder": "Family Tree Builder",
+      "how_it_works": "How It Works",
+      "examples": "Examples",
+      "comparison": "vs Competitors"
+    },
+    "support": {
+      "title": "Support",
+      "faq": "FAQ",
+      "help": "Help Center",
+      "contact": "Contact Us",
+      "tutorials": "Tutorials",
+      "community": "Community"
+    },
+    "resources": {
+      "title": "Resources",
+      "glossary": "Genealogy Glossary",
+      "tips": "Genealogy Tips",
+      "blog": "Blog",
+      "templates": "Templates",
+      "export": "Export Guide",
+      "practices": "Best Practices"
+    },
+    "legal": {
+      "title": "Legal",
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Service",
+      "cookies": "Cookie Policy",
+      "opensource": "Open Source"
+    },
+    "copyright": "© 2024 MapMyRoots. All rights reserved. Made with ❤️ for families worldwide.",
+    "badges": {
+      "privacy": "🔒 Privacy First",
+      "mobile": "📱 Mobile Friendly",
+      "free": "💯 Free Forever"
+    }
+  },
+  "builder": {
+    "meta": {
+      "title": "MapMyRoots - Build Your Family Tree",
+      "description": "Interactive family tree builder with drag-and-drop interface. Create, edit, and visualize your family connections with MapMyRoots."
+    },
+    "cache": {
+      "auto_save": "Auto-save enabled",
+      "saved": "Saved",
+      "last_saved": "Last saved",
+      "cached_available": "Cached data available",
+      "saving": "Saving...",
+      "tree_name_placeholder": "Enter tree name...",
+      "people": "people",
+      "connections": "connections",
+      "auto_save_status": "Auto-save:",
+      "enabled": "enabled",
+      "tree_stats": "Tree Statistics",
+      "expand_info": "Click to expand details"
+    },
+    "modals": {
+      "delete_person": {
+        "title": "Delete Person",
+        "message": "Are you sure you want to delete this person? This action cannot be undone.",
+        "confirm": "Yes, Delete"
+      },
+      "clear_all": {
+        "title": "Clear All Data",
+        "message": "Are you sure you want to clear all family tree data? This action cannot be undone.",
+        "confirm": "Yes, Clear All"
+      },
+      "line_removal": {
+        "title": "Remove Connection Line",
+        "message": "This will hide the visual connection line but preserve the relationship data. The family relationship will remain intact and can be restored later.",
+        "confirm": "Hide Line",
+        "description": "Hide visual connection while preserving family data"
+      },
+      "connection": {
+        "title": "Connect People",
+        "text": "Person A is __ to Person B",
+        "mother": "Mother",
+        "father": "Father",
+        "child": "Child",
+        "spouse": "Spouse",
+        "line_only": "Line only"
+      },
+      "style": {
+        "title": "Style Selected Circles",
+        "apply": "Apply Changes",
+        "preview": "Preview Changes"
+      },
+      "person": {
+        "add_title": "Add Person",
+        "edit_title": "Edit Person",
+        "editing": "Editing:",
+        "new_person": "New Person"
+      }
+    },
+    "buttons": {
+      "bring_front": "FRONT",
+      "edit": "Edit",
+      "cancel": "Cancel",
+      "save": "Save",
+      "delete": "Delete",
+      "style": "Style",
+      "link": "Link",
+      "undo": "Undo"
+    },
+    "zoom": {
+      "zoom_in": "Zoom In",
+      "zoom_out": "Zoom Out", 
+      "zoom_reset": "Reset Zoom",
+      "zoom_display": "Current zoom level"
+    },
+    "search": {
+      "placeholder": "Search family members...",
+      "no_results": "No family members found",
+      "results_count": "{{count}} results found",
+      "clear": "Clear search"
+    },
+    "sidebar": {
+      "home": "Return to Home",
+      "search": "Search Family Members",
+      "center_selected": "Center Selected Person",
+      "zoom_in": "Zoom In",
+      "zoom_out": "Zoom Out",
+      "settings": "Open Settings",
+      "toggle_view": "Toggle View Mode",
+      "undo": "Undo Last Action",
+      "redo": "Redo Last Action"
+    },
+    "settings": {
+      "title": "Family Tree Settings",
+      "node_style": "Node Style",
+      "style_circle": "Circle",
+      "style_rectangle": "Rectangle",
+      "display_preferences": "Display Preferences",
+      "show_maiden_name": "Show Maiden Name",
+      "show_date_of_birth": "Show Date of Birth",
+      "show_father_name": "Show Father's Name",
+      "node_appearance": "Node Appearance",
+      "node_color": "Node Color:",
+      "node_size": "Node Size:",
+      "apply": "Apply",
+      "node_outline": "Node Outline",
+      "show_outline": "Show Outline",
+      "outline_thickness": "Outline Thickness:",
+      "outline_color": "Outline Color:",
+      "connector_lines": "Connector Lines",
+      "family_connections": "Family Connections",
+      "spouse_connections": "Spouse Connections",
+      "line_only_connections": "Line-Only Connections",
+      "line_style": "Line Style:",
+      "line_thickness": "Line Thickness:",
+      "line_color": "Line Color:",
+      "style_solid": "Solid",
+      "style_dashed": "Dashed",
+      "style_dotted": "Dotted",
+      "style_dash_dot": "Dash-Dot",
+      "text_settings": "Text Settings",
+      "font": "Font:",
+      "font_size": "Font Size:",
+      "name_color": "Name Color:",
+      "date_color": "Date Color:",
+      "basic_export": "Basic Export",
+      "advanced_export": "Advanced Export",
+      "pdf_layout": "PDF Layout",
+      "export_formats": "Basic: SVG (vector), PNG (image), PDF (document)<br>Advanced: GEDCOM (genealogy), PDF with layouts",
+      "data_management": "Data Management",
+      "save_family_tree": "Save Family Tree",
+      "load_family_tree": "Load Family Tree",
+      "format_support": "Supports JSON format files",
+      "reset": "Reset",
+      "clear_all_data": "Clear All Data",
+      "clear_warning": "Warning: This will permanently delete all family tree data"
+    },
+    "table": {
+      "search_placeholder": "Search...",
+      "sort_name": "Name",
+      "sort_father_name": "Father's Name",
+      "sort_surname": "Surname",
+      "sort_dob": "Date of Birth",
+      "sort_gender": "Gender",
+      "header_name": "Name",
+      "header_father_name": "Father's Name",
+      "header_surname": "Surname",
+      "header_maiden_name": "Maiden Name",
+      "header_dob": "Date of Birth",
+      "header_gender": "Gender",
+      "header_mother": "Mother",
+      "header_father": "Father",
+      "header_spouse": "Spouse",
+      "header_actions": "Actions",
+      "no_results": "No family members match your search",
+      "total_people": "Total: {{count}} people"
+    },
+    "form": {
+      "gender": "Gender",
+      "gender_male": "Male",
+      "gender_female": "Female",
+      "given_name": "Given Name",
+      "father_name": "Father's Name",
+      "father_name_placeholder": "Father's given name",
+      "father_name_help": "Father's given name (not surname)",
+      "surname": "Surname",
+      "maiden_name": "Maiden Name",
+      "date_of_birth": "Date of Birth",
+      "dob_placeholder": "dd.mm.yyyy or yyyy",
+      "dob_help": "Enter full date dd.mm.yyyy or just year yyyy",
+      "mother": "Mother",
+      "father": "Father",
+      "spouse": "Spouse",
+      "select_person": "Select a person...",
+      "no_selection": "No selection"
+    },
+    "validation": {
+      "name_required": "Please enter a name.",
+      "gender_required": "Please select a gender.",
+      "invalid_date": "Please enter a valid date.",
+      "form_errors": "Please fix the errors below:"
+    },
+    "notifications": {
+      "unknown_person": "Unknown",
+      "person_deleted": "Person Deleted",
+      "delete_success": "{{name}} has been deleted from the tree",
+      "delete_failed": "Delete Failed",
+      "delete_error": "Could not delete person. Please try again.",
+      "invalid_file": "Invalid File",
+      "drop_json": "Please drop a JSON file",
+      "bring_front_title": "Brought to Front",
+      "bring_front_single": "Person brought to front",
+      "bring_front_multiple": "{{count}} people brought to front",
+      "no_selection_front": "Please select a person to bring to front.",
+      "save_success": "Changes saved successfully",
+      "save_error": "Error saving changes",
+      "connection_added": "Connection added successfully",
+      "connection_removed": "Connection removed",
+      "style_applied": "Style applied to selected nodes",
+      "tree_cleared": "Family tree cleared",
+      "export_success": "Export completed successfully",
+      "export_error": "Export failed",
+      "loading": "Loading...",
+      "processing": "Processing..."
+    },
+    "actions": {
+      "add_person": "Add New Person",
+      "edit_person": "Edit Person Details",
+      "delete_person": "Delete Person",
+      "connect_people": "Connect People",
+      "style_nodes": "Style Selected Nodes",
+      "bring_to_front": "Bring to Front",
+      "center_view": "Center in View",
+      "zoom_to_fit": "Zoom to Fit",
+      "export_tree": "Export Family Tree",
+      "save_tree": "Save Family Tree",
+      "load_tree": "Load Family Tree"
+    },
+    "toolbar": {
+      "save": "Save Family Tree",
+      "load": "Load Family Tree", 
+      "export": "Export Family Tree"
+    },
+    "status": {
+      "ready": "Ready",
+      "loading": "Loading family tree...",
+      "saving": "Saving changes...",
+      "error": "An error occurred",
+      "success": "Operation completed successfully",
+      "no_changes": "No changes to save",
+      "unsaved_changes": "You have unsaved changes"
+    }
+  },
+  "glossary": {
+    "meta": {
+      "title": "Genealogy Glossary - Essential Terms for Family History Research | MapMyRoots",
+      "description": "Comprehensive glossary of genealogical terms and definitions. Learn essential vocabulary for family history research and family tree building with MapMyRoots.",
+      "keywords": "genealogy glossary, genealogical terms, family history vocabulary, ancestry definitions, genealogy dictionary, research terms",
+      "og": {
+        "title": "Genealogy Glossary - Essential Terms for Family History Research",
+        "description": "Master genealogical vocabulary with our comprehensive glossary. Essential terms and definitions for successful family history research."
+      },
+      "twitter": {
+        "title": "Genealogy Glossary - Essential Terms for Family History Research",
+        "description": "Master genealogical vocabulary with our comprehensive glossary. Essential terms and definitions for successful family history research."
+      }
+    },
+    "breadcrumb": {
+      "home": "Home",
+      "current": "Glossary"
+    },
+    "hero": {
+      "title": "Genealogy Glossary",
+      "subtitle": "Master the language of family history research with our comprehensive collection of genealogical terms and definitions."
+    },
+    "navigation": {
+      "title": "Quick Navigation"
+    },
+    "search": {
+      "placeholder": "Search for a genealogy term...",
+      "no_results_title": "No results found",
+      "no_results_text": "Try searching for a different term or browse by letter above."
+    },
+    "terms": {
+      "abstract": {
+        "name": "Abstract",
+        "definition": "An abbreviated transcription of a document that includes the date of the record and every name it contains. May also provide relationships or descriptions of the people mentioned."
+      },
+      "affinity": {
+        "name": "Affinity",
+        "definition": "A relationship created by marriage. It refers to the connection between a person and their spouse's blood relatives, or between a person and their relative's spouse."
+      },
+      "ahnentafel": {
+        "name": "Ahnentafel",
+        "definition": "A German word meaning \"ancestor table.\" This numbering system assigns each ancestor a number, making organization easier. The subject is #1, father #2, mother #3, etc."
+      },
+      "ancestor": {
+        "name": "Ancestor",
+        "definition": "A person from whom one is descended, typically more distant than grandparents. Includes parents, grandparents, great-grandparents, and earlier generations."
+      },
+      "ancestry": {
+        "name": "Ancestry",
+        "definition": "One's family or ethnic descent; the line of people from whom a person is descended. Also refers to the collective ancestors of a family."
+      },
+      "autosomal_dna": {
+        "name": "Autosomal DNA",
+        "definition": "DNA inherited from both parents that can help identify relatives within about 5-7 generations. Used in modern DNA testing for genealogy."
+      },
+      "banns": {
+        "name": "Banns",
+        "definition": "Public announcements of an intended marriage, traditionally made in church on three successive Sundays before the wedding ceremony."
+      },
+      "birth_record": {
+        "name": "Birth Record",
+        "definition": "An official document recording the birth of a person, typically including name, date, place of birth, and parents' names."
+      },
+      "brick_wall": {
+        "name": "Brick Wall",
+        "definition": "A genealogical term for a research obstacle where no additional information can be found about an ancestor, creating a dead end in research."
+      },
+      "census": {
+        "name": "Census",
+        "definition": "An official count and survey of a population, typically including names, ages, occupations, and family relationships. Conducted periodically by governments."
+      },
+      "family_tree": {
+        "name": "Family Tree",
+        "definition": "A chart showing family relationships in a tree structure, displaying ancestors, descendants, and collateral relatives."
+      },
+      "genealogy": {
+        "name": "Genealogy",
+        "definition": "The study and tracing of family lineages and histories; the practice of researching and documenting family relationships."
+      }
+    }
+  }
+}

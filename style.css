@@ -1,0 +1,2249 @@
+/* Basic Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ENHANCED: Complete scrollbar removal */
+* {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* Internet Explorer 10+ */
+}
+
+*::-webkit-scrollbar {
+  display: none !important; /* WebKit - Complete removal */
+  width: 0 !important;
+  height: 0 !important;
+}
+
+*::-webkit-scrollbar-track,
+*::-webkit-scrollbar-thumb,
+*::-webkit-scrollbar-corner {
+  display: none !important;
+}
+
+html, body {
+  height: 100%;
+  font-family: 'Inter', sans-serif;
+  background-color: #f4f4f4;
+  overflow: hidden; /* Prevent page scrolling */
+  touch-action: manipulation; /* Allow only basic touch actions */
+  -webkit-overflow-scrolling: touch;
+  /* Prevent iOS bounce/rubber band effect */
+  position: fixed;
+  width: 100%;
+}
+
+#mainContainer {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  touch-action: none; /* Disable default touch behaviors */
+  position: relative;
+}
+
+/* Graphic View & Table View */
+#graphicView, #tableView {
+  flex: 1;
+  position: relative;
+  height: 100%;
+  /* Allow normal touch behavior for table scrolling */
+  touch-action: auto;
+  overflow-y: auto;
+  /* Hide scrollbar but maintain scroll functionality */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+#graphicView::-webkit-scrollbar,
+#tableView::-webkit-scrollbar {
+  display: none;
+}
+
+#svgArea {
+  width: 100%;
+  height: 100%;
+  background-color: #fff;
+  cursor: grab;
+}
+
+/* Consolidated hidden class for all elements */
+.hidden {
+  display: none !important;
+}
+
+/* Search functionality styles */
+.search-container {
+  position: fixed;
+  left: 52px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.search-field {
+  width: 0;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  padding: 0;
+  font-size: 14px;
+  outline: none;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.search-field.expanded {
+  width: 300px;
+  padding: 0 50px 0 20px;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.search-field:focus {
+  border-color: #3498db;
+  box-shadow: 0 4px 20px rgba(52, 152, 219, 0.3);
+}
+
+.search-suggestions {
+  position: absolute;
+  top: 45px;
+  left: 0;
+  right: 0;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 1001;
+  display: none;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.search-suggestions::-webkit-scrollbar {
+  display: none;
+}
+
+.search-suggestions.visible {
+  display: block;
+}
+
+.search-suggestion {
+  padding: 12px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.search-suggestion:last-child {
+  border-bottom: none;
+}
+
+.search-suggestion:hover {
+  background-color: #f8f9fa;
+}
+
+.search-suggestion.selected {
+  background-color: rgba(52, 152, 219, 0.1);
+}
+
+.suggestion-name {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 14px;
+}
+
+.suggestion-details {
+  font-size: 12px;
+  color: #7f8c8d;
+}
+
+.search-close {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666;
+  font-size: 18px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.search-field.expanded + .search-close {
+  opacity: 1;
+}
+
+.search-close:hover {
+  color: #e74c3c;
+}
+
+/* ENHANCED: Enhanced Cache Indicator with proper hover behavior and no truncation */
+.cache-indicator {
+  position: fixed;
+  bottom: 16px;
+  left: 8px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #666;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  z-index: 900;
+  border: 1px solid rgba(0,0,0,0.1);
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transform-origin: bottom left;
+  overflow: visible; /* Changed from hidden to visible */
+  
+  /* Collapsed state - single line with proper width */
+  width: auto;
+  min-width: 160px; /* Increased to prevent truncation */
+  max-width: 220px; /* Increased max width */
+  height: 32px;
+  line-height: 16px;
+  display: flex;
+  align-items: center;
+}
+
+.cache-indicator:hover {
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+.cache-indicator.saving {
+  background: rgba(46, 204, 113, 0.1);
+  border-color: rgba(46, 204, 113, 0.3);
+  color: #27ae60;
+}
+
+.cache-indicator.error {
+  background: rgba(231, 76, 60, 0.1);
+  border-color: rgba(231, 76, 60, 0.3);
+  color: #e74c3c;
+}
+
+/* Better expansion behavior - expands from bottom-left without truncation */
+.cache-indicator.expanded {
+  width: 280px;
+  height: auto;
+  min-height: 140px; /* Increased min-height */
+  padding: 16px;
+  line-height: normal;
+  display: block;
+  overflow: visible; /* Ensure content is always visible */
+  /* Bottom-left corner stays in place */
+  transform-origin: bottom left;
+}
+
+/* Save indicator - always visible in collapsed state with no truncation */
+.cache-save-indicator {
+  white-space: nowrap;
+  overflow: visible; /* Changed from hidden */
+  text-overflow: clip; /* Changed from ellipsis */
+  flex: 1;
+  min-width: 0; /* Allow proper flex sizing */
+}
+
+/* Expanded content - hidden by default but visible when expanded */
+.cache-expanded-content {
+  opacity: 0;
+  visibility: hidden;
+  max-height: 0;
+  overflow: hidden;
+  margin-top: 0;
+  transition: all 0.3s ease 0.1s; /* Added delay for smoother transition */
+  pointer-events: none; /* Prevent interaction when collapsed */
+}
+
+.cache-indicator.expanded .cache-expanded-content {
+  opacity: 1;
+  visibility: visible;
+  max-height: 200px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(0,0,0,0.1);
+  pointer-events: auto; /* Allow interaction when expanded */
+}
+
+/* Ensure all interactive elements prevent collapse */
+.cache-expanded-content,
+.cache-expanded-content *,
+.tree-name-input,
+.tree-stats,
+.tree-stats * {
+  pointer-events: auto;
+}
+
+.tree-name-input {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 12px;
+  margin-bottom: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+  pointer-events: auto; /* Explicitly allow interaction */
+}
+
+.tree-name-input:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.tree-stats {
+  font-size: 11px;
+  color: #666;
+  line-height: 1.4;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  pointer-events: auto; /* Explicitly allow interaction */
+}
+
+.tree-stats > div {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  pointer-events: auto; /* Explicitly allow interaction */
+}
+
+
+/* Notifications System Updates */
+.notifications-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.notification {
+  background: white;
+  border-radius: 12px;
+  padding: 16px 20px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+  border-left: 4px solid #3498db;
+  min-width: 300px;
+  max-width: 400px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  opacity: 0;
+  transform: translateX(100%);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  pointer-events: auto;
+}
+
+.notification.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.notification.success {
+  border-left-color: #27ae60;
+}
+
+.notification.error {
+  border-left-color: #e74c3c;
+}
+
+.notification.info {
+  border-left-color: #3498db;
+}
+
+.notification.warning {
+  border-left-color: #f39c12;
+}
+
+.notification.cache {
+  border-left-color: #9b59b6;
+}
+
+.notification-icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.notification-content {
+  flex: 1;
+}
+
+.notification-title {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 4px;
+  color: #2c3e50;
+}
+
+.notification-message {
+  font-size: 13px;
+  color: #7f8c8d;
+  line-height: 1.4;
+}
+
+.notification-close {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.2s ease;
+  background: none;
+  border: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notification-close:hover {
+  opacity: 1;
+}
+
+/* Loading spinner for notifications */
+.notification-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #e9ecef;
+  border-left: 2px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ENHANCED: Vertical Sidebar - Narrower with Better Design */
+.sidebar {
+  position: fixed;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1001;
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 12px;
+  padding: 4px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 40px;
+}
+
+.sidebar-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #6b7280;
+  position: relative;
+}
+
+.sidebar-btn:hover {
+  background: rgba(52, 152, 219, 0.12);
+  color: #3498db;
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2);
+}
+
+.sidebar-btn.active {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  color: white;
+  box-shadow: 0 2px 12px rgba(52, 152, 219, 0.3);
+}
+
+.sidebar-btn svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2.5;
+}
+
+.sidebar-divider {
+  height: 1px;
+  background: rgba(0, 0, 0, 0.1);
+  margin: 4px 0;
+}
+
+/* Undo/Redo buttons styling */
+#undoSidebarBtn, #redoSidebarBtn {
+  opacity: 0.7;
+  transition: all 0.2s ease;
+}
+
+#undoSidebarBtn:hover, #redoSidebarBtn:hover {
+  opacity: 1;
+  background: rgba(52, 152, 219, 0.1);
+  color: #3498db;
+  transform: scale(1.05);
+}
+
+#undoSidebarBtn:disabled, #redoSidebarBtn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+#undoSidebarBtn.available, #redoSidebarBtn.available {
+  opacity: 1;
+  color: #3498db;
+}
+
+/* ENHANCED: Settings Icon Improvements */
+.settings-icon {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #6b7280;
+  z-index: 997;
+}
+
+.settings-icon:hover {
+  background: rgba(243, 156, 18, 0.12);
+  color: #f39c12;
+  transform: scale(1.1) rotate(45deg);
+  box-shadow: 0 4px 16px rgba(243, 156, 18, 0.25);
+}
+
+.settings-icon svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2.5;
+  transition: transform 0.2s ease;
+}
+
+/* Remove old positioned elements that are no longer needed */
+.view-toggle-icon,
+.back-to-home {
+  display: none !important;
+}
+
+/* ENHANCED: Compact Gender Radio Buttons - Single Line Layout */
+.gender-radio-group {
+  display: flex; /* Changed from grid to flex for single line */
+  flex-direction: row;
+  gap: 8px; /* Reduced gap */
+  padding: 0;
+  flex-wrap: wrap; /* Allow wrap on very small screens */
+}
+
+.gender-radio-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 2px solid #e2e8f0;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  background: #ffffff;
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
+  height: 50px;
+  box-sizing: border-box;
+  font-weight: 500;
+}
+
+.gender-radio-option:hover {
+  border-color: #cbd5e0;
+  background: #f7fafc;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.gender-radio-option input[type="radio"]:checked + .gender-radio-option,
+.gender-radio-option:has(input[type="radio"]:checked) {
+  border-color: #3498db;
+  background: rgba(52, 152, 219, 0.08);
+  color: #3498db;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.15);
+}
+
+.gender-radio-option input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #3498db;
+  margin: 0;
+}
+
+.gender-radio-option label {
+  cursor: pointer;
+  font-weight: 500;
+  margin: 0;
+  font-size: 14px;
+  white-space: nowrap;
+  user-select: none;
+}
+
+
+
+
+
+/* ENHANCED: Modern Form Groups */
+.form-group { 
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.form-group:last-of-type {
+  margin-bottom: 32px;
+}
+
+.form-group label { 
+  display: block; 
+  margin-bottom: 8px; 
+  font-weight: 600;
+  color: #2d3748;
+  font-size: 14px;
+  line-height: 1.4;
+  letter-spacing: 0.025em;
+}
+
+.form-group label .required {
+  color: #e53e3e;
+  margin-left: 2px;
+}
+
+.form-group input, 
+.form-group select { 
+  width: 100%; 
+  padding: 14px 16px; 
+  font-size: 15px;
+  border: 2px solid #e2e8f0; 
+  border-radius: 10px; 
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box;
+  background: #ffffff;
+  font-family: inherit;
+  line-height: 1.5;
+  color: #2d3748;
+  font-weight: 400;
+}
+
+.form-group input:hover,
+.form-group select:hover {
+  border-color: #cbd5e0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.form-group input:focus, 
+.form-group select:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 
+    0 0 0 3px rgba(52, 152, 219, 0.1),
+    0 4px 12px rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+  transform: translateY(-1px);
+}
+
+.form-group input::placeholder {
+  color: #a0aec0;
+  font-weight: 400;
+}
+
+.form-group input:invalid {
+  border-color: #e53e3e;
+}
+
+.form-group input:invalid:focus {
+  border-color: #e53e3e;
+  box-shadow: 
+    0 0 0 3px rgba(229, 62, 62, 0.1),
+    0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.help-text { 
+  font-size: 12px; 
+  color: #718096; 
+  margin-top: 6px;
+  line-height: 1.5;
+  font-style: italic;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.help-text::before {
+  content: "ℹ";
+  color: #a0aec0;
+  font-style: normal;
+  font-size: 11px;
+}
+
+.required { 
+  color: #e53e3e; 
+}
+
+/* ENHANCED: Optimized Searchable Select */
+.searchable-select { 
+  position: relative; 
+}
+
+.searchable-select .select-input { 
+  width: 100%; 
+  padding: 14px 16px; 
+  font-size: 15px; 
+  border: 2px solid #e2e8f0; 
+  border-radius: 10px; 
+  cursor: pointer; 
+  background-color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 50px;
+  box-sizing: border-box;
+  font-family: inherit;
+  color: #2d3748;
+  font-weight: 400;
+  position: relative;
+}
+
+.searchable-select .select-input:hover {
+  border-color: #cbd5e0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transform: translateY(-1px);
+}
+
+.searchable-select .select-input.open { 
+  border-color: #3498db; 
+  box-shadow: 
+    0 0 0 3px rgba(52, 152, 219, 0.1),
+    0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.searchable-select .select-input::after {
+  content: '▼';
+  font-size: 12px;
+  color: #718096;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-left: 8px;
+}
+
+.searchable-select .select-input.open::after {
+  transform: rotate(180deg);
+  color: #3498db;
+}
+
+.searchable-select .options { 
+  position: absolute; 
+  top: calc(100% + 6px); 
+  left: 0; 
+  right: 0; 
+  max-height: 240px; 
+  overflow-y: auto; 
+  background: #ffffff; 
+  border: 2px solid #e2e8f0; 
+  border-radius: 10px; 
+  z-index: 1002; 
+  box-shadow: 
+    0 10px 25px rgba(0, 0, 0, 0.1),
+    0 4px 10px rgba(0, 0, 0, 0.05);
+  scrollbar-width: thin;
+  backdrop-filter: blur(8px);
+}
+
+.searchable-select .options.hidden { 
+  display: none; 
+}
+
+.searchable-select .select-option { 
+  padding: 14px 16px; 
+  cursor: pointer; 
+  border-bottom: 1px solid #f7fafc;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 15px;
+  color: #2d3748;
+  font-weight: 400;
+}
+
+.searchable-select .select-option:last-child { 
+  border-bottom: none; 
+}
+
+.searchable-select .select-option:hover { 
+  background-color: #f7fafc; 
+  color: #2d3748;
+  transform: translateX(2px);
+}
+
+.searchable-select .select-option.selected { 
+  background-color: rgba(52, 152, 219, 0.08);
+  color: #3498db;
+  font-weight: 500;
+  border-left: 3px solid #3498db;
+  padding-left: 13px;
+}
+
+
+
+
+/* Button helpers */
+.btn-danger {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-danger:hover {
+  background-color: #c0392b;
+}
+
+.btn-danger-outline {
+  background-color: transparent;
+  color: #e74c3c;
+  border: 2px solid #e74c3c;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.btn-danger-outline:hover {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.btn-success {
+  background: #27ae60; 
+  color: white; 
+  border: none; 
+  padding: 10px 20px; 
+  border-radius: 6px; 
+  cursor: pointer;
+}
+
+
+/* ENHANCED: Validation Error Styles - Optimized */
+.form-group.error input,
+.form-group.error select,
+.form-group.error .select-input {
+  border-color: #dc3545 !important;
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1) !important;
+  background: rgba(220, 53, 69, 0.02) !important;
+}
+
+.form-group.error .gender-radio-option {
+  border-color: #dc3545 !important;
+  background: rgba(220, 53, 69, 0.02) !important;
+}
+
+.error-message {
+  color: #dc3545;
+  font-size: 12px;
+  margin-top: 6px;
+  animation: slideDown 0.2s ease-out;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+
+/* Icon Buttons */
+.icon-button {
+  position: fixed;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  z-index: 1000;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: all 0.2s ease;
+  /* Allow normal touch behavior for buttons */
+  touch-action: auto;
+}
+
+.icon-button:hover {
+  background-color: rgba(255, 255, 255, 1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* View Toggle Icon (upper left) */
+.view-toggle-icon {
+  top: 16px;
+  left: 16px;
+}
+
+/* Settings Icon (upper right) */
+.settings-icon {
+  top: 16px;
+  right: 16px;
+}
+
+.icon {
+  width: 24px;
+  height: 24px;
+  stroke: #333;
+  transition: stroke 0.2s ease;
+}
+
+.icon-button:hover .icon {
+  stroke: #000;
+}
+
+/* ENHANCED: Settings Panel */
+#settingsPanel {
+  position: fixed;
+  top: 70px;
+  right: 16px;
+  width: 320px;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+  backdrop-filter: blur(12px);
+  padding: 24px;
+  z-index: 999;
+  /* Allow normal touch behavior in settings */
+  touch-action: auto;
+  /* Hide scrollbar */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+#settingsPanel::-webkit-scrollbar {
+  display: none;
+}
+
+#settingsPanel h3 { 
+  margin-bottom: 16px; 
+  font-size: 20px; 
+  font-weight: 600;
+  border-bottom: 2px solid #e9ecef;
+  padding-bottom: 8px;
+}
+
+.setting-section {
+  margin-bottom: 20px;
+  padding: 16px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.setting-section h4 {
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #495057;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.setting-group { 
+  margin-bottom: 12px; 
+  display: flex; 
+  align-items: center; 
+  gap: 8px;
+}
+
+.setting-group label { 
+  flex: 1; 
+  font-size: 14px; 
+  font-weight: 500;
+}
+
+.setting-group input,
+.setting-group select,
+.setting-group button { 
+  flex: 1.5; 
+  font-size: 14px; 
+  padding: 6px 12px; 
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+
+.export-group { 
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+
+.export-group button {
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+#settingsPanel button { 
+  background-color: #3498db; 
+  color: #fff; 
+  border: none; 
+  border-radius: 6px; 
+  cursor: pointer; 
+  transition: background-color 0.2s ease;
+}
+
+#settingsPanel button:hover { 
+  background-color: #2980b9; 
+}
+
+.file-label {
+  display: inline-block;
+  flex: 1.5;
+  padding: 6px 12px;
+  background-color: #6c757d;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: center;
+  font-size: 14px;
+  transition: background-color 0.2s ease;
+}
+
+.file-label:hover {
+  background-color: #5a6268;
+}
+
+.file-label span {
+  pointer-events: none;
+}
+
+.file-label input[type="file"] {
+  display: none;
+}
+
+/* Enhanced Settings Panel */
+.collapsible-section {
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.collapsible-header {
+  padding: 12px 16px;
+  background: #f8f9fa;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 8px 8px 0 0;
+  transition: background-color 0.2s ease;
+}
+
+.collapsible-header:hover {
+  background: #e9ecef;
+}
+
+.collapsible-header h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.collapsible-toggle {
+  font-size: 12px;
+  color: #666;
+  transition: transform 0.2s ease;
+}
+
+.collapsible-content {
+  padding: 16px;
+  display: none;
+}
+
+.collapsible-content.expanded {
+  display: block;
+}
+
+.collapsible-header.expanded .collapsible-toggle {
+  transform: rotate(180deg);
+}
+
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.checkbox-item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.checkbox-item label {
+  cursor: pointer;
+  font-size: 14px;
+  margin: 0;
+}
+
+/* Node Style Selection */
+.node-style-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.node-style-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.node-style-option:hover {
+  border-color: #3498db;
+  background-color: #f8f9fa;
+}
+
+.node-style-option.selected {
+  border-color: #3498db;
+  background-color: #e3f2fd;
+}
+
+.node-style-preview {
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #3498db;
+  color: white;
+  font-weight: 600;
+  font-size: 12px;
+  margin-bottom: 8px;
+  border-radius: 50%;
+}
+
+.node-style-preview.circle {
+  border-radius: 50%;
+}
+
+.node-style-preview.rectangle {
+  border-radius: 8px;
+  width: 80px;
+}
+
+.node-style-label {
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* Setting Subsections for Connector Lines */
+.setting-subsection {
+  margin-bottom: 16px;
+  padding: 12px;
+  background-color: #ffffff;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+}
+
+.setting-subsection h5 {
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #495057;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* Enhanced checkbox styling for outline toggle */
+.checkbox-item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #3498db;
+}
+
+.checkbox-item label {
+  cursor: pointer;
+  font-size: 14px;
+  margin: 0;
+  user-select: none;
+}
+
+/* Color picker styling */
+.setting-group input[type="color"] {
+  width: 40px;
+  height: 32px;
+  padding: 2px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Number input styling */
+.setting-group input[type="number"] {
+  min-width: 60px;
+  text-align: center;
+}
+
+/* Select styling */
+.setting-group select {
+  min-width: 100px;
+}
+
+/* Apply button styling for new sections */
+#applyOutlineStyle,
+#applyLineStyles {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+  margin-top: 8px;
+}
+
+#applyOutlineStyle:hover,
+#applyLineStyles:hover {
+  background-color: #218838;
+}
+
+/* Panel helper class */
+.panel {
+  position: fixed;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  z-index: 999;
+}
+
+/* ENHANCED: Zoom Controls - Narrower with Better Design */
+.zoom-controls {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  z-index: 997;
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 12px;
+  padding: 4px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.zoom-display {
+  font-size: 11px;
+  font-weight: 700;
+  color: #6b7280;
+  min-width: 35px;
+  text-align: center;
+  padding: 0 6px;
+  letter-spacing: 0.025em;
+}
+
+.zoom-btn {
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #6b7280;
+  position: relative;
+}
+
+.zoom-btn:hover {
+  background: rgba(52, 152, 219, 0.12);
+  color: #3498db;
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2);
+}
+
+.zoom-btn:active {
+  transform: scale(0.95);
+}
+
+.zoom-btn svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2.5;
+}
+
+.zoom-btn.zoom-reset {
+  margin: 0 2px;
+}
+
+/* ENHANCED: Top Left Toolbar - Narrower with Better Design */
+.top-toolbar {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  z-index: 997;
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 12px;
+  padding: 4px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.toolbar-btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #6b7280;
+  position: relative;
+}
+
+.toolbar-btn:hover {
+  background: rgba(15, 134, 108, 0.12);
+  color: #0f866c;
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(15, 134, 108, 0.2);
+}
+
+.toolbar-btn:active {
+  transform: scale(0.95);
+}
+
+.toolbar-btn svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Export Menu */
+.export-menu {
+  position: fixed;
+  top: 70px;
+  left: 16px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  padding: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  z-index: 999;
+  min-width: 220px;
+  opacity: 1;
+  transform: translateY(0);
+  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.export-menu.hidden {
+  opacity: 0;
+  transform: translateY(-10px);
+  pointer-events: none;
+}
+
+.export-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.export-option:hover {
+  background: rgba(15, 134, 108, 0.1);
+  color: #0f866c;
+}
+
+.export-option svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.export-option span {
+  flex: 1;
+}
+
+/* Floating Action Buttons - UPDATED FOR BRING TO FRONT BUTTON */
+.floating-buttons {
+  position: fixed;
+  bottom: 80px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  z-index: 998;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  /* Allow normal touch behavior for buttons */
+  touch-action: auto;
+}
+
+/* Main button row (undo and add buttons) */
+.floating-buttons .main-buttons {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Removed the blur effect completely */
+.floating-buttons::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0);
+  opacity: 0;
+  transition: all 0.3s ease;
+  pointer-events: none;
+  z-index: 997;
+}
+
+.floating-buttons.expanded::before {
+  background: rgba(0, 0, 0, 0.1);
+  opacity: 1;
+}
+
+.floating-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  position: relative;
+  margin-bottom: 0;
+  outline: none;
+  user-select: none;
+  /* Allow normal touch behavior for buttons */
+  touch-action: auto;
+}
+
+.floating-btn:active {
+  transform: scale(0.95);
+}
+
+/* Undo Button Styles */
+.floating-btn.undo {
+  background-color: #95a5a6;
+  color: #fff;
+  z-index: 1003;
+  box-shadow: 0 4px 12px rgba(149, 165, 166, 0.3);
+}
+
+.floating-btn.undo:hover {
+  background-color: #7f8c8d;
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(149, 165, 166, 0.4);
+}
+
+.floating-btn.undo svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* Primary Button (Add) Styles */
+.floating-btn.primary {
+  background-color: #2ecc71;
+  color: #fff;
+  font-size: 28px;
+  z-index: 1003;
+  transform: rotate(0deg);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 6px 16px rgba(46, 204, 113, 0.3);
+}
+
+.floating-buttons.expanded .floating-btn.primary {
+  transform: rotate(45deg);
+  background-color: #e74c3c;
+  box-shadow: 0 6px 16px rgba(231, 76, 60, 0.3);
+}
+
+.floating-btn.primary:hover { 
+  background-color: #27ae60;
+  transform: scale(1.1) rotate(0deg);
+  box-shadow: 0 8px 20px rgba(46, 204, 113, 0.4);
+}
+
+.floating-buttons.expanded .floating-btn.primary:hover {
+  background-color: #c0392b;
+  transform: scale(1.1) rotate(45deg);
+  box-shadow: 0 8px 20px rgba(231, 76, 60, 0.4);
+}
+
+/* Secondary Buttons */
+.floating-btn.secondary {
+  background-color: #3498db;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  z-index: 1002;
+  opacity: 0;
+  transform: translateY(0px) scale(0);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  position: absolute;
+  right: 0;
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+}
+
+.floating-buttons.expanded .floating-btn.secondary {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Bring to Front Button */
+.floating-btn.bring-front {
+  background-color: #f39c12;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  z-index: 1002;
+  opacity: 0;
+  transform: translateY(0px) scale(0);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  position: absolute;
+  right: 0;
+  box-shadow: 0 4px 12px rgba(243, 156, 18, 0.3);
+}
+
+.floating-buttons.expanded .floating-btn.bring-front {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* UPDATED: Bring to Front Button Positioning (topmost) */
+.floating-buttons.expanded #bringFrontBtn {
+  transform: translateY(-280px) scale(1);
+  transition-delay: 0.05s;
+}
+
+/* UPDATED: Edit Button Positioning (second) */
+.floating-buttons.expanded #editBtn {
+  transform: translateY(-210px) scale(1);
+  transition-delay: 0.1s;
+}
+
+/* UPDATED: Style Button Positioning (third) */
+.floating-buttons.expanded #styleBtn {
+  transform: translateY(-140px) scale(1);
+  transition-delay: 0.15s;
+}
+
+/* UPDATED: Connect Button Positioning (fourth) */
+.floating-buttons.expanded #connectBtn {
+  transform: translateY(-70px) scale(1);
+  transition-delay: 0.2s;
+}
+
+.floating-btn.secondary:hover {
+  background-color: #2980b9;
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(52, 152, 219, 0.4);
+}
+
+.floating-btn.bring-front:hover {
+  background-color: #e67e22;
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(243, 156, 18, 0.4);
+}
+
+/* UPDATED: Bring to Front Button Hover State */
+.floating-buttons.expanded #bringFrontBtn:hover {
+  transform: translateY(-280px) scale(1.1);
+  box-shadow: 0 6px 16px rgba(243, 156, 18, 0.4);
+}
+
+/* UPDATED: Edit Button Hover State */
+.floating-buttons.expanded #editBtn:hover {
+  transform: translateY(-210px) scale(1.1);
+  box-shadow: 0 6px 16px rgba(52, 152, 219, 0.4);
+}
+
+/* UPDATED: Style Button Hover State */
+.floating-buttons.expanded #styleBtn:hover {
+  transform: translateY(-140px) scale(1.1);
+  box-shadow: 0 6px 16px rgba(52, 152, 219, 0.4);
+}
+
+/* UPDATED: Connect Button Hover State */
+.floating-buttons.expanded #connectBtn:hover {
+  transform: translateY(-70px) scale(1.1);
+  box-shadow: 0 6px 16px rgba(52, 152, 219, 0.4);
+}
+
+/* UPDATED: Active States */
+.floating-buttons.expanded #bringFrontBtn:active {
+  transform: translateY(-280px) scale(0.95);
+}
+
+.floating-buttons.expanded #editBtn:active {
+  transform: translateY(-210px) scale(0.95);
+}
+
+.floating-buttons.expanded #styleBtn:active {
+  transform: translateY(-140px) scale(0.95);
+}
+
+.floating-buttons.expanded #connectBtn:active {
+  transform: translateY(-70px) scale(0.95);
+}
+
+/* Hide secondary buttons by default */
+.floating-btn.secondary.hidden,
+.floating-btn.bring-front.hidden {
+  display: none !important;
+}
+
+/* Improved button labels for better UX */
+.floating-btn.secondary,
+.floating-btn.bring-front {
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* Table View Styles */
+#tableControls { 
+  padding: 12px; 
+  background-color: #fff; 
+  display: flex; 
+  gap: 12px; 
+  border-bottom: 1px solid #ddd; 
+}
+
+#tableControls input, #tableControls select { 
+  padding: 8px 12px; 
+  font-size: 14px; 
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+
+#familyTable { 
+  width: 100%; 
+  border-collapse: collapse; 
+  background-color: #fff;
+}
+
+#familyTable th, #familyTable td { 
+  padding: 12px 8px; 
+  text-align: left; 
+  border-bottom: 1px solid #eee; 
+}
+
+#familyTable th { 
+  background-color: #f8f9fa; 
+  font-weight: 600; 
+  position: sticky;
+  top: 0;
+}
+
+#familyTable tbody tr:hover { 
+  background-color: #f8f9fa; 
+}
+
+.table-btn { 
+  padding: 4px 8px; 
+  margin: 2px; 
+  border: none; 
+  border-radius: 4px; 
+  cursor: pointer; 
+  font-size: 12px;
+  font-weight: 500;
+  transition: opacity 0.2s ease;
+}
+
+.table-btn:first-child { 
+  background-color: #3498db; 
+  color: white; 
+}
+
+.table-btn:last-child { 
+  background-color: #e74c3c; 
+  color: white; 
+}
+
+.table-btn:hover { 
+  opacity: 0.8; 
+}
+
+/* ENHANCED: Enhanced Animations */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+/* ENHANCED: Form validation animation */
+.form-group.error {
+  animation: shake 0.5s ease-in-out;
+}
+
+/* SVG Styles - Updated for text inside circles */
+.person-group circle { 
+  stroke: #2c3e50; 
+  stroke-width: 2px; 
+  cursor: grab;
+  transition: all 0.2s ease;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
+.person-group circle:hover {
+  stroke-width: 3px;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
+}
+
+.person-group.selected circle {
+  stroke: #e74c3c;
+  stroke-width: 4px;
+  filter: drop-shadow(0 0 12px rgba(231, 76, 60, 0.6));
+}
+
+/* Text inside circles */
+.person-group text.name { 
+  font-weight: 600; 
+  font-family: 'Inter', sans-serif;
+  pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  dominant-baseline: middle;
+}
+
+.person-group text.birth-name { 
+  font-family: 'Inter', sans-serif;
+  pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  font-style: italic;
+  opacity: 0.9;
+  dominant-baseline: middle;
+}
+
+.person-group text.dob { 
+  font-family: 'Inter', sans-serif;
+  pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  dominant-baseline: middle;
+}
+
+/* Ensure text is readable on colored backgrounds */
+.person-group text {
+  text-rendering: optimizeLegibility;
+  shape-rendering: geometricPrecision;
+}
+
+/* Ensure circles are large enough for text content */
+.person-group circle {
+  min-width: 100px;
+  min-height: 100px;
+}
+
+/* Additional visual improvements */
+.person-group {
+  will-change: transform;
+  /* Allow all touch actions on circles */
+  touch-action: auto;
+}
+
+.person-group circle {
+  will-change: transform;
+  /* Ensure circles can receive all touch events */
+  touch-action: auto;
+  pointer-events: all;
+  /* Improved gradient for depth */
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
+.person-group circle:active {
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
+  transform: scale(0.98);
+}
+
+/* Improved selection state */
+.person-group.selected {
+  transform: scale(1.05);
+  transition: transform 0.2s ease;
+}
+
+.person-group.selected circle {
+  stroke: #e74c3c;
+  stroke-width: 4px;
+  filter: drop-shadow(0 0 12px rgba(231, 76, 60, 0.6));
+}
+
+/* Relation lines updated for new circle sizes */
+.relation { 
+  stroke: #7f8c8d; 
+  stroke-width: 2px; 
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+.relation.spouse { 
+  stroke-dasharray: 4 2; 
+  stroke: #e74c3c;
+  opacity: 0.9;
+}
+
+/* Grid lines remain the same */
+.grid-line {
+  stroke: #f0f0f0;
+  stroke-width: 1px;
+  pointer-events: none;
+}
+
+.grid-line.major {
+  stroke: #e0e0e0;
+  stroke-width: 1px;
+}
+
+/* SVG Container */
+#svgArea {
+  width: 100%;
+  height: 100%;
+  background-color: #fff;
+  cursor: grab;
+  user-select: none;
+  /* Allow touch on circles, prevent on background */
+  touch-action: pan-x pan-y;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  /* Improve rendering performance on mobile */
+  will-change: transform;
+  transform-origin: 0 0;
+}
+
+#svgArea.panning {
+  cursor: grabbing;
+  touch-action: none;
+}
+
+/* Performance optimizations for mobile */
+.person-group {
+  will-change: transform;
+  /* Allow all touch actions on circles */
+  touch-action: auto;
+}
+
+.person-group circle {
+  will-change: transform;
+  /* Ensure circles can receive all touch events */
+  touch-action: auto;
+  pointer-events: all;
+}
+
+
+/* Responsive Design - Mobile First Approach */
+/* Note: Base styles defined above are used for sidebar, zoom controls, and floating buttons */
+/* Only essential mobile-specific overrides are included here to prevent style conflicts */
+@media (max-width: 768px) {
+  /* Mobile cache indicator with better width handling */
+  .cache-indicator {
+    bottom: 8px;
+    left: 8px;
+    font-size: 11px;
+    min-width: 140px; /* Increased for mobile */
+    max-width: 200px; /* Increased max width */
+  }
+  
+  .cache-indicator.expanded {
+    width: 260px; /* Adjusted for mobile */
+    min-height: 120px;
+    max-width: calc(100vw - 32px);
+  }
+
+  #settingsPanel {
+    width: calc(100vw - 32px);
+    right: 16px;
+    left: 16px;
+  }
+  
+  
+  /* ENHANCED: Gender buttons stack on very small screens */
+  .gender-radio-group {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .gender-radio-option {
+    height: 44px; /* Larger touch targets */
+    justify-content: flex-start;
+    padding: 12px 16px;
+  }
+  
+  .floating-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .floating-buttons .main-buttons {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* Floating buttons - use base styles for consistency */
+
+
+  /* Adjust form elements for touch */
+  .form-group input, 
+  .form-group select,
+  .searchable-select .select-input {
+    padding: 14px 16px;
+    font-size: 16px; /* Prevents zoom on iOS */
+    min-height: 48px;
+    box-sizing: border-box;
+  }
+
+  /* Icon buttons - use base styles for consistency */
+
+  /* Improve table for mobile */
+  #familyTable {
+    font-size: 14px;
+  }
+
+  #familyTable th, 
+  #familyTable td {
+    padding: 8px 4px;
+  }
+
+  .table-btn {
+    padding: 8px 12px;
+    min-height: 40px;
+  }
+
+  /* Settings panel improvements */
+  .setting-group input,
+  .setting-group select,
+  .setting-group button {
+    padding: 12px 16px;
+    font-size: 16px;
+    min-height: 48px;
+  }
+
+  /* Sidebar styles removed - using base styles for consistency */
+
+  .search-container {
+    left: 48px;
+  }
+
+  .search-field.expanded {
+    width: 250px;
+  }
+  
+  .node-style-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .notifications-container {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+  }
+
+  .notification {
+    min-width: unset;
+    max-width: unset;
+  }
+  
+  /* UPDATED: Mobile positioning for buttons */
+  .floating-buttons.expanded #bringFrontBtn {
+    transform: translateY(-350px) scale(1);
+    transition-delay: 0.05s;
+  }
+
+  .floating-buttons.expanded #editBtn {
+    transform: translateY(-280px) scale(1);
+    transition-delay: 0.1s;
+  }
+
+  .floating-buttons.expanded #styleBtn {
+    transform: translateY(-210px) scale(1);
+    transition-delay: 0.15s;
+  }
+
+  .floating-buttons.expanded #connectBtn {
+    transform: translateY(-140px) scale(1);
+    transition-delay: 0.2s;
+  }
+
+  /* UPDATED: Mobile hover states */
+  .floating-buttons.expanded #bringFrontBtn:hover {
+    transform: translateY(-350px) scale(1.1);
+  }
+
+  .floating-buttons.expanded #editBtn:hover {
+    transform: translateY(-280px) scale(1.1);
+  }
+
+  .floating-buttons.expanded #styleBtn:hover {
+    transform: translateY(-210px) scale(1.1);
+  }
+
+  .floating-buttons.expanded #connectBtn:hover {
+    transform: translateY(-140px) scale(1.1);
+  }
+
+  /* UPDATED: Mobile active states */
+  .floating-buttons.expanded #bringFrontBtn:active {
+    transform: translateY(-350px) scale(0.95);
+  }
+
+  .floating-buttons.expanded #editBtn:active {
+    transform: translateY(-280px) scale(0.95);
+  }
+
+  .floating-buttons.expanded #styleBtn:active {
+    transform: translateY(-210px) scale(0.95);
+  }
+
+  .floating-buttons.expanded #connectBtn:active {
+    transform: translateY(-140px) scale(0.95);
+  }
+
+  /* Mobile optimizations for text inside circles */
+  .person-group text.name {
+    font-size: 10px !important;
+  }
+  
+  .person-group text.birth-name {
+    font-size: 9px !important;
+  }
+  
+  .person-group text.dob {
+    font-size: 9px !important;
+  }
+  
+  .person-group circle {
+    /* Slightly larger circles on mobile for better touch targets */
+    r: 55;
+  }
+}
+
+/* Additional mobile optimizations - Very Small Screens */
+/* Note: Further reduced sizes only for very small screens (480px and below) */
+@media (max-width: 480px) {
+  /* Zoom controls - minimal positioning adjustments only */
+  .zoom-controls {
+    bottom: 12px;
+    right: 12px;
+  }
+
+  /* All other UI elements use base styles to prevent conflicts */
+
+  
+  .gender-radio-option {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+  
+}
+
+
+/* Enhanced Export Buttons */
+.export-group-enhanced {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.export-btn {
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  background-color: #3498db;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.export-btn:hover {
+  background-color: #2980b9;
+}
+
+.export-btn.advanced {
+  background-color: #9b59b6;
+}
+
+.export-btn.advanced:hover {
+  background-color: #8e44ad;
+}
+
+/* Clear All Section */
+.clear-all-section {
+  border-top: 2px solid #e9ecef;
+  margin-top: 16px;
+  padding-top: 16px;
+}
+
+.clear-all-section h4 {
+  color: #e74c3c;
+  margin-bottom: 12px;
+}
+
+/* Import/Export Enhancement */
+.import-export-enhanced {
+  border: 2px dashed #e9ecef;
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+  margin-bottom: 16px;
+  transition: border-color 0.2s ease;
+}
+
+.import-export-enhanced:hover {
+  border-color: #3498db;
+}
+
+.import-export-enhanced.dragover {
+  border-color: #3498db;
+  background: rgba(52, 152, 219, 0.05);
+}
+
+.format-support {
+  font-size: 12px;
+  color: #666;
+  margin-top: 8px;
+}
+
+/* Settings improvements */
+.setting-group-enhanced {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.setting-group-enhanced label {
+  font-weight: 500;
+  color: #495057;
+  font-size: 14px;
+}
+
+.setting-group-enhanced .help-text {
+  font-size: 12px;
+  color: #6c757d;
+  margin-top: 4px;
+}

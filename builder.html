@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="en" data-i18n-title="builder.meta.title">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title data-i18n="builder.meta.title">MapMyRoots - Build Your Family Tree</title>
+  <meta name="description" content="Interactive family tree builder with drag-and-drop interface. Create, edit, and visualize your family connections with MapMyRoots." data-i18n-content="builder.meta.description">
+  
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-MNZ4MJB7');</script>
+  <!-- End Google Tag Manager -->
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Roboto:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="modal.css" />
+  
+  <!-- Language Switcher Styles -->
+  <style>
+    .language-switcher {
+      position: relative;
+      display: inline-block;
+    }
+    
+    .language-button {
+      background: none;
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 0.5rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      transition: var(--transition);
+      color: var(--text-primary);
+      font-size: 0.9rem;
+    }
+    
+    .language-button:hover {
+      border-color: var(--primary-color);
+      background: rgba(15, 134, 108, 0.05);
+    }
+    
+    .language-dropdown {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background: var(--background-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius-card);
+      box-shadow: var(--shadow);
+      z-index: 1000;
+      min-width: 150px;
+      display: none;
+    }
+    
+    .language-dropdown.open {
+      display: block;
+    }
+    
+    .language-option {
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      transition: var(--transition);
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      color: var(--text-primary);
+    }
+    
+    .language-option:hover {
+      background: var(--background-alt);
+    }
+    
+    .language-option.active {
+      background: rgba(15, 134, 108, 0.1);
+      color: var(--primary-color);
+      font-weight: 600;
+    }
+    
+    .language-flag {
+      font-size: 1.2rem;
+    }
+  </style>
+</head>
+<body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MNZ4MJB7"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
+
+  <!-- Enhanced Cache Indicator with Expandable Info -->
+  <div class="cache-indicator" id="cacheIndicator">
+    <div class="cache-save-indicator" id="saveIndicator" data-i18n="builder.cache.auto_save">Auto-save enabled</div>
+    <div class="cache-expanded-content">
+      <input type="text" class="tree-name-input" id="treeNameInput" placeholder="Enter tree name..." value="My Family Tree" data-i18n-placeholder="builder.cache.tree_name_placeholder">
+      <div class="tree-stats">
+        <div>👥 <span id="personCount">0</span> <span data-i18n="builder.cache.people">people</span></div>
+        <div>🔗 <span id="connectionCount">0</span> <span data-i18n="builder.cache.connections">connections</span></div>
+        <div>💾 <span data-i18n="builder.cache.auto_save_status">Auto-save:</span> <span id="autoSaveStatus" data-i18n="builder.cache.enabled">enabled</span></div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Delete Confirmation Modal -->
+  <div id="deleteConfirmModal" class="modal hidden">
+    <div class="modal-content">
+      <h2 data-i18n="builder.modals.delete_person.title">Delete Person</h2>
+      <p style="margin-bottom: 20px; color: #666;" data-i18n="builder.modals.delete_person.message">Are you sure you want to delete this person? This action cannot be undone.</p>
+      <div class="form-actions">
+        <button type="button" id="cancelDeletePerson" data-i18n="builder.buttons.cancel">Cancel</button>
+        <button type="button" id="confirmDeletePerson" class="btn-danger" data-i18n="builder.modals.delete_person.confirm">Yes, Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Clear All Confirmation Modal -->
+  <div id="clearAllConfirmModal" class="modal hidden">
+    <div class="modal-content">
+      <h2 data-i18n="builder.modals.clear_all.title">Clear All Data</h2>
+      <p style="margin-bottom: 20px; color: #666;" data-i18n="builder.modals.clear_all.message">Are you sure you want to clear all family tree data? This action cannot be undone.</p>
+      <div class="form-actions">
+        <button type="button" id="cancelClearAll" data-i18n="builder.buttons.cancel">Cancel</button>
+        <button type="button" id="confirmClearAll" class="btn-danger" data-i18n="builder.modals.clear_all.confirm">Yes, Clear All</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Enhanced Line Removal Modal -->
+  <div id="lineRemovalModal" class="modal hidden">
+    <div class="modal-content">
+      <h2 data-i18n="builder.modals.line_removal.title">Remove Connection Line</h2>
+      <p style="margin-bottom: 20px; color: #666; font-size: 14px; line-height: 1.5;" data-i18n="builder.modals.line_removal.message">
+        This will hide the visual connection line but preserve the relationship data. 
+        The family relationship will remain intact and can be restored later.
+      </p>
+      <div class="form-actions">
+        <button type="button" id="cancelLineRemoval" data-i18n="builder.buttons.cancel">Cancel</button>
+        <button type="button" id="confirmLineRemoval" class="btn-danger" data-i18n="builder.modals.line_removal.confirm">Hide Line</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notifications Container -->
+  <div class="notifications-container" id="notificationsContainer"></div>
+
+  <!-- Search Container -->
+  <div class="search-container" id="searchContainer">
+    <input type="text" id="searchField" class="search-field" placeholder="Search family members..." data-i18n="builder.search.placeholder">
+    <button class="search-close" id="searchClose">&times;</button>
+    <div class="search-suggestions" id="searchSuggestions"></div>
+  </div>
+
+  <!-- Header with Language Switcher -->
+  <div class="header-controls" style="position: fixed; top: 1rem; right: 1rem; z-index: 200; display: flex; gap: 1rem; align-items: center;">
+    <!-- Language Switcher -->
+    <div class="language-switcher" id="language-switcher">
+      <button class="language-button" id="language-button" aria-label="Select language">
+        <span class="language-flag" id="current-flag">🇺🇸</span>
+        <span id="current-language">EN</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6,9 12,15 18,9"></polyline>
+        </svg>
+      </button>
+      <div class="language-dropdown" id="language-dropdown">
+        <button class="language-option" data-lang="en" data-flag="🇺🇸">
+          <span class="language-flag">🇺🇸</span>
+          <span data-i18n="languages.english">English</span>
+        </button>
+        <button class="language-option" data-lang="es" data-flag="🇪🇸">
+          <span class="language-flag">🇪🇸</span>
+          <span data-i18n="languages.spanish">Español</span>
+        </button>
+        <button class="language-option" data-lang="ru" data-flag="🇷🇺">
+          <span class="language-flag">🇷🇺</span>
+          <span data-i18n="languages.russian">Русский</span>
+        </button>
+        <button class="language-option" data-lang="de" data-flag="🇩🇪">
+          <span class="language-flag">🇩🇪</span>
+          <span data-i18n="languages.german">Deutsch</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vertical Sidebar -->
+  <div class="sidebar">
+    <button class="sidebar-btn" id="homeBtn" data-i18n-title="builder.sidebar.home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        <polyline points="9,22 9,12 15,12 15,22"/>
+      </svg>
+    </button>
+    
+    <div class="sidebar-divider"></div>
+    
+    <button class="sidebar-btn" id="searchBtn" data-i18n-title="builder.sidebar.search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/>
+        <path d="M21 21l-4.35-4.35"/>
+      </svg>
+    </button>
+    
+    <button class="sidebar-btn" id="centerSelectedBtn" data-i18n-title="builder.sidebar.center_selected">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M12 1v6M12 17v6M4.22 4.22l4.24 4.24M15.54 15.54l4.24 4.24M1 12h6M17 12h6M4.22 19.78l4.24-4.24M15.54 8.46l4.24-4.24"/>
+      </svg>
+    </button>
+    
+    <div class="sidebar-divider"></div>
+    
+    <button class="sidebar-btn" id="settingsToggle" data-i18n-title="builder.sidebar.settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="m12 1 1.5 4 3.5-1-1 3.5 4 1.5-4 1.5 1 3.5-3.5-1L12 23l-1.5-4-3.5 1 1-3.5L4 14.5l4-1.5-1-3.5 3.5 1L12 1z"/>
+      </svg>
+    </button>
+    
+    <button class="sidebar-btn" id="viewToggle" data-i18n-title="builder.sidebar.toggle_view">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="7" height="7"/>
+        <rect x="14" y="3" width="7" height="7"/>
+        <rect x="14" y="14" width="7" height="7"/>
+        <rect x="3" y="14" width="7" height="7"/>
+      </svg>
+    </button>
+    
+    <div class="sidebar-divider"></div>
+    
+    <!-- Undo/Redo buttons at bottom of sidebar -->
+    <button class="sidebar-btn" id="undoSidebarBtn" data-i18n-title="builder.sidebar.undo" title="Undo (Ctrl+Z)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 7v6h6"/>
+        <path d="m21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"/>
+      </svg>
+    </button>
+    
+    <button class="sidebar-btn" id="redoSidebarBtn" data-i18n-title="builder.sidebar.redo" title="Redo (Ctrl+Y)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 7v6h-6"/>
+        <path d="m3 17a9 9 0 019-9 9 9 0 016 2.3L21 13"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Enhanced Settings Panel -->
+  <div id="settingsPanel" class="panel hidden">
+    <h3 data-i18n="builder.settings.title">Settings</h3>
+    
+    <!-- Node Style Selection -->
+    <div class="setting-section">
+      <h4 data-i18n="builder.settings.node_style">Node Style</h4>
+      <div class="node-style-grid">
+        <div class="node-style-option selected" data-style="circle">
+          <div class="node-style-preview circle">JD</div>
+          <div class="node-style-label" data-i18n="builder.settings.style_circle">Circle</div>
+        </div>
+        <div class="node-style-option" data-style="rectangle">
+          <div class="node-style-preview rectangle">John Doe</div>
+          <div class="node-style-label" data-i18n="builder.settings.style_rectangle">Rectangle</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Display Preferences -->
+    <div class="collapsible-section">
+      <div class="collapsible-header" data-target="displayPrefs">
+        <h4 data-i18n="builder.settings.display_preferences">Display Preferences</h4>
+        <span class="collapsible-toggle">▼</span>
+      </div>
+      <div class="collapsible-content" id="displayPrefs">
+        <div class="checkbox-group">
+          <div class="checkbox-item">
+            <input type="checkbox" id="showMaidenName" checked>
+            <label for="showMaidenName" data-i18n="builder.settings.show_maiden_name">Show Maiden Name</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="showDateOfBirth" checked>
+            <label for="showDateOfBirth" data-i18n="builder.settings.show_date_of_birth">Show Date of Birth</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="showFatherName" checked>
+            <label for="showFatherName" data-i18n="builder.settings.show_father_name">Show Father's Name</label>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Node Settings -->
+    <div class="setting-section">
+      <h4 data-i18n="builder.settings.node_appearance">Node Appearance</h4>
+      <div class="setting-group">
+        <label for="nodeColorPicker" data-i18n="builder.settings.node_color">Node Color:</label>
+        <input type="color" id="nodeColorPicker" value="#3498db" />
+      </div>
+      <div class="setting-group">
+        <label for="nodeSizeInput" data-i18n="builder.settings.node_size">Node Size:</label>
+        <input type="number" id="nodeSizeInput" min="10" max="100" value="40" />
+      </div>
+      <div class="setting-group">
+        <button id="applyNodeStyle" data-i18n="builder.settings.apply">Apply</button>
+      </div>
+    </div>
+
+    <!-- Node Outline Settings -->
+    <div class="setting-section">
+      <h4 data-i18n="builder.settings.node_outline">Node Outline</h4>
+      <div class="setting-group">
+        <div class="checkbox-item">
+          <input type="checkbox" id="showNodeOutline" checked>
+          <label for="showNodeOutline" data-i18n="builder.settings.show_outline">Show Outline</label>
+        </div>
+      </div>
+      <div class="setting-group">
+        <label for="outlineThicknessInput" data-i18n="builder.settings.outline_thickness">Outline Thickness:</label>
+        <input type="number" id="outlineThicknessInput" min="0" max="10" value="2" />
+      </div>
+      <div class="setting-group">
+        <label for="outlineColorPicker" data-i18n="builder.settings.outline_color">Outline Color:</label>
+        <input type="color" id="outlineColorPicker" value="#2c3e50" />
+      </div>
+      <div class="setting-group">
+        <button id="applyOutlineStyle" data-i18n="builder.settings.apply">Apply</button>
+      </div>
+    </div>
+
+    <!-- Connector Line Settings -->
+    <div class="setting-section">
+      <h4 data-i18n="builder.settings.connector_lines">Connector Lines</h4>
+      
+      <!-- Family Connection Lines -->
+      <div class="setting-subsection">
+        <h5 data-i18n="builder.settings.family_connections">Family Connections</h5>
+        <div class="setting-group">
+          <label for="familyLineStyleSelect" data-i18n="builder.settings.line_style">Line Style:</label>
+          <select id="familyLineStyleSelect">
+            <option value="solid" data-i18n="builder.settings.style_solid">Solid</option>
+            <option value="dashed" data-i18n="builder.settings.style_dashed">Dashed</option>
+            <option value="dotted" data-i18n="builder.settings.style_dotted">Dotted</option>
+            <option value="dash-dot" data-i18n="builder.settings.style_dash_dot">Dash-Dot</option>
+          </select>
+        </div>
+        <div class="setting-group">
+          <label for="familyLineThicknessInput" data-i18n="builder.settings.line_thickness">Line Thickness:</label>
+          <input type="number" id="familyLineThicknessInput" min="1" max="10" value="2" />
+        </div>
+        <div class="setting-group">
+          <label for="familyLineColorPicker" data-i18n="builder.settings.line_color">Line Color:</label>
+          <input type="color" id="familyLineColorPicker" value="#7f8c8d" />
+        </div>
+      </div>
+
+      <!-- Spouse Connection Lines -->
+      <div class="setting-subsection">
+        <h5 data-i18n="builder.settings.spouse_connections">Spouse Connections</h5>
+        <div class="setting-group">
+          <label for="spouseLineStyleSelect" data-i18n="builder.settings.line_style">Line Style:</label>
+          <select id="spouseLineStyleSelect">
+            <option value="solid" data-i18n="builder.settings.style_solid">Solid</option>
+            <option value="dashed" data-i18n="builder.settings.style_dashed">Dashed</option>
+            <option value="dotted" data-i18n="builder.settings.style_dotted">Dotted</option>
+            <option value="dash-dot" data-i18n="builder.settings.style_dash_dot">Dash-Dot</option>
+          </select>
+        </div>
+        <div class="setting-group">
+          <label for="spouseLineThicknessInput" data-i18n="builder.settings.line_thickness">Line Thickness:</label>
+          <input type="number" id="spouseLineThicknessInput" min="1" max="10" value="2" />
+        </div>
+        <div class="setting-group">
+          <label for="spouseLineColorPicker" data-i18n="builder.settings.line_color">Line Color:</label>
+          <input type="color" id="spouseLineColorPicker" value="#e74c3c" />
+        </div>
+      </div>
+
+      <!-- Line-Only Connections -->
+      <div class="setting-subsection">
+        <h5 data-i18n="builder.settings.line_only_connections">Line-Only Connections</h5>
+        <div class="setting-group">
+          <label for="lineOnlyStyleSelect" data-i18n="builder.settings.line_style">Line Style:</label>
+          <select id="lineOnlyStyleSelect">
+            <option value="solid" data-i18n="builder.settings.style_solid">Solid</option>
+            <option value="dashed" data-i18n="builder.settings.style_dashed">Dashed</option>
+            <option value="dotted" data-i18n="builder.settings.style_dotted">Dotted</option>
+            <option value="dash-dot" data-i18n="builder.settings.style_dash_dot">Dash-Dot</option>
+          </select>
+        </div>
+        <div class="setting-group">
+          <label for="lineOnlyThicknessInput" data-i18n="builder.settings.line_thickness">Line Thickness:</label>
+          <input type="number" id="lineOnlyThicknessInput" min="1" max="10" value="2" />
+        </div>
+        <div class="setting-group">
+          <label for="lineOnlyColorPicker" data-i18n="builder.settings.line_color">Line Color:</label>
+          <input type="color" id="lineOnlyColorPicker" value="#9b59b6" />
+        </div>
+      </div>
+
+      <div class="setting-group">
+        <button id="applyLineStyles" data-i18n="builder.settings.apply">Apply Line Styles</button>
+      </div>
+    </div>
+
+    <!-- Font Settings -->
+    <div class="setting-section">
+      <h4 data-i18n="builder.settings.text_settings">Text Settings</h4>
+      <div class="setting-group">
+        <label for="fontSelect" data-i18n="builder.settings.font">Font:</label>
+        <select id="fontSelect">
+          <optgroup label="Modern Sans-Serif">
+            <option value="Inter">Inter</option>
+            <option value="Roboto">Roboto</option>
+            <option value="Lato">Lato</option>
+            <option value="Montserrat">Montserrat</option>
+            <option value="Poppins">Poppins</option>
+            <option value="Open Sans">Open Sans</option>
+          </optgroup>
+          <optgroup label="Serif">
+            <option value="Merriweather">Merriweather</option>
+            <option value="Playfair Display">Playfair Display</option>
+            <option value="Roboto Slab">Roboto Slab</option>
+          </optgroup>
+          <optgroup label="Monospace">
+            <option value="Courier New">Courier New</option>
+            <option value="Roboto Mono">Roboto Mono</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="setting-group">
+        <label for="fontSizeInput" data-i18n="builder.settings.font_size">Font Size:</label>
+        <input type="number" id="fontSizeInput" min="6" max="72" value="14" />
+      </div>
+      <div class="setting-group">
+        <label for="nameColorPicker" data-i18n="builder.settings.name_color">Name Color:</label>
+        <input type="color" id="nameColorPicker" value="#333333" />
+      </div>
+      <div class="setting-group">
+        <label for="dateColorPicker" data-i18n="builder.settings.date_color">Date Color:</label>
+        <input type="color" id="dateColorPicker" value="#757575" />
+      </div>
+    </div>
+
+
+    <!-- Enhanced Data Settings with Import/Export -->
+    <div class="setting-section">
+      <h4 data-i18n="builder.settings.data_management">Data Management</h4>
+      
+      <!-- Enhanced Import/Export Area -->
+      <div class="import-export-enhanced" id="importExportArea">
+        <div class="setting-group">
+          <button id="saveData" data-i18n="builder.settings.save_family_tree">Save Family Tree</button>
+          <label for="loadData" class="file-label">
+            <span data-i18n="builder.settings.load_family_tree">Load Family Tree</span>
+            <input type="file" id="loadData" accept=".json" />
+          </label>
+        </div>
+        <div class="format-support" data-i18n="builder.settings.format_support">
+          Supports JSON format files
+        </div>
+      </div>
+      
+      <!-- Auto-save Controls will be added here by JavaScript -->
+    </div>
+
+    <!-- Clear All Section -->
+    <div class="setting-section clear-all-section">
+      <h4 data-i18n="builder.settings.reset">Reset</h4>
+      <div class="setting-group">
+        <button id="clearAllBtn" class="btn-danger-outline" data-i18n="builder.settings.clear_all_data">Clear All Data</button>
+      </div>
+      <div class="format-support" data-i18n="builder.settings.clear_warning">
+        Warning: This will permanently delete all family tree data
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Container -->
+  <div id="mainContainer">
+    <!-- Graphic View -->
+    <div id="graphicView">
+      <svg id="svgArea"></svg>
+    </div>
+
+    <!-- Table View (initially hidden) -->
+    <div id="tableView" class="hidden">
+      <div id="tableControls">
+        <input type="text" id="searchInput" placeholder="Search..." data-i18n="builder.table.search_placeholder" />
+        <select id="sortSelect">
+          <option value="name" data-i18n="builder.table.sort_name">Name</option>
+          <option value="fatherName" data-i18n="builder.table.sort_father_name">Father's Name</option>
+          <option value="surname" data-i18n="builder.table.sort_surname">Surname</option>
+          <option value="dob" data-i18n="builder.table.sort_dob">Date of Birth</option>
+          <option value="gender" data-i18n="builder.table.sort_gender">Gender</option>
+        </select>
+      </div>
+      <table id="familyTable">
+        <thead>
+          <tr>
+            <th data-i18n="builder.table.header_name">Name</th>
+            <th data-i18n="builder.table.header_father_name">Father's Name</th>
+            <th data-i18n="builder.table.header_surname">Surname</th>
+            <th data-i18n="builder.table.header_maiden_name">Maiden Name</th>
+            <th data-i18n="builder.table.header_dob">Date of Birth</th>
+            <th data-i18n="builder.table.header_gender">Gender</th>
+            <th data-i18n="builder.table.header_mother">Mother</th>
+            <th data-i18n="builder.table.header_father">Father</th>
+            <th data-i18n="builder.table.header_spouse">Spouse</th>
+            <th data-i18n="builder.table.header_actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="familyTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Zoom Controls (Bottom Right) -->
+  <div class="zoom-controls">
+    <button id="zoomOutControl" class="zoom-btn" title="Zoom Out (Ctrl + -)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/>
+        <path d="m21 21-4.35-4.35"/>
+        <line x1="8" y1="11" x2="14" y2="11"/>
+      </svg>
+    </button>
+    <div class="zoom-display" id="zoomDisplay">100%</div>
+    <button id="zoomInControl" class="zoom-btn" title="Zoom In (Ctrl + +)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/>
+        <path d="m21 21-4.35-4.35"/>
+        <line x1="11" y1="8" x2="11" y2="14"/>
+        <line x1="8" y1="11" x2="14" y2="11"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Top Left Toolbar -->
+  <div class="top-toolbar">
+    <button id="saveBtn" class="toolbar-btn" title="Save Family Tree">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+        <polyline points="17,21 17,13 7,13 7,21"/>
+        <polyline points="7,3 7,8 15,8"/>
+      </svg>
+    </button>
+    <button id="loadBtn" class="toolbar-btn" title="Load Family Tree">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14,2 14,8 20,8"/>
+        <line x1="16" y1="13" x2="8" y2="13"/>
+        <line x1="16" y1="17" x2="8" y2="17"/>
+        <polyline points="10,9 9,9 8,9"/>
+      </svg>
+    </button>
+    <button id="exportBtn" class="toolbar-btn" title="Export Family Tree">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7,10 12,15 17,10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Export Menu -->
+  <div id="exportMenu" class="export-menu hidden">
+    <div class="export-option" data-format="svg">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="13,2 3,14 12,14 11,22 21,10 12,10"/>
+      </svg>
+      <span>SVG</span>
+    </div>
+    <div class="export-option" data-format="png">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+        <circle cx="8.5" cy="8.5" r="1.5"/>
+        <polyline points="21,15 16,10 5,21"/>
+      </svg>
+      <span>PNG</span>
+    </div>
+    <div class="export-option" data-format="png-transparent">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+        <circle cx="8.5" cy="8.5" r="1.5"/>
+        <polyline points="21,15 16,10 5,21"/>
+        <line x1="3" y1="21" x2="21" y2="3" stroke-dasharray="2,2"/>
+      </svg>
+      <span>PNG (No BG)</span>
+    </div>
+    <div class="export-option" data-format="jpeg">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+        <circle cx="8.5" cy="8.5" r="1.5"/>
+        <polyline points="21,15 16,10 5,21"/>
+      </svg>
+      <span>JPEG</span>
+    </div>
+    <div class="export-option" data-format="pdf">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14,2 14,8 20,8"/>
+        <line x1="16" y1="13" x2="8" y2="13"/>
+        <line x1="16" y1="17" x2="8" y2="17"/>
+        <polyline points="10,9 9,9 8,9"/>
+      </svg>
+      <span>PDF</span>
+    </div>
+    <div class="export-option" data-format="gedcom">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 6L9 17l-5-5"/>
+      </svg>
+      <span>GEDCOM</span>
+    </div>
+  </div>
+
+  <!-- Enhanced Floating Action Buttons with Bring to Front -->
+  <div class="floating-buttons">
+    <button id="bringFrontBtn" class="floating-btn bring-front hidden" data-i18n="builder.buttons.bring_front">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+        <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm2 4v-2H3c0 1.1.89 2 2 2zM3 9h2V7H3v2zm12 12h2v-2h-2v2zm4-18H9c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 12H9V5h10v10zm-8 6h2v-2h-2v2zm-4 0h2v-2H7v2z"/>
+      </svg>
+    </button>
+    <button id="editBtn" class="floating-btn secondary hidden" data-i18n="builder.buttons.edit">Edit</button>
+    <button id="styleBtn" class="floating-btn secondary hidden" data-i18n="builder.buttons.style">Style</button>
+    <button id="connectBtn" class="floating-btn secondary hidden" data-i18n="builder.buttons.link">Link</button>
+    <div class="main-buttons">
+      <button id="addPersonBtn" class="floating-btn primary">+</button>
+    </div>
+  </div>
+
+  <!-- Connection Modal - UPDATED with Line Only option -->
+  <div id="connectionModal" class="modal hidden">
+    <div class="modal-content">
+      <h2 id="connectionModalTitle" data-i18n="builder.modals.connection.title">Connect People</h2>
+      <div class="connection-content">
+        <p id="connectionText" data-i18n="builder.modals.connection.text">Person A is __ to Person B</p>
+        <div class="connection-buttons">
+          <button type="button" id="motherBtn" class="connection-btn" data-i18n="builder.modals.connection.mother">Mother</button>
+          <button type="button" id="fatherBtn" class="connection-btn" data-i18n="builder.modals.connection.father">Father</button>
+          <button type="button" id="childBtn" class="connection-btn" data-i18n="builder.modals.connection.child">Child</button>
+          <button type="button" id="spouseBtn" class="connection-btn" data-i18n="builder.modals.connection.spouse">Spouse</button>
+          <button type="button" id="lineOnlyBtn" class="connection-btn line-only" data-i18n="builder.modals.connection.line_only">Line only</button>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="button" id="cancelConnectionModal" data-i18n="builder.buttons.cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Style Modal for Selected Circles -->
+  <div id="styleModal" class="modal hidden">
+    <div class="modal-content">
+      <h2 id="styleModalTitle" data-i18n="builder.modals.style.title">Style Selected Circles</h2>
+      <div class="modal-body">
+        <form id="styleForm">
+          <!-- Node Settings -->
+          <div class="setting-section">
+            <h4 data-i18n="builder.settings.node_appearance">Node Appearance</h4>
+            <div class="setting-group">
+              <label for="selectedNodeColor" data-i18n="builder.settings.node_color">Node Color:</label>
+              <input type="color" id="selectedNodeColor" value="#3498db" />
+            </div>
+            <div class="setting-group">
+              <label for="selectedNodeSize" data-i18n="builder.settings.node_size">Node Size:</label>
+              <input type="number" id="selectedNodeSize" min="10" max="100" value="40" />
+            </div>
+          </div>
+
+          <!-- Font Settings -->
+          <div class="setting-section">
+            <h4 data-i18n="builder.settings.text_settings">Text Settings</h4>
+            <div class="setting-group">
+              <label for="selectedFont" data-i18n="builder.settings.font">Font:</label>
+              <select id="selectedFont">
+                <optgroup label="Modern Sans-Serif">
+                  <option value="Inter">Inter</option>
+                  <option value="Roboto">Roboto</option>
+                  <option value="Lato">Lato</option>
+                  <option value="Montserrat">Montserrat</option>
+                  <option value="Poppins">Poppins</option>
+                  <option value="Open Sans">Open Sans</option>
+                </optgroup>
+                <optgroup label="Serif">
+                  <option value="Merriweather">Merriweather</option>
+                  <option value="Playfair Display">Playfair Display</option>
+                  <option value="Roboto Slab">Roboto Slab</option>
+                </optgroup>
+                <optgroup label="Monospace">
+                  <option value="Courier New">Courier New</option>
+                  <option value="Roboto Mono">Roboto Mono</option>
+                </optgroup>
+              </select>
+            </div>
+            <div class="setting-group">
+              <label for="selectedFontSize" data-i18n="builder.settings.font_size">Font Size:</label>
+              <input type="number" id="selectedFontSize" min="6" max="72" value="14" />
+            </div>
+            <div class="setting-group">
+              <label for="selectedNameColor" data-i18n="builder.settings.name_color">Name Color:</label>
+              <input type="color" id="selectedNameColor" value="#333333" />
+            </div>
+            <div class="setting-group">
+              <label for="selectedDateColor" data-i18n="builder.settings.date_color">Date Color:</label>
+              <input type="color" id="selectedDateColor" value="#757575" />
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="form-actions">
+        <button type="button" id="cancelStyleModal" data-i18n="builder.buttons.cancel">Cancel</button>
+        <button type="submit" id="applySelectedStyle" data-i18n="builder.settings.apply">Apply</button>
+      </div>
+    </div>
+  </div>
+
+<!-- Person Modal (Enhanced with Radio Buttons, Sticky Buttons, and Delete) -->
+  <div id="personModal" class="modal hidden">
+    <div class="modal-content">
+      <h2 id="modalTitle" data-i18n="builder.modals.person.add_title">Add Person</h2>
+      <div class="modal-body">
+        <form id="personForm">
+          <!-- Gender Radio Buttons at Top -->
+          <div class="form-group">
+            <label data-i18n="builder.form.gender">Gender <span class="required">*</span></label>
+            <div class="gender-radio-group">
+              <div class="gender-radio-option">
+                <input type="radio" id="genderMale" name="personGender" value="male" required />
+                <label for="genderMale" data-i18n="builder.form.gender_male">Male</label>
+              </div>
+              <div class="gender-radio-option">
+                <input type="radio" id="genderFemale" name="personGender" value="female" required />
+                <label for="genderFemale" data-i18n="builder.form.gender_female">Female</label>
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="personName" data-i18n="builder.form.given_name">Given Name <span class="required">*</span></label>
+            <input type="text" id="personName" required />
+          </div>
+          <div class="form-group">
+            <label for="personFatherName" data-i18n="builder.form.father_name">Father's Name</label>
+            <input type="text" id="personFatherName" placeholder="Father's given name" data-i18n="builder.form.father_name_placeholder" />
+            <small class="help-text" data-i18n="builder.form.father_name_help">Father's given name (not surname)</small>
+          </div>
+          <div class="form-group">
+            <label for="personSurname" data-i18n="builder.form.surname">Surname</label>
+            <input type="text" id="personSurname" />
+          </div>
+          <div class="form-group">
+            <label for="personMaidenName" data-i18n="builder.form.maiden_name">Maiden Name</label>
+            <input type="text" id="personMaidenName" />
+          </div>
+          <div class="form-group">
+            <label for="personDob" data-i18n="builder.form.date_of_birth">Date of Birth</label>
+            <input type="text" id="personDob" placeholder="dd.mm.yyyy or yyyy" data-i18n="builder.form.dob_placeholder" />
+            <small class="help-text" data-i18n="builder.form.dob_help">Enter full date dd.mm.yyyy or just year yyyy</small>
+          </div>
+          <div class="form-group">
+            <label data-i18n="builder.form.mother">Mother</label>
+            <div class="searchable-select" id="motherSelect"></div>
+          </div>
+          <div class="form-group">
+            <label data-i18n="builder.form.father">Father</label>
+            <div class="searchable-select" id="fatherSelect"></div>
+          </div>
+          <div class="form-group">
+            <label data-i18n="builder.form.spouse">Spouse</label>
+            <div class="searchable-select" id="spouseSelect"></div>
+          </div>
+        </form>
+      </div>
+      <div class="form-actions">
+        <button type="button" id="deletePersonBtn" class="btn-danger hidden" data-i18n="builder.buttons.delete">Delete</button>
+        <div class="form-actions-right">
+          <button type="button" id="cancelModal" data-i18n="builder.buttons.cancel">Cancel</button>
+          <button type="submit" id="savePerson" data-i18n="builder.buttons.save">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- i18n Script -->
+  <script src="./i18n.js"></script>
+  <!-- Language Switcher -->
+  <script src="./language-switcher.js"></script>
+  
+  <!-- Scripts as ES modules -->
+  <script type="module" src="searchableSelect.js"></script>
+  <script type="module" src="modal.js"></script>
+  <script type="module" src="tree.js"></script>
+  <script type="module" src="table.js"></script>
+  <script type="module" src="exporter.js"></script>
+  <script type="module" src="notifications.js"></script>
+  <script type="module" src="search.js"></script>
+  
+  <script type="module">
+    import { rebuildTableView } from './table.js';
+    
+    // Enhanced App Initialization with i18n support
+    document.addEventListener('DOMContentLoaded', async () => {
+      console.log('🌍 Initializing family tree builder with i18n...');
+      
+      // Initialize i18n first
+      if (window.i18n) {
+        try {
+          await window.i18n.init();
+          console.log('✅ i18n initialized in builder');
+        } catch (error) {
+          console.error('❌ i18n initialization failed:', error);
+        }
+      }
+      
+      // Setup drag and drop for file import
+      setupDragAndDrop();
+      
+      // Setup cache indicator updates
+      setupCacheIndicator();
+      
+      // Wait for tree core to be ready, then initialize sidebar
+      setTimeout(() => {
+        initializeSidebar();
+        initializeEnhancedSettings();
+        initializeEnhancedCacheIndicator();
+      }, 1000);
+    });
+    
+    function setupDragAndDrop() {
+      const importExportArea = document.getElementById('importExportArea');
+      if (!importExportArea) return;
+      
+      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        importExportArea.addEventListener(eventName, preventDefaults, false);
+      });
+      
+      function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      
+      ['dragenter', 'dragover'].forEach(eventName => {
+        importExportArea.addEventListener(eventName, highlight, false);
+      });
+      
+      ['dragleave', 'drop'].forEach(eventName => {
+        importExportArea.addEventListener(eventName, unhighlight, false);
+      });
+      
+      function highlight(e) {
+        importExportArea.classList.add('dragover');
+      }
+      
+      function unhighlight(e) {
+        importExportArea.classList.remove('dragover');
+      }
+      
+      importExportArea.addEventListener('drop', handleDrop, false);
+      
+      function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        
+        if (files.length > 0) {
+          const file = files[0];
+          if (file.type === 'application/json' || file.name.endsWith('.json')) {
+            // Trigger the file input change event
+            const loadDataInput = document.getElementById('loadData');
+            if (loadDataInput) {
+              // Create a new FileList
+              const fileList = new DataTransfer();
+              fileList.items.add(file);
+              loadDataInput.files = fileList.files;
+              
+              // Trigger change event
+              const event = new Event('change', { bubbles: true });
+              loadDataInput.dispatchEvent(event);
+            }
+          } else {
+            import('./notifications.js').then(({ notifications }) => {
+              const errorTitle = window.i18n ? window.i18n.t('builder.notifications.invalid_file') : 'Invalid File';
+              const errorMessage = window.i18n ? window.i18n.t('builder.notifications.drop_json') : 'Please drop a JSON file';
+              notifications.error(errorTitle, errorMessage);
+            });
+          }
+        }
+      }
+    }
+    
+    function setupCacheIndicator() {
+      // Update cache indicator based on system state
+      const cacheIndicator = document.getElementById('cacheIndicator');
+      if (!cacheIndicator) return;
+      
+      // Listen for save events
+      window.addEventListener('storage', (e) => {
+        if (e.key && e.key.includes('familyTreeCanvas')) {
+          const saveIndicator = document.getElementById('saveIndicator');
+          if (saveIndicator) {
+            const savedText = window.i18n ? window.i18n.t('builder.cache.saved') : 'Saved';
+            saveIndicator.textContent = `${savedText}: ${new Date().toLocaleTimeString()}`;
+            cacheIndicator.classList.add('saving');
+            
+            setTimeout(() => {
+              cacheIndicator.classList.remove('saving');
+            }, 2000);
+          }
+        }
+      });
+      
+      // Check for cached data on load
+      setTimeout(() => {
+        const cachedData = localStorage.getItem('familyTreeCanvas_state');
+        if (cachedData) {
+          const saveIndicator = document.getElementById('saveIndicator');
+          if (saveIndicator) {
+            try {
+              const data = JSON.parse(cachedData);
+              const lastSave = new Date(data.timestamp);
+              const lastSavedText = window.i18n ? window.i18n.t('builder.cache.last_saved') : 'Last saved';
+              saveIndicator.textContent = `${lastSavedText}: ${lastSave.toLocaleTimeString()}`;
+            } catch (error) {
+              const cachedText = window.i18n ? window.i18n.t('builder.cache.cached_available') : 'Cached data available';
+              saveIndicator.textContent = cachedText;
+            }
+          }
+        }
+      }, 2000);
+    }
+
+    // Enhanced Cache Indicator Class
+    function initializeEnhancedCacheIndicator() {
+      class EnhancedCacheIndicator {
+        constructor() {
+          this.indicator = document.getElementById('cacheIndicator');
+          this.saveIndicator = document.getElementById('saveIndicator');
+          this.treeNameInput = document.getElementById('treeNameInput');
+          this.personCount = document.getElementById('personCount');
+          this.connectionCount = document.getElementById('connectionCount');
+          this.autoSaveStatus = document.getElementById('autoSaveStatus');
+          this.expandTimeout = null;
+          this.isExpanded = false;
+          
+          this.init();
+        }
+        
+        init() {
+          if (this.indicator) {
+            this.indicator.addEventListener('click', () => this.toggleExpand());
+            this.indicator.addEventListener('mouseleave', () => this.scheduleCollapse());
+            
+            // Prevent collapse when hovering over expanded content
+            this.indicator.addEventListener('mouseenter', () => {
+              if (this.expandTimeout) {
+                clearTimeout(this.expandTimeout);
+                this.expandTimeout = null;
+              }
+            });
+          }
+          
+          if (this.treeNameInput) {
+            this.treeNameInput.addEventListener('change', () => this.saveTreeName());
+            this.treeNameInput.addEventListener('blur', () => this.saveTreeName());
+          }
+          
+          this.updateStats();
+          this.loadTreeName();
+        }
+        
+        toggleExpand() {
+          this.isExpanded = !this.isExpanded;
+          
+          if (this.isExpanded) {
+            this.indicator.classList.add('expanded');
+            this.updateStats();
+            this.scheduleCollapse(4000); // Auto-collapse after 4 seconds
+          } else {
+            this.indicator.classList.remove('expanded');
+            if (this.expandTimeout) {
+              clearTimeout(this.expandTimeout);
+              this.expandTimeout = null;
+            }
+          }
+        }
+        
+        scheduleCollapse(delay = 500) {
+          if (this.expandTimeout) {
+            clearTimeout(this.expandTimeout);
+          }
+          
+          this.expandTimeout = setTimeout(() => {
+            if (this.isExpanded) {
+              this.isExpanded = false;
+              this.indicator.classList.remove('expanded');
+            }
+          }, delay);
+        }
+        
+        updateStats() {
+          // Get stats from tree core if available
+          if (window.treeCore) {
+            const personCount = window.treeCore.renderer?.nodes.size || 0;
+            const connectionCount = window.treeCore.renderer?.connections.length || 0;
+            
+            if (this.personCount) this.personCount.textContent = personCount;
+            if (this.connectionCount) this.connectionCount.textContent = connectionCount;
+          }
+        }
+        
+        saveTreeName() {
+          if (this.treeNameInput) {
+            const treeName = this.treeNameInput.value.trim() || 'My Family Tree';
+            localStorage.setItem('familyTree_treeName', treeName);
+          }
+        }
+        
+        loadTreeName() {
+          const savedName = localStorage.getItem('familyTree_treeName') || 'My Family Tree';
+          if (this.treeNameInput) {
+            this.treeNameInput.value = savedName;
+          }
+        }
+        
+        updateSaveStatus(status, time) {
+          if (this.saveIndicator) {
+            this.saveIndicator.textContent = `${status}: ${time}`;
+          }
+        }
+      }
+
+      // Initialize the enhanced cache indicator
+      window.enhancedCacheIndicator = new EnhancedCacheIndicator();
+    }
+    
+    let currentView = 'graphic';
+    
+    function initializeSidebar() {
+      console.log('Initializing enhanced sidebar...');
+      
+      // Home button
+      const homeBtn = document.getElementById('homeBtn');
+      if (homeBtn) {
+        homeBtn.addEventListener('click', () => {
+          console.log('Home button clicked');
+          window.location.href = 'index.html';
+        });
+        console.log('Home button initialized');
+      }
+
+      // Center selected button
+      const centerSelectedBtn = document.getElementById('centerSelectedBtn');
+      if (centerSelectedBtn) {
+        centerSelectedBtn.addEventListener('click', () => {
+          console.log('Center selected button clicked');
+          const treeCore = window.treeCore;
+          if (treeCore && typeof treeCore.centerSelectedNode === 'function') {
+            treeCore.centerSelectedNode();
+          } else {
+            console.error('Tree core not available for centering');
+            notifications.error('Tree Core Not Ready', 'Please wait for the family tree to load completely');
+          }
+        });
+        console.log('Center selected button initialized');
+      }
+      
+      // Zoom buttons - improved to work with canvas
+      const zoomInBtn = document.getElementById('zoomInBtn');
+      if (zoomInBtn) {
+        zoomInBtn.addEventListener('click', () => {
+          console.log('Zoom in button clicked');
+          triggerCanvasZoom(-100);
+        });
+        console.log('Zoom in button initialized');
+      }
+      
+      const zoomOutBtn = document.getElementById('zoomOutBtn');
+      if (zoomOutBtn) {
+        zoomOutBtn.addEventListener('click', () => {
+          console.log('Zoom out button clicked');
+          triggerCanvasZoom(100);
+        });
+        console.log('Zoom out button initialized');
+      }
+      
+      // Settings toggle
+      const settingsToggle = document.getElementById('settingsToggle');
+      const settingsPanel = document.getElementById('settingsPanel');
+      
+      if (settingsToggle && settingsPanel) {
+        settingsToggle.addEventListener('click', (e) => {
+          e.stopPropagation();
+          console.log('Settings toggle clicked');
+          const isHidden = settingsPanel.classList.contains('hidden');
+          settingsPanel.classList.toggle('hidden');
+          settingsToggle.classList.toggle('active');
+          console.log('Settings panel', isHidden ? 'opened' : 'closed');
+        });
+        
+        // Close settings when clicking outside
+        document.addEventListener('click', (e) => {
+          if (!settingsPanel.contains(e.target) && !settingsToggle.contains(e.target)) {
+            if (!settingsPanel.classList.contains('hidden')) {
+              settingsPanel.classList.add('hidden');
+              settingsToggle.classList.remove('active');
+            }
+          }
+        });
+        
+        console.log('Settings toggle initialized');
+      }
+      
+      // View toggle
+      const viewToggle = document.getElementById('viewToggle');
+      if (viewToggle) {
+        viewToggle.addEventListener('click', () => {
+          console.log('View toggle clicked');
+          toggleView();
+        });
+        console.log('View toggle initialized');
+      }
+    }
+    
+    function triggerCanvasZoom(deltaY) {
+      console.log('Triggering canvas zoom:', deltaY);
+      
+      const graphicView = document.getElementById('graphicView');
+      const canvas = graphicView?.querySelector('canvas');
+      
+      if (canvas) {
+        console.log('Found canvas, triggering zoom');
+        const rect = canvas.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        
+        const wheelEvent = new WheelEvent('wheel', {
+          deltaY: deltaY,
+          clientX: centerX,
+          clientY: centerY,
+          bubbles: true,
+          cancelable: true
+        });
+        
+        canvas.dispatchEvent(wheelEvent);
+      } else {
+        console.log('Canvas not found, trying SVG fallback');
+        const svgArea = document.getElementById('svgArea');
+        if (svgArea) {
+          const rect = svgArea.getBoundingClientRect();
+          const centerX = rect.left + rect.width / 2;
+          const centerY = rect.top + rect.height / 2;
+          
+          const wheelEvent = new WheelEvent('wheel', {
+            deltaY: deltaY,
+            clientX: centerX,
+            clientY: centerY,
+            bubbles: true,
+            cancelable: true
+          });
+          
+          svgArea.dispatchEvent(wheelEvent);
+        }
+      }
+    }
+    
+    function toggleView() {
+      console.log('Toggling view from:', currentView);
+      
+      const graphicView = document.getElementById('graphicView');
+      const tableView = document.getElementById('tableView');
+      const viewToggle = document.getElementById('viewToggle');
+      
+      if (!graphicView || !tableView || !viewToggle) {
+        console.error('View elements not found');
+        return;
+      }
+      
+      const icon = viewToggle.querySelector('svg');
+      
+      if (currentView === 'graphic') {
+        // Switch to table view
+        currentView = 'table';
+        tableView.classList.remove('hidden');
+        graphicView.classList.add('hidden');
+        viewToggle.classList.add('active');
+        
+        // Update icon
+        if (icon) {
+          icon.innerHTML = `
+            <path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z" fill="currentColor" stroke="none"/>
+          `;
+        }
+        
+        // Rebuild table
+        setTimeout(() => {
+          rebuildTableView();
+        }, 100);
+        
+      } else {
+        // Switch to graphic view
+        currentView = 'graphic';
+        graphicView.classList.remove('hidden');
+        tableView.classList.add('hidden');
+        viewToggle.classList.remove('active');
+        
+        // Update icon
+        if (icon) {
+          icon.innerHTML = `
+            <rect x="3" y="3" width="7" height="7"/>
+            <rect x="14" y="3" width="7" height="7"/>
+            <rect x="14" y="14" width="7" height="7"/>
+            <rect x="3" y="14" width="7" height="7"/>
+          `;
+        }
+        
+        // Refresh canvas
+        setTimeout(() => {
+          import('./tree.js').then(() => {
+            console.log('Canvas refreshed after view switch');
+          });
+        }, 100);
+      }
+      
+      console.log('Switched to view:', currentView);
+    }
+    
+    function initializeEnhancedSettings() {
+      console.log('Initializing enhanced settings...');
+      
+      // Collapsible sections
+      document.querySelectorAll('.collapsible-header').forEach(header => {
+        header.addEventListener('click', () => {
+          const targetId = header.getAttribute('data-target');
+          const content = document.getElementById(targetId);
+          
+          if (content) {
+            const isExpanded = content.classList.contains('expanded');
+            content.classList.toggle('expanded');
+            header.classList.toggle('expanded');
+            console.log(`Toggled section ${targetId}:`, !isExpanded);
+          }
+        });
+      });
+      
+      console.log('Enhanced settings initialized');
+    }
+  </script>
+</body>
+</html>

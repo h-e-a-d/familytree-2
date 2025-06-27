@@ -1,0 +1,526 @@
+/* Modal System Styles - Extracted from main stylesheet */
+
+/* ENHANCED: Optimized Modal Styles */
+.modal { 
+  position: fixed; 
+  top: 0; 
+  left: 0; 
+  width: 100%; 
+  height: 100%; 
+  background: rgba(0,0,0,0.6); 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  z-index: 1001;
+  padding: 20px;
+  box-sizing: border-box;
+  backdrop-filter: blur(4px);
+  animation: modalFadeIn 0.3s ease-out;
+  /* Remove any scrolling capability */
+  overflow: hidden;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(4px);
+  }
+}
+
+@keyframes modalFadeOut {
+  from {
+    opacity: 1;
+    backdrop-filter: blur(4px);
+  }
+  to {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+}
+
+.modal-content { 
+  background: #fff; 
+  border-radius: 16px; 
+  width: 100%;
+  max-width: 520px;
+  max-height: calc(100vh - 40px);
+  overflow: hidden;
+  box-shadow: 
+    0 24px 48px rgba(0,0,0,0.15),
+    0 8px 16px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  animation: modalSlideIn 0.3s ease-out;
+  position: relative;
+}
+
+@keyframes modalSlideIn {
+  from {
+    transform: translateY(20px) scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* ENHANCED: Optimized Modal Header */
+.modal-header {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
+  border-radius: 16px 16px 0 0;
+  flex-shrink: 0;
+}
+
+.modal-content h2 {
+  margin: 0;
+  padding: 20px 24px 16px;
+  font-size: 22px;
+  font-weight: 700;
+  color: #2d3748;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  line-height: 1.2;
+  border-bottom: 1px solid #e2e8f0;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 16px 16px 0 0;
+  letter-spacing: -0.025em;
+}
+
+.modal-content h2 .person-icon {
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+}
+
+/* ENHANCED: Optimized Modal Body - NO SCROLLBARS */
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 24px 24px 0;
+  /* Completely remove scrollbars */
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.modal-body::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Higher z-index for confirmation modals that should appear above other modals */
+#deleteConfirmModal,
+#clearAllConfirmModal,
+#lineRemovalModal {
+  z-index: 1050 !important;
+  background: rgba(0,0,0,0.7) !important;
+}
+
+/* Connection Modal Styles */
+.connection-content {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.connection-content p {
+  font-size: 18px;
+  margin-bottom: 20px;
+  color: #2c3e50;
+}
+
+.connection-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.connection-btn {
+  padding: 14px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  border: 2px solid #3498db;
+  background-color: #fff;
+  color: #3498db;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.connection-btn:hover {
+  background-color: #3498db;
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+}
+
+.connection-btn:active {
+  transform: translateY(0);
+}
+
+.connection-btn.line-only {
+  border-color: #9b59b6;
+  color: #9b59b6;
+}
+
+.connection-btn.line-only:hover {
+  background-color: #9b59b6;
+  color: #fff;
+}
+
+/* Custom styling for the line-only button */
+.connection-btn.line-only {
+  background-color: #9b59b6 !important;
+  border-color: #9b59b6 !important;
+  color: white !important;
+}
+
+.connection-btn.line-only:hover {
+  background-color: #8e44ad !important;
+  border-color: #8e44ad !important;
+  color: white !important;
+}
+
+/* ENHANCED: Optimized Form Actions */
+.modal-content {
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  overflow: hidden;
+}
+
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.form-actions {
+  position: sticky;
+  bottom: 0;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-top: 1px solid #e2e8f0;
+  padding: 20px 24px;
+  margin: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  border-radius: 0 0 16px 16px;
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.08);
+  gap: 16px;
+  flex-wrap: nowrap;
+}
+
+.form-actions-right {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+/* ENHANCED: Modern Button Styles */
+.form-actions button {
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 100px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  line-height: 1;
+  position: relative;
+  user-select: none;
+  white-space: nowrap;
+}
+
+/* Delete button should have same styling but different color */
+.form-actions button[id*="delete"] {
+  order: -1;
+  margin-right: 16px;
+}
+
+.form-actions button:active {
+  transform: translateY(1px);
+}
+
+.form-actions button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+}
+
+/* Cancel Button - Optimized */
+.form-actions button[id*="cancel"] { 
+  background: #6c757d; 
+  color: #fff; 
+  border-color: #6c757d;
+  order: 1;
+}
+
+.form-actions button[id*="cancel"]:hover {
+  background: #5a6268;
+  border-color: #5a6268;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(108, 117, 125, 0.2);
+}
+
+/* Save/Apply Button - Optimized */
+.form-actions button[id*="save"],
+.form-actions button[id*="apply"] { 
+  background: #28a745; 
+  color: #fff; 
+  border-color: #28a745;
+  order: 2;
+}
+
+.form-actions button[id*="save"]:hover,
+.form-actions button[id*="apply"]:hover {
+  background: #218838;
+  border-color: #218838;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.2);
+}
+
+/* Delete Button - Optimized */
+.form-actions button[id*="delete"] {
+  background: #dc3545; 
+  color: #fff; 
+  border-color: #dc3545;
+  order: 0;
+}
+
+.form-actions button[id*="delete"]:hover {
+  background: #c82333;
+  border-color: #c82333;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.2);
+}
+
+/* ENHANCED: Loading Button Support */
+.form-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.form-actions button.loading {
+  position: relative;
+  color: transparent;
+}
+
+.form-actions button.loading::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+}
+
+/* ENHANCED: Focus improvements for keyboard navigation */
+.form-actions button:focus-visible,
+.form-group input:focus-visible,
+.form-group select:focus-visible {
+  outline: 3px solid #3498db;
+  outline-offset: 2px;
+  z-index: 1;
+}
+
+/* ENHANCED: Modal enhancement styles */
+.modal-enhanced {
+  isolation: isolate;
+  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.modal-mobile .modal-content {
+  border-radius: 16px 16px 0 0;
+  margin-top: auto;
+  max-height: 90vh;
+}
+
+.modal-open {
+  overflow: hidden !important;
+}
+
+/* Better modal content shadow */
+.modal-enhanced .modal-content {
+  box-shadow: 
+    0 24px 48px rgba(0, 0, 0, 0.2),
+    0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* Smooth transitions for all interactive elements */
+.modal-enhanced input,
+.modal-enhanced select,
+.modal-enhanced button {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Responsive Design - Mobile Modal Adjustments */
+@media (max-width: 768px) {
+  .modal {
+    padding: 12px;
+    align-items: flex-start;
+    padding-top: 20px;
+  }
+  
+  .modal-content {
+    max-height: calc(100vh - 40px);
+    width: 100%;
+    max-width: none;
+    margin: 0;
+  }
+  
+  .modal-header {
+    padding: 16px 20px 12px;
+  }
+  
+  .modal-content h2 {
+    font-size: 18px;
+  }
+  
+  .modal-content h2 .person-icon {
+    width: 20px;
+    height: 20px;
+    font-size: 11px;
+  }
+  
+  .modal-body {
+    padding: 16px 20px 0;
+  }
+  
+  /* ENHANCED: All buttons in one row for mobile */
+  .form-actions {
+    padding: 16px 20px;
+    flex-direction: row;
+    gap: 12px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: nowrap;
+  }
+  
+  .form-actions-right {
+    display: flex;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  
+  .form-actions button {
+    flex: 1;
+    max-width: 100px;
+    height: 44px;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 10px 16px;
+    white-space: nowrap;
+  }
+  
+  .form-actions button[id*="delete"] {
+    order: -1;
+    flex: 1;
+    max-width: 100px;
+    margin: 0;
+  }
+  
+  .connection-buttons {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  /* Make connection buttons larger for touch */
+  .connection-btn {
+    padding: 16px 24px;
+    font-size: 18px;
+    min-height: 60px;
+  }
+}
+
+/* Additional mobile optimizations - Very Small Screens */
+@media (max-width: 480px) {
+  .modal-content {
+    padding: 20px;
+  }
+
+  .connection-buttons {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .modal {
+    padding: 8px;
+    padding-top: 16px;
+  }
+  
+  .modal-header {
+    padding: 12px 16px;
+  }
+  
+  .modal-body {
+    padding: 12px 16px 0;
+  }
+  
+  .form-actions {
+    padding: 12px 16px;
+  }
+  
+  /* Responsive text sizing */
+  .modal-enhanced .modal-content h2 {
+    font-size: 16px;
+  }
+}
+
+/* ENHANCED: Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  .modal,
+  .modal-content,
+  .form-actions button {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .modal-content {
+    border: 2px solid #000;
+  }
+  
+  .form-actions {
+    border-top: 2px solid #000;
+  }
+}
