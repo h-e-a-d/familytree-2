@@ -56,10 +56,16 @@ The codebase has been significantly enhanced with critical improvements:
 - **Updated translations**: Removed legacy-related translations from all locale files
 
 ### Smart Node Positioning Fix
-- **Fixed coordinate mismatch issue**: New nodes now position near existing content instead of fixed grid
-- **Intelligent placement**: New nodes appear to the right of existing family tree with proper spacing
-- **Auto-camera centering**: Camera automatically centers on loaded JSON content and new nodes
-- **Better user experience**: No more nodes appearing thousands of pixels away from existing tree
+- **Fixed coordinate mismatch issue**: New nodes now appear at screen center for immediate visibility
+- **Center-screen placement**: New nodes are positioned at the current viewport center with small offsets
+- **Auto-camera centering**: Camera automatically centers on loaded JSON content when no saved position
+- **Better user experience**: New nodes always appear in the user's current view
+
+### Critical Bug Fixes (December 2024)
+- **Delete Button State Bug**: Fixed issue where delete buttons became permanently disabled after deletion
+- **Loading State Management**: Corrected button state storage to capture original state before modification
+- **Button Reset Logic**: Added safety checks to ensure buttons are properly enabled when modals open
+- **UI Consistency**: Improved button state management across different modal interactions
 
 ## Core Architecture
 

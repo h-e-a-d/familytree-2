@@ -112,6 +112,9 @@ export function openModalForEdit(personId, retryCount = 0) {
     // Show delete button for editing mode
     if (deleteBtn) {
       deleteBtn.classList.remove('hidden');
+      deleteBtn.disabled = false; // Ensure button is enabled
+      deleteBtn.classList.remove('loading'); // Clear any loading state
+      console.log('✅ Delete button enabled for editing mode');
     }
 
     if (!personData && !node) {
@@ -145,6 +148,9 @@ export function openModalForEdit(personId, retryCount = 0) {
     // Hide delete button for new person mode
     if (deleteBtn) {
       deleteBtn.classList.add('hidden');
+      deleteBtn.disabled = false; // Reset state for next time
+      deleteBtn.classList.remove('loading'); // Clear any loading state
+      console.log('🔄 Delete button reset for new person mode');
     }
 
     // Clear all form fields

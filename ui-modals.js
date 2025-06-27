@@ -1079,16 +1079,16 @@ class ModalUXEnhancer {
   // Loading state management
   setButtonLoading(button, isLoading) {
     if (isLoading) {
-      button.classList.add('loading');
-      button.disabled = true;
-      
-      // Store original state
+      // Store original state BEFORE modifying the button
       this.loadingStates.set(button, {
         text: button.textContent,
         html: button.innerHTML,
-        disabled: button.disabled
+        disabled: button.disabled  // Capture state before we change it
       });
       
+      // Now set loading state
+      button.classList.add('loading');
+      button.disabled = true;
       button.setAttribute('aria-label', 'Loading...');
     } else {
       button.classList.remove('loading');
@@ -1100,8 +1100,12 @@ class ModalUXEnhancer {
         button.removeAttribute('aria-label');
         this.loadingStates.delete(button);
       } else {
+        // Safety fallback: enable button if no stored state
         button.disabled = false;
+        button.removeAttribute('aria-label');
       }
+      
+      console.log('🔄 Button loading state cleared:', button.id || button.textContent, 'disabled:', button.disabled);
     }
   }
 

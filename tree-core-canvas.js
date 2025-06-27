@@ -1637,35 +1637,24 @@ class TreeCoreCanvas {
           const existingNodes = Array.from(this.renderer.nodes.values());
           let x = 300, y = 300;
           
-          // Smart positioning: place new nodes near existing content
+          // Simple center-screen positioning for new nodes
           if (existingNodes.length > 0) {
-            const bounds = this.renderer.getContentBounds();
-            if (bounds) {
-              // Position new nodes to the right of existing content with some spacing
-              const spacing = 150;
-              const gridSize = 120;
-              const nodesPerColumn = 5;
-              
-              // Calculate how many new nodes have been added in this session
-              const newNodeCount = existingNodes.length;
-              const row = newNodeCount % nodesPerColumn;
-              const col = Math.floor(newNodeCount / nodesPerColumn);
-              
-              // Position to the right of existing content
-              x = bounds.x + bounds.width + spacing + (col * gridSize);
-              y = bounds.y + (row * gridSize);
-              
-              console.log(`📍 Positioning new node at (${x}, ${y}) near existing content bounds:`, bounds);
-            } else {
-              // Fallback to original grid pattern if bounds calculation fails
-              const gridSize = 200;
-              const nodesPerRow = 4;
-              const row = Math.floor(existingNodes.length / nodesPerRow);
-              const col = existingNodes.length % nodesPerRow;
-              
-              x = 200 + (col * gridSize);
-              y = 200 + (row * gridSize);
-            }
+            // Get current camera position to determine screen center
+            const camera = this.renderer.getCamera();
+            const viewportWidth = 800;  // Approximate viewport width
+            const viewportHeight = 600; // Approximate viewport height
+            
+            // Calculate world coordinates for screen center
+            // Camera coordinates are inverted, so we need to account for that
+            const screenCenterX = -camera.x + (viewportWidth / 2);
+            const screenCenterY = -camera.y + (viewportHeight / 2);
+            
+            // Add small random offset to avoid overlapping if multiple nodes created
+            const offset = existingNodes.length * 30;
+            x = screenCenterX + offset;
+            y = screenCenterY + offset;
+            
+            console.log(`📍 Positioning new node at screen center (${x}, ${y}) with camera:`, camera);
           }
           
           nodeData = {
@@ -1685,19 +1674,8 @@ class TreeCoreCanvas {
           this.renderer.setNode(personId, nodeData);
           console.log('➕ Created new node:', personId, 'at position:', x, y);
           
-          // Auto-center camera to show the new node if it's positioned far from current view
-          if (this.renderer && existingNodes.length > 0) {
-            // Get current camera position
-            const camera = this.renderer.getCamera();
-            const nodeDistance = Math.sqrt(Math.pow(x - camera.x, 2) + Math.pow(y - camera.y, 2));
-            
-            // If new node is more than 800px away from camera center, pan to show it
-            if (nodeDistance > 800) {
-              console.log('📹 Auto-centering camera to show new node');
-              // Center camera on the new node (negative coordinates because camera moves opposite to content)
-              this.renderer.setCamera(-x + 400, -y + 300, camera.scale); // Offset to center in viewport
-            }
-          }
+          // Node is positioned at screen center, no camera adjustment needed
+          console.log('✅ New node created at screen center, no camera movement required');
         }
       } else {
         console.warn('⚠️ Renderer not available, node will be created when renderer initializes');
