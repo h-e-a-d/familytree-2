@@ -700,9 +700,20 @@ class TreeCoreCanvas {
       });
     }
     
-    // Restore camera
+    // Restore camera or auto-center on content
     if (data.camera && this.renderer) {
       this.renderer.setCamera(data.camera.x, data.camera.y, data.camera.scale);
+      console.log('🎥 Restored saved camera position:', data.camera);
+    } else if (this.renderer && this.renderer.nodes.size > 0) {
+      // If no saved camera, auto-center on all content
+      const bounds = this.renderer.getContentBounds();
+      if (bounds) {
+        const centerX = bounds.x + bounds.width / 2;
+        const centerY = bounds.y + bounds.height / 2;
+        // Center camera on content (negative coordinates because camera moves opposite to content)
+        this.renderer.setCamera(-centerX + 400, -centerY + 300, 1);
+        console.log('🎯 Auto-centered camera on loaded content:', { centerX, centerY, bounds });
+      }
     }
     
     // Restore hidden/line-only connections
@@ -1626,15 +1637,35 @@ class TreeCoreCanvas {
           const existingNodes = Array.from(this.renderer.nodes.values());
           let x = 300, y = 300;
           
-          // Try to position new nodes in a grid pattern to avoid overlap
+          // Smart positioning: place new nodes near existing content
           if (existingNodes.length > 0) {
-            const gridSize = 200;
-            const nodesPerRow = 4;
-            const row = Math.floor(existingNodes.length / nodesPerRow);
-            const col = existingNodes.length % nodesPerRow;
-            
-            x = 200 + (col * gridSize);
-            y = 200 + (row * gridSize);
+            const bounds = this.renderer.getContentBounds();
+            if (bounds) {
+              // Position new nodes to the right of existing content with some spacing
+              const spacing = 150;
+              const gridSize = 120;
+              const nodesPerColumn = 5;
+              
+              // Calculate how many new nodes have been added in this session
+              const newNodeCount = existingNodes.length;
+              const row = newNodeCount % nodesPerColumn;
+              const col = Math.floor(newNodeCount / nodesPerColumn);
+              
+              // Position to the right of existing content
+              x = bounds.x + bounds.width + spacing + (col * gridSize);
+              y = bounds.y + (row * gridSize);
+              
+              console.log(`📍 Positioning new node at (${x}, ${y}) near existing content bounds:`, bounds);
+            } else {
+              // Fallback to original grid pattern if bounds calculation fails
+              const gridSize = 200;
+              const nodesPerRow = 4;
+              const row = Math.floor(existingNodes.length / nodesPerRow);
+              const col = existingNodes.length % nodesPerRow;
+              
+              x = 200 + (col * gridSize);
+              y = 200 + (row * gridSize);
+            }
           }
           
           nodeData = {
@@ -1653,6 +1684,20 @@ class TreeCoreCanvas {
           
           this.renderer.setNode(personId, nodeData);
           console.log('➕ Created new node:', personId, 'at position:', x, y);
+          
+          // Auto-center camera to show the new node if it's positioned far from current view
+          if (this.renderer && existingNodes.length > 0) {
+            // Get current camera position
+            const camera = this.renderer.getCamera();
+            const nodeDistance = Math.sqrt(Math.pow(x - camera.x, 2) + Math.pow(y - camera.y, 2));
+            
+            // If new node is more than 800px away from camera center, pan to show it
+            if (nodeDistance > 800) {
+              console.log('📹 Auto-centering camera to show new node');
+              // Center camera on the new node (negative coordinates because camera moves opposite to content)
+              this.renderer.setCamera(-x + 400, -y + 300, camera.scale); // Offset to center in viewport
+            }
+          }
         }
       } else {
         console.warn('⚠️ Renderer not available, node will be created when renderer initializes');

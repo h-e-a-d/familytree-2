@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 MapMyRoots is a free online family tree builder and genealogy software built with vanilla JavaScript. It features a canvas-based interactive family tree visualization with drag-and-drop functionality, multi-format export capabilities, and comprehensive person management.
 
+**Latest Version**: 2.1.0 (Updated December 2024)
+
 ## Key Entry Points
 
 - `index.html` - Marketing/landing page with internationalization
@@ -24,9 +26,9 @@ python3 -m http.server 8000
 npx serve .
 ```
 
-## Recent Security & Architecture Improvements
+## Recent Security & Architecture Improvements (2024)
 
-The codebase has been enhanced with several critical improvements:
+The codebase has been significantly enhanced with critical improvements:
 
 - **Security**: All `innerHTML` usage replaced with safe DOM manipulation
 - **Input Validation**: Comprehensive data sanitization for user inputs
@@ -34,6 +36,30 @@ The codebase has been enhanced with several critical improvements:
 - **Error Handling**: Robust retry mechanisms and recovery strategies
 - **Accessibility**: Full keyboard navigation and screen reader support
 - **Configuration**: Centralized config system with feature flags
+- **Code Organization**: Modal styles separated into dedicated CSS file for better maintainability
+- **Legacy Code Removal**: Cleaned up all legacy data format support for simplified codebase
+
+## Recent Refactoring (December 2024)
+
+### Modal System Refactoring
+- **Separated modal styles**: Extracted all modal-related CSS from `style.css` into dedicated `modal.css`
+- **Improved maintainability**: Modal styles are now organized in a single file
+- **Updated references**: `builder.html` now includes both `style.css` and `modal.css`
+- **Clean separation**: Main stylesheet no longer contains modal-specific code
+
+### Legacy Code Removal
+- **Removed legacy data format support**: Application now only supports current JSON format
+- **Cleaned JavaScript**: Removed `processLegacyData()` and `checkForLegacyData()` methods
+- **Updated error handling**: Unrecognized data formats are now properly rejected
+- **Simplified notifications**: Removed legacy-specific notification types
+- **Cleaned HTML**: Removed legacy import modal and related UI elements
+- **Updated translations**: Removed legacy-related translations from all locale files
+
+### Smart Node Positioning Fix
+- **Fixed coordinate mismatch issue**: New nodes now position near existing content instead of fixed grid
+- **Intelligent placement**: New nodes appear to the right of existing family tree with proper spacing
+- **Auto-camera centering**: Camera automatically centers on loaded JSON content and new nodes
+- **Better user experience**: No more nodes appearing thousands of pixels away from existing tree
 
 ## Core Architecture
 
@@ -50,6 +76,7 @@ The application uses ES6 modules with clear separation of concerns:
 - Auto-save functionality saves to localStorage every 30 seconds
 - Undo/redo system tracks state changes with configurable limits
 - Observer pattern for state updates between modules
+- **Data Format**: Only supports current JSON format (legacy format support removed)
 
 ### Canvas Rendering
 - High-performance canvas-based family tree visualization
@@ -67,6 +94,7 @@ The application uses ES6 modules with clear separation of concerns:
 - **Internationalization**: Support for EN, ES, RU, DE languages
 - **Search**: Real-time family member search functionality
 - **Undo/Redo**: Full state management for user actions
+- **Responsive Design**: Optimized for desktop, tablet, and mobile devices
 
 ## Data Structure
 
@@ -75,6 +103,7 @@ Family tree data is stored as:
 - **Relationships**: Parent-child and spouse connections via person IDs
 - **Display preferences**: Node styling, font settings, visibility options
 - **Canvas state**: Pan, zoom, and layout information
+- **Format**: JSON structure with version information for data validation
 
 ## File Organization
 
@@ -83,7 +112,8 @@ Core Application:
 ├── tree.js                 # Enhanced entry point with event-driven architecture
 ├── tree-core-canvas.js     # Application controller
 ├── canvas-renderer.js      # Canvas rendering engine
-├── style.css              # Main stylesheet
+├── style.css              # Main stylesheet (modal styles removed)
+├── modal.css              # Modal-specific styles (NEW - separated from main CSS)
 
 Architecture & Infrastructure:
 ├── event-bus.js           # Event-driven communication system
@@ -93,7 +123,7 @@ Architecture & Infrastructure:
 ├── config.js              # Centralized configuration and constants
 
 Data & State:
-├── core-cache.js          # Enhanced auto-save with validation
+├── core-cache.js          # Enhanced auto-save with validation (legacy support removed)
 ├── core-undoRedo.js       # Undo/redo functionality
 ├── core-export.js         # Export coordination
 
@@ -103,7 +133,7 @@ UI Components:
 ├── ui-buttons.js          # Button interactions
 ├── ui-settings.js         # Settings panel
 ├── ui-modals.js           # Modal management
-├── notifications.js       # User notifications
+├── notifications.js       # User notifications (legacy methods removed)
 
 Features:
 ├── exporter.js            # Multi-format export
@@ -113,10 +143,22 @@ Features:
 ├── searchableSelect.js    # Enhanced dropdowns
 
 Assets:
-├── locales/               # Translation files
+├── locales/               # Translation files (legacy entries removed)
 ├── fonts/                 # Custom fonts
 └── glossary/              # Genealogy glossary
 ```
+
+## CSS Architecture
+
+### Main Stylesheets
+- **`style.css`**: Core application styles (navigation, layout, forms, responsive design)
+- **`modal.css`**: All modal-related styles (dialogs, overlays, form actions)
+- **`homepage.css`**: Landing page specific styles (used only by index.html)
+
+### Modal System
+- All modal styles are now in `modal.css` for better organization
+- Includes: modal containers, content, headers, form actions, responsive behavior
+- Referenced in `builder.html` after main stylesheet for proper cascade
 
 ## Common Patterns
 
@@ -126,6 +168,25 @@ Assets:
 4. **Dependency Injection**: Use the ServiceContainer pattern instead of direct imports where possible
 5. **Data Validation**: Always validate data before processing or storage
 6. **Accessibility**: Follow WCAG guidelines, provide keyboard navigation and ARIA labels
+7. **CSS Organization**: Keep modal styles in modal.css, main styles in style.css
+
+## Data Format Standards
+
+### Current JSON Format (Only Supported)
+```javascript
+{
+  "version": "2.1.0",
+  "cacheFormat": "enhanced",
+  "persons": [...],
+  "fontSettings": {...},
+  "canvasState": {...}
+}
+```
+
+### Data Validation
+- All loaded data must include version or persons properties
+- Unrecognized formats are rejected with appropriate error messages
+- Auto-save only works with current format specifications
 
 ## New Architecture Examples
 
@@ -164,6 +225,41 @@ const result = await RetryManager.retry(async () => {
 });
 ```
 
+## Development Guidelines
+
+### When Working with Modals
+- Always add modal styles to `modal.css`, not `style.css`
+- Test modal functionality across desktop and mobile devices
+- Ensure proper keyboard navigation and screen reader support
+- Use existing modal patterns for consistency
+
+### Data Handling
+- Only process data that matches current JSON format
+- Always validate data structure before processing
+- Use appropriate error messages for invalid data
+- Log warnings for unrecognized formats but don't attempt processing
+
+### CSS Organization
+- Main application styles go in `style.css`
+- Modal-specific styles go in `modal.css`
+- Homepage styles stay in `homepage.css`
+- Maintain responsive design patterns across all stylesheets
+
+## Browser Compatibility
+
+- **Modern Browsers**: Chrome 80+, Firefox 75+, Safari 13+, Edge 80+
+- **Mobile**: iOS Safari 13+, Chrome Mobile 80+
+- **Features Used**: ES6 modules, Canvas API, localStorage, CSS Grid, Flexbox
+- **Fallbacks**: Graceful degradation for older browsers where possible
+
+## Performance Considerations
+
+- Canvas rendering optimized for trees with 100+ people
+- Auto-save throttled to prevent excessive localStorage writes
+- Lazy loading for non-critical UI components
+- Optimized CSS with minimal reflows and repaints
+- Separate CSS files allow for better caching strategies
+
 ## Important Notes
 
 - The application runs entirely client-side with no backend dependencies
@@ -171,3 +267,15 @@ const result = await RetryManager.retry(async () => {
 - Canvas rendering is optimized for performance with large family trees
 - Internationalization uses JSON translation files in the `locales/` directory
 - Export functionality supports industry-standard GEDCOM format for genealogy software compatibility
+- **Legacy data formats are no longer supported** - only current JSON format is accepted
+- Modal styles are separated for better maintainability and organization
+
+## Testing Recommendations
+
+When testing the application:
+1. **Data Import**: Test only with current JSON format files
+2. **Modal Functionality**: Verify all modals work correctly after CSS separation
+3. **Responsive Design**: Test modal behavior on mobile devices
+4. **Error Handling**: Ensure graceful handling of invalid data formats
+5. **Performance**: Test with large family trees (50+ people)
+6. **Accessibility**: Verify keyboard navigation and screen reader compatibility
