@@ -179,8 +179,8 @@ export class AppContext {
 
     // Register core services
     this.services.register('eventBus', this.eventBus);
-    this.services.registerSingleton('treeCore', (container) => {
-      const { TreeCoreCanvas } = require('./tree-core-canvas.js');
+    this.services.registerSingleton('treeCore', async (container) => {
+      const { TreeCoreCanvas } = await import('./tree-core-canvas.js');
       return new TreeCoreCanvas(container);
     });
 
