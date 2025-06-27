@@ -1845,6 +1845,101 @@ class TreeCoreCanvas {
     
     notifications.success('Connected', 'Persons connected successfully');
   }
+
+  // ENHANCED: Camera centering method using search algorithm
+  centerOnNodeImproved(personId) {
+    if (!this.renderer || !personId) {
+      console.warn('Cannot center on node: renderer or personId missing');
+      return;
+    }
+
+    const node = this.renderer.nodes.get(personId);
+    if (!node) {
+      console.warn(`Cannot center on node: node ${personId} not found`);
+      return;
+    }
+
+    // Get canvas dimensions (same as search.js method)
+    const canvas = this.renderer.canvas;
+    const canvasWidth = canvas.width / this.renderer.dpr;
+    const canvasHeight = canvas.height / this.renderer.dpr;
+
+    // Smart zoom level adjustment (same as search.js)
+    let targetScale = this.renderer.camera.scale;
+    if (targetScale < 0.8) {
+      targetScale = 1.0;
+    } else if (targetScale > 3.0) {
+      targetScale = 2.0;
+    }
+
+    // Calculate exact center position (same formula as search.js)
+    const targetCameraX = (canvasWidth / 2) - (node.x * targetScale);
+    const targetCameraY = (canvasHeight / 2) - (node.y * targetScale);
+
+    console.log(`🎯 Centering camera on node ${personId} at (${node.x}, ${node.y})`);
+    console.log(`📐 Canvas dimensions: ${canvasWidth}x${canvasHeight}`);
+    console.log(`🔍 Target camera position: (${targetCameraX}, ${targetCameraY}) scale: ${targetScale}`);
+
+    // Animate camera to center position (enhanced version from search.js)
+    this.animateCameraImproved({
+      x: targetCameraX,
+      y: targetCameraY,
+      scale: targetScale
+    }, node, personId);
+  }
+
+  // ENHANCED: Camera animation method using search algorithm
+  animateCameraImproved(targetCamera, node, personId) {
+    const renderer = this.renderer;
+    const startTime = performance.now();
+    const duration = 1000; // 1 second animation (same as search)
+    const startCamera = {
+      x: renderer.camera.x,
+      y: renderer.camera.y,
+      scale: renderer.camera.scale
+    };
+
+    const animate = (currentTime) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      // Cubic ease-in-out (same as search.js)
+      const eased = progress < 0.5
+        ? 4 * progress * progress * progress
+        : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+
+      // Interpolate camera position
+      renderer.camera.x = startCamera.x + (targetCamera.x - startCamera.x) * eased;
+      renderer.camera.y = startCamera.y + (targetCamera.y - startCamera.y) * eased;
+      renderer.camera.scale = startCamera.scale + (targetCamera.scale - startCamera.scale) * eased;
+
+      renderer.needsRedraw = true;
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        // Post-animation validation (same as search.js)
+        console.log(`✅ Camera animation complete for node ${personId}`);
+        console.log(`📍 Final camera position: (${renderer.camera.x}, ${renderer.camera.y}) scale: ${renderer.camera.scale}`);
+        
+        // Validate centering
+        const canvas = renderer.canvas;
+        const canvasWidth = canvas.width / renderer.dpr;
+        const canvasHeight = canvas.height / renderer.dpr;
+        const expectedX = (canvasWidth / 2) - (node.x * renderer.camera.scale);
+        const expectedY = (canvasHeight / 2) - (node.y * renderer.camera.scale);
+        
+        if (Math.abs(renderer.camera.x - expectedX) > 1 || Math.abs(renderer.camera.y - expectedY) > 1) {
+          console.warn('⚠️ Camera centering validation failed, applying correction');
+          renderer.camera.x = expectedX;
+          renderer.camera.y = expectedY;
+          renderer.needsRedraw = true;
+        }
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }
 }
 
 // Create and export instance
@@ -1972,103 +2067,5 @@ function devError(...args) {
   }
 }
 // Replace all console.log, console.warn, console.error with devLog, devWarn, devError
-// ... existing code ...
-
-  // ENHANCED: Camera centering method using search algorithm
-  centerOnNodeImproved(personId) {
-    if (!this.renderer || !personId) {
-      console.warn('Cannot center on node: renderer or personId missing');
-      return;
-    }
-
-    const node = this.renderer.nodes.get(personId);
-    if (!node) {
-      console.warn(`Cannot center on node: node ${personId} not found`);
-      return;
-    }
-
-    // Get canvas dimensions (same as search.js method)
-    const canvas = this.renderer.canvas;
-    const canvasWidth = canvas.width / this.renderer.dpr;
-    const canvasHeight = canvas.height / this.renderer.dpr;
-
-    // Smart zoom level adjustment (same as search.js)
-    let targetScale = this.renderer.camera.scale;
-    if (targetScale < 0.8) {
-      targetScale = 1.0;
-    } else if (targetScale > 3.0) {
-      targetScale = 2.0;
-    }
-
-    // Calculate exact center position (same formula as search.js)
-    const targetCameraX = (canvasWidth / 2) - (node.x * targetScale);
-    const targetCameraY = (canvasHeight / 2) - (node.y * targetScale);
-
-    console.log(`🎯 Centering camera on node ${personId} at (${node.x}, ${node.y})`);
-    console.log(`📐 Canvas dimensions: ${canvasWidth}x${canvasHeight}`);
-    console.log(`🔍 Target camera position: (${targetCameraX}, ${targetCameraY}) scale: ${targetScale}`);
-
-    // Animate camera to center position (enhanced version from search.js)
-    this.animateCameraImproved({
-      x: targetCameraX,
-      y: targetCameraY,
-      scale: targetScale
-    }, node, personId);
-  }
-
-  // ENHANCED: Camera animation method using search algorithm
-  animateCameraImproved(targetCamera, node, personId) {
-    const renderer = this.renderer;
-    const startTime = performance.now();
-    const duration = 1000; // 1 second animation (same as search)
-    const startCamera = {
-      x: renderer.camera.x,
-      y: renderer.camera.y,
-      scale: renderer.camera.scale
-    };
-
-    const animate = (currentTime) => {
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-
-      // Cubic ease-in-out (same as search.js)
-      const eased = progress < 0.5
-        ? 4 * progress * progress * progress
-        : 1 - Math.pow(-2 * progress + 2, 3) / 2;
-
-      // Interpolate camera position
-      renderer.camera.x = startCamera.x + (targetCamera.x - startCamera.x) * eased;
-      renderer.camera.y = startCamera.y + (targetCamera.y - startCamera.y) * eased;
-      renderer.camera.scale = startCamera.scale + (targetCamera.scale - startCamera.scale) * eased;
-
-      renderer.needsRedraw = true;
-
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      } else {
-        // Post-animation validation (same as search.js)
-        console.log(`✅ Camera animation complete for node ${personId}`);
-        console.log(`📍 Final camera position: (${renderer.camera.x}, ${renderer.camera.y}) scale: ${renderer.camera.scale}`);
-        
-        // Validate centering
-        const canvas = renderer.canvas;
-        const canvasWidth = canvas.width / renderer.dpr;
-        const canvasHeight = canvas.height / renderer.dpr;
-        const expectedX = (canvasWidth / 2) - (node.x * renderer.camera.scale);
-        const expectedY = (canvasHeight / 2) - (node.y * renderer.camera.scale);
-        
-        if (Math.abs(renderer.camera.x - expectedX) > 1 || Math.abs(renderer.camera.y - expectedY) > 1) {
-          console.warn('⚠️ Camera centering validation failed, applying correction');
-          renderer.camera.x = expectedX;
-          renderer.camera.y = expectedY;
-          renderer.needsRedraw = true;
-        }
-      }
-    };
-
-    requestAnimationFrame(animate);
-  }
-}
-
 // Export the TreeCoreCanvas class
 export { TreeCoreCanvas };
