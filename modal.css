@@ -406,8 +406,7 @@
    FORM ACTIONS - COMPLETELY REDESIGNED
 ======================================== */
 .form-actions {
-  position: sticky;
-  bottom: 0;
+  position: relative;
   background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
   border-top: 1px solid #f1f5f9;
   padding: 18px 24px;
@@ -420,7 +419,6 @@
   border-radius: 0 0 16px 16px;
   box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.06);
   gap: 12px;
-  position: relative;
 }
 
 /* Ensure desktop grid layout doesn't interfere on mobile */
@@ -1028,14 +1026,20 @@
    RESPONSIVE DESIGN - COMPACT MOBILE
 ======================================== */
 @media (max-width: 768px) {
+  /* Support for dynamic viewport height (mobile URL bar) */
   .modal {
     padding: 12px;
     align-items: flex-start;
     padding-top: 16px;
+    padding-bottom: 20px;
+    /* Use dvh when available, fallback to vh */
+    height: 100dvh;
+    height: 100vh;
   }
   
   .modal-content {
-    max-height: calc(100vh - 32px);
+    max-height: calc(100dvh - 52px);
+    max-height: calc(100vh - 52px);
     width: 100%;
     max-width: none;
     margin: 0;
@@ -1191,10 +1195,16 @@
   .modal {
     padding: 8px;
     padding-top: 12px;
+    padding-bottom: 24px;
+    /* Use dvh when available, fallback to vh */
+    height: 100dvh;
+    height: 100vh;
   }
   
   .modal-content {
     border-radius: 10px;
+    max-height: calc(100dvh - 68px);
+    max-height: calc(100vh - 68px);
   }
   
   .modal-content h2 {
