@@ -1633,32 +1633,21 @@ class TreeCoreCanvas {
           
           console.log('✏️ Updated existing node:', personId);
         } else {
-          // Create new node with smart positioning
+          // Create new node with organized positioning
           const existingNodes = Array.from(this.renderer.nodes.values());
           let x = 300, y = 300;
           
-          // Smart positioning: place new nodes near existing content
+          // Organized positioning: place new nodes below existing content, centered horizontally
           if (existingNodes.length > 0) {
-            const bounds = this.renderer.getContentBounds();
-            if (bounds) {
-              // Position new nodes near existing content with some spacing
-              const spacing = 150;
-              const gridSpacing = 120;
-              
-              // Position to the right of existing content in a column
-              const column = Math.floor(existingNodes.length / 6); // New column every 6 nodes
-              const row = existingNodes.length % 6; // Position within column
-              
-              x = bounds.x + bounds.width + spacing + (column * gridSpacing);
-              y = bounds.y + (row * gridSpacing);
-              
-              console.log(`📍 Positioning new node near existing content at (${x}, ${y}), bounds:`, bounds);
-            } else {
-              console.log('⚠️ Could not get content bounds, using fallback positioning');
-              // Fallback: position at a reasonable default location
-              x = 400 + (existingNodes.length % 4) * 150;
-              y = 300 + Math.floor(existingNodes.length / 4) * 150;
-            }
+            const position = this.calculateNewNodePosition(existingNodes);
+            x = position.x;
+            y = position.y;
+            console.log(`📍 Positioning new node below existing content at (${x}, ${y})`);
+          } else {
+            // First node: center it on the canvas
+            x = 400;
+            y = 300;
+            console.log(`📍 Positioning first node at center (${x}, ${y})`);
           }
           
           nodeData = {
@@ -1701,6 +1690,13 @@ class TreeCoreCanvas {
       // Update canvas
       if (this.renderer) {
         this.renderer.needsRedraw = true;
+      }
+      
+      // Center camera on newly created nodes (not edits)
+      if (!isEdit) {
+        setTimeout(() => {
+          this.centerOnNodeImproved(personId);
+        }, 100);
       }
       
       // Show success notification
@@ -1844,6 +1840,38 @@ class TreeCoreCanvas {
     this.undoRedoManager.pushUndoState();
     
     notifications.success('Connected', 'Persons connected successfully');
+  }
+
+  // ENHANCED: Calculate organized position for new nodes
+  calculateNewNodePosition(existingNodes) {
+    if (!existingNodes || existingNodes.length === 0) {
+      return { x: 400, y: 300 }; // Default center position
+    }
+
+    // Find the bounds of existing nodes
+    let minX = Infinity, maxX = -Infinity;
+    let maxY = -Infinity;
+    
+    existingNodes.forEach(node => {
+      const nodeX = node.x || 0;
+      const nodeY = node.y || 0;
+      
+      minX = Math.min(minX, nodeX);
+      maxX = Math.max(maxX, nodeX);
+      maxY = Math.max(maxY, nodeY);
+    });
+    
+    // Calculate horizontal center between leftmost and rightmost nodes
+    const centerX = (minX + maxX) / 2;
+    
+    // Position below the lowest node with spacing
+    const verticalSpacing = 150; // Space between rows
+    const newY = maxY + verticalSpacing;
+    
+    console.log(`📊 Node bounds: minX=${minX}, maxX=${maxX}, maxY=${maxY}`);
+    console.log(`📍 New node position: centerX=${centerX}, newY=${newY}`);
+    
+    return { x: centerX, y: newY };
   }
 
   // ENHANCED: Camera centering method using search algorithm
