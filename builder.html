@@ -118,39 +118,114 @@
 
   <!-- Delete Confirmation Modal -->
   <div id="deleteConfirmModal" class="modal hidden">
-    <div class="modal-content">
-      <h2 data-i18n="builder.modals.delete_person.title">Delete Person</h2>
-      <p style="margin-bottom: 20px; color: #666;" data-i18n="builder.modals.delete_person.message">Are you sure you want to delete this person? This action cannot be undone.</p>
+    <div class="modal-content confirmation-modal">
+      <h2>
+        <span class="person-icon">🗑️</span>
+        <span data-i18n="builder.modals.delete_person.title">Delete Person</span>
+      </h2>
+      <div class="modal-body">
+        <div class="confirmation-content">
+          <div class="warning-icon">⚠️</div>
+          <p class="confirmation-message" data-i18n="builder.modals.delete_person.message">
+            Are you sure you want to delete this person? This action cannot be undone and will remove all their data from the family tree.
+          </p>
+          <div class="consequence-list">
+            <div class="consequence-item">
+              <span class="bullet">•</span>
+              <span>Personal information will be permanently lost</span>
+            </div>
+            <div class="consequence-item">
+              <span class="bullet">•</span>
+              <span>Family connections will be removed</span>
+            </div>
+            <div class="consequence-item">
+              <span class="bullet">•</span>
+              <span>This action cannot be undone</span>
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="form-actions">
-        <button type="button" id="cancelDeletePerson" data-i18n="builder.buttons.cancel">Cancel</button>
-        <button type="button" id="confirmDeletePerson" class="btn-danger" data-i18n="builder.modals.delete_person.confirm">Yes, Delete</button>
+        <div class="form-actions-right">
+          <button type="button" id="cancelDeletePerson" data-i18n="builder.buttons.cancel">Cancel</button>
+          <button type="button" id="confirmDeletePerson" data-i18n="builder.modals.delete_person.confirm">Yes, Delete</button>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- Clear All Confirmation Modal -->
   <div id="clearAllConfirmModal" class="modal hidden">
-    <div class="modal-content">
-      <h2 data-i18n="builder.modals.clear_all.title">Clear All Data</h2>
-      <p style="margin-bottom: 20px; color: #666;" data-i18n="builder.modals.clear_all.message">Are you sure you want to clear all family tree data? This action cannot be undone.</p>
+    <div class="modal-content confirmation-modal">
+      <h2>
+        <span class="person-icon">🔄</span>
+        <span data-i18n="builder.modals.clear_all.title">Clear All Data</span>
+      </h2>
+      <div class="modal-body">
+        <div class="confirmation-content">
+          <div class="warning-icon">⚠️</div>
+          <p class="confirmation-message" data-i18n="builder.modals.clear_all.message">
+            Are you sure you want to clear all family tree data? This will permanently delete everything and cannot be undone.
+          </p>
+          <div class="consequence-list">
+            <div class="consequence-item">
+              <span class="bullet">•</span>
+              <span>All family members will be deleted</span>
+            </div>
+            <div class="consequence-item">
+              <span class="bullet">•</span>
+              <span>All relationships will be lost</span>
+            </div>
+            <div class="consequence-item">
+              <span class="bullet">•</span>
+              <span>Your entire family tree will be reset</span>
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="form-actions">
-        <button type="button" id="cancelClearAll" data-i18n="builder.buttons.cancel">Cancel</button>
-        <button type="button" id="confirmClearAll" class="btn-danger" data-i18n="builder.modals.clear_all.confirm">Yes, Clear All</button>
+        <div class="form-actions-right">
+          <button type="button" id="cancelClearAll" data-i18n="builder.buttons.cancel">Cancel</button>
+          <button type="button" id="confirmClearAll" data-i18n="builder.modals.clear_all.confirm">Yes, Clear All</button>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- Enhanced Line Removal Modal -->
   <div id="lineRemovalModal" class="modal hidden">
-    <div class="modal-content">
-      <h2 data-i18n="builder.modals.line_removal.title">Remove Connection Line</h2>
-      <p style="margin-bottom: 20px; color: #666; font-size: 14px; line-height: 1.5;" data-i18n="builder.modals.line_removal.message">
-        This will hide the visual connection line but preserve the relationship data. 
-        The family relationship will remain intact and can be restored later.
-      </p>
+    <div class="modal-content confirmation-modal">
+      <h2>
+        <span class="person-icon">👁️</span>
+        <span data-i18n="builder.modals.line_removal.title">Hide Connection Line</span>
+      </h2>
+      <div class="modal-body">
+        <div class="confirmation-content">
+          <div class="info-icon">ℹ️</div>
+          <p class="confirmation-message" data-i18n="builder.modals.line_removal.message">
+            This will hide the visual connection line but preserve the relationship data. The family relationship will remain intact and can be restored later.
+          </p>
+          <div class="consequence-list">
+            <div class="consequence-item">
+              <span class="bullet">•</span>
+              <span>Connection line will be hidden</span>
+            </div>
+            <div class="consequence-item">
+              <span class="bullet">•</span>
+              <span>Relationship data remains intact</span>
+            </div>
+            <div class="consequence-item">
+              <span class="bullet">•</span>
+              <span>Can be restored at any time</span>
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="form-actions">
-        <button type="button" id="cancelLineRemoval" data-i18n="builder.buttons.cancel">Cancel</button>
-        <button type="button" id="confirmLineRemoval" class="btn-danger" data-i18n="builder.modals.line_removal.confirm">Hide Line</button>
+        <div class="form-actions-right">
+          <button type="button" id="cancelLineRemoval" data-i18n="builder.buttons.cancel">Cancel</button>
+          <button type="button" id="confirmLineRemoval" data-i18n="builder.modals.line_removal.confirm">Hide Line</button>
+        </div>
       </div>
     </div>
   </div>

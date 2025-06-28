@@ -1,22 +1,23 @@
-/* Modal System Styles - Extracted from main stylesheet */
+/* Modal System Styles - COMPLETELY REDESIGNED for Modern UX/UI */
 
-/* ENHANCED: Optimized Modal Styles */
+/* ========================================
+   MODAL CONTAINER & BACKDROP
+======================================== */
 .modal { 
   position: fixed; 
   top: 0; 
   left: 0; 
   width: 100%; 
   height: 100%; 
-  background: rgba(0,0,0,0.6); 
+  background: rgba(0, 0, 0, 0.75);
   display: flex; 
   align-items: center; 
   justify-content: center; 
   z-index: 1001;
   padding: 20px;
   box-sizing: border-box;
-  backdrop-filter: blur(4px);
-  animation: modalFadeIn 0.3s ease-out;
-  /* Remove any scrolling capability */
+  backdrop-filter: blur(12px);
+  animation: modalFadeIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   overflow: hidden;
 }
 
@@ -27,14 +28,14 @@
   }
   to {
     opacity: 1;
-    backdrop-filter: blur(4px);
+    backdrop-filter: blur(12px);
   }
 }
 
 @keyframes modalFadeOut {
   from {
     opacity: 1;
-    backdrop-filter: blur(4px);
+    backdrop-filter: blur(12px);
   }
   to {
     opacity: 0;
@@ -42,25 +43,30 @@
   }
 }
 
+/* ========================================
+   MODAL CONTENT CONTAINER
+======================================== */
 .modal-content { 
-  background: #fff; 
-  border-radius: 16px; 
+  background: #ffffff;
+  border-radius: 20px; 
   width: 100%;
-  max-width: 520px;
+  max-width: 480px;
   max-height: calc(100vh - 40px);
   overflow: hidden;
   box-shadow: 
-    0 24px 48px rgba(0,0,0,0.15),
-    0 8px 16px rgba(0,0,0,0.1);
+    0 32px 64px rgba(0, 0, 0, 0.2),
+    0 16px 32px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
   display: flex;
   flex-direction: column;
-  animation: modalSlideIn 0.3s ease-out;
+  animation: modalSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   position: relative;
+  border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 @keyframes modalSlideIn {
   from {
-    transform: translateY(20px) scale(0.95);
+    transform: translateY(40px) scale(0.9);
     opacity: 0;
   }
   to {
@@ -69,189 +75,390 @@
   }
 }
 
-/* ENHANCED: Optimized Modal Header */
-.modal-header {
-  padding: 20px 24px 16px;
-  border-bottom: 1px solid #f0f0f0;
-  background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
-  border-radius: 16px 16px 0 0;
-  flex-shrink: 0;
-}
-
+/* ========================================
+   MODAL HEADER
+======================================== */
 .modal-content h2 {
   margin: 0;
-  padding: 20px 24px 16px;
-  font-size: 22px;
+  padding: 28px 32px 20px;
+  font-size: 24px;
   font-weight: 700;
-  color: #2d3748;
+  color: #1a202c;
   display: flex;
   align-items: center;
-  gap: 12px;
-  line-height: 1.2;
-  border-bottom: 1px solid #e2e8f0;
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-  border-radius: 16px 16px 0 0;
-  letter-spacing: -0.025em;
+  gap: 16px;
+  line-height: 1.3;
+  border-bottom: 1px solid #f1f5f9;
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 20px 20px 0 0;
+  letter-spacing: -0.02em;
+  position: relative;
+}
+
+.modal-content h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 32px;
+  right: 32px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, #e2e8f0 50%, transparent 100%);
 }
 
 .modal-content h2 .person-icon {
-  width: 28px;
-  height: 28px;
-  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+  box-shadow: 
+    0 4px 12px rgba(102, 126, 234, 0.4),
+    0 2px 4px rgba(102, 126, 234, 0.2);
+  position: relative;
+  overflow: hidden;
 }
 
-/* ENHANCED: Optimized Modal Body - NO SCROLLBARS */
+.modal-content h2 .person-icon::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.2) 50%, transparent 70%);
+  transform: rotate(45deg);
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+  50% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+}
+
+/* ========================================
+   MODAL BODY
+======================================== */
 .modal-body {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 24px 24px 0;
-  /* Completely remove scrollbars */
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
+  padding: 0 32px 8px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-behavior: smooth;
 }
 
 .modal-body::-webkit-scrollbar {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
+  display: none;
 }
 
-/* Higher z-index for confirmation modals that should appear above other modals */
-#deleteConfirmModal,
-#clearAllConfirmModal,
-#lineRemovalModal {
-  z-index: 1050 !important;
-  background: rgba(0,0,0,0.7) !important;
+/* ========================================
+   FORM GROUPS - ENHANCED DESIGN
+======================================== */
+.form-group { 
+  margin-bottom: 28px;
+  position: relative;
+  animation: fadeInUp 0.4s ease-out;
+  animation-fill-mode: both;
 }
 
-/* Connection Modal Styles */
-.connection-content {
-  text-align: center;
-  margin-bottom: 20px;
+.form-group:nth-child(1) { animation-delay: 0.1s; }
+.form-group:nth-child(2) { animation-delay: 0.15s; }
+.form-group:nth-child(3) { animation-delay: 0.2s; }
+.form-group:nth-child(4) { animation-delay: 0.25s; }
+.form-group:nth-child(5) { animation-delay: 0.3s; }
+.form-group:nth-child(6) { animation-delay: 0.35s; }
+.form-group:nth-child(7) { animation-delay: 0.4s; }
+.form-group:nth-child(8) { animation-delay: 0.45s; }
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.connection-content p {
-  font-size: 18px;
-  margin-bottom: 20px;
-  color: #2c3e50;
+.form-group:last-of-type {
+  margin-bottom: 32px;
 }
 
-.connection-buttons {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.connection-btn {
-  padding: 14px 20px;
-  font-size: 15px;
+.form-group label { 
+  display: block; 
+  margin-bottom: 10px; 
   font-weight: 600;
-  border: 2px solid #3498db;
-  background-color: #fff;
-  color: #3498db;
-  border-radius: 8px;
-  cursor: pointer;
+  color: #374151;
+  font-size: 14px;
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  font-size: 12px;
+  opacity: 0.8;
   transition: all 0.2s ease;
-  min-height: 48px;
+}
+
+.form-group:focus-within label {
+  color: #667eea;
+  opacity: 1;
+  transform: translateY(-2px);
+}
+
+.form-group label .required {
+  color: #ef4444;
+  margin-left: 4px;
+  font-size: 14px;
+}
+
+.form-group input, 
+.form-group select { 
+  width: 100%; 
+  padding: 16px 20px; 
+  font-size: 16px;
+  border: 2px solid #e5e7eb; 
+  border-radius: 16px; 
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box;
+  background: #ffffff;
+  font-family: inherit;
+  line-height: 1.5;
+  color: #374151;
+  font-weight: 500;
+  position: relative;
+  outline: none;
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.form-group input:not(:placeholder-shown),
+.form-group select:not(:empty) {
+  border-color: #d1d5db;
+  background: #ffffff;
+}
+
+.form-group input:hover,
+.form-group select:hover {
+  border-color: #d1d5db;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.form-group input:focus, 
+.form-group select:focus {
+  border-color: #667eea;
+  box-shadow: 
+    0 0 0 4px rgba(102, 126, 234, 0.15),
+    0 8px 24px rgba(0, 0, 0, 0.12);
+  background: #ffffff;
+  transform: translateY(-2px);
+}
+
+.form-group input::placeholder {
+  color: #9ca3af;
+  font-weight: 400;
+  opacity: 0.7;
+}
+
+/* ========================================
+   GENDER RADIO BUTTONS - REDESIGNED
+======================================== */
+.gender-radio-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.gender-radio-option {
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.connection-btn:hover {
-  background-color: #3498db;
-  color: #fff;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
-}
-
-.connection-btn:active {
-  transform: translateY(0);
-}
-
-.connection-btn.line-only {
-  border-color: #9b59b6;
-  color: #9b59b6;
-}
-
-.connection-btn.line-only:hover {
-  background-color: #9b59b6;
-  color: #fff;
-}
-
-/* Custom styling for the line-only button */
-.connection-btn.line-only {
-  background-color: #9b59b6 !important;
-  border-color: #9b59b6 !important;
-  color: white !important;
-}
-
-.connection-btn.line-only:hover {
-  background-color: #8e44ad !important;
-  border-color: #8e44ad !important;
-  color: white !important;
-}
-
-/* ENHANCED: Optimized Form Actions */
-.modal-content {
-  display: flex;
-  flex-direction: column;
-  max-height: 90vh;
+  gap: 12px;
+  cursor: pointer;
+  padding: 20px 24px;
+  border-radius: 16px;
+  border: 2px solid #e5e7eb;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: #ffffff;
+  position: relative;
   overflow: hidden;
+  min-height: 64px;
 }
 
-.modal-body {
-  flex: 1;
-  overflow-y: auto;
-  padding-right: 8px;
+.gender-radio-option::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
+.gender-radio-option:hover {
+  border-color: #d1d5db;
+  background: #f9fafb;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.gender-radio-option:hover::before {
+  opacity: 1;
+}
+
+.gender-radio-option:has(input[type="radio"]:checked) {
+  border-color: #667eea;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  color: #667eea;
+  font-weight: 600;
+  box-shadow: 
+    0 0 0 4px rgba(102, 126, 234, 0.15),
+    0 8px 24px rgba(102, 126, 234, 0.2);
+  transform: translateY(-2px);
+}
+
+.gender-radio-option input[type="radio"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #667eea;
+  margin: 0;
+  position: relative;
+}
+
+.gender-radio-option label {
+  cursor: pointer;
+  font-weight: 600;
+  margin: 0;
+  font-size: 15px;
+  white-space: nowrap;
+  user-select: none;
+  position: relative;
+  z-index: 1;
+}
+
+/* ========================================
+   SEARCHABLE SELECT STYLING
+======================================== */
+.searchable-select {
+  position: relative;
+}
+
+.searchable-select .select-input {
+  width: 100%;
+  padding: 16px 20px;
+  font-size: 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 16px;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.searchable-select .select-input:hover {
+  border-color: #d1d5db;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.searchable-select .select-input:focus {
+  border-color: #667eea;
+  box-shadow: 
+    0 0 0 4px rgba(102, 126, 234, 0.15),
+    0 8px 24px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+/* ========================================
+   HELP TEXT
+======================================== */
+.help-text { 
+  font-size: 13px; 
+  color: #6b7280; 
+  margin-top: 8px;
+  line-height: 1.5;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #f9fafb;
+  border-radius: 12px;
+  border-left: 3px solid #667eea;
+}
+
+.help-text::before {
+  content: "💡";
+  font-style: normal;
+  font-size: 14px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* ========================================
+   FORM ACTIONS - COMPLETELY REDESIGNED
+======================================== */
 .form-actions {
   position: sticky;
   bottom: 0;
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-  border-top: 1px solid #e2e8f0;
-  padding: 20px 24px;
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  border-top: 1px solid #f1f5f9;
+  padding: 24px 32px;
   margin: 0;
   z-index: 10;
-  display: flex;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
   align-items: center;
   flex-shrink: 0;
-  border-radius: 0 0 16px 16px;
-  box-shadow: 0 -4px 12px rgba(0,0,0,0.08);
+  border-radius: 0 0 20px 20px;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.06);
   gap: 16px;
-  flex-wrap: nowrap;
+  position: relative;
+}
+
+.form-actions::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 32px;
+  right: 32px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, #e2e8f0 50%, transparent 100%);
 }
 
 .form-actions-right {
   display: flex;
   gap: 16px;
   align-items: center;
+  grid-column: 3 / 5;
+  justify-self: end;
 }
 
-/* ENHANCED: Modern Button Styles */
+/* ========================================
+   BUTTONS - MODERN DESIGN SYSTEM
+======================================== */
 .form-actions button {
-  padding: 12px 24px;
-  border-radius: 10px;
-  font-size: 14px;
+  padding: 16px 32px;
+  border-radius: 16px;
+  font-size: 15px;
   font-weight: 600;
-  border: 2px solid transparent;
+  border: none;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  min-width: 100px;
-  height: 44px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 120px;
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -260,89 +467,118 @@
   position: relative;
   user-select: none;
   white-space: nowrap;
+  text-decoration: none;
+  outline: none;
+  overflow: hidden;
 }
 
-/* Delete button should have same styling but different color */
-.form-actions button[id*="delete"] {
-  order: -1;
-  margin-right: 16px;
+.form-actions button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.3) 50%, transparent 70%);
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+}
+
+.form-actions button:hover::before {
+  transform: translateX(100%);
 }
 
 .form-actions button:active {
-  transform: translateY(1px);
+  transform: translateY(2px) scale(0.98);
 }
 
-.form-actions button:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+.form-actions button:focus-visible {
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.3);
 }
 
-/* Cancel Button - Optimized */
+/* DELETE BUTTON */
+.form-actions button[id*="delete"] {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  box-shadow: 
+    0 8px 24px rgba(239, 68, 68, 0.3),
+    0 4px 12px rgba(239, 68, 68, 0.2);
+  grid-column: 1;
+  justify-self: start;
+}
+
+.form-actions button[id*="delete"]:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 12px 32px rgba(239, 68, 68, 0.4),
+    0 8px 16px rgba(239, 68, 68, 0.3);
+}
+
+.form-actions button[id*="delete"]:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+/* CANCEL BUTTON */
 .form-actions button[id*="cancel"] { 
-  background: #6c757d; 
-  color: #fff; 
-  border-color: #6c757d;
-  order: 1;
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  color: #ffffff;
+  box-shadow: 
+    0 8px 24px rgba(107, 114, 128, 0.3),
+    0 4px 12px rgba(107, 114, 128, 0.2);
 }
 
 .form-actions button[id*="cancel"]:hover {
-  background: #5a6268;
-  border-color: #5a6268;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(108, 117, 125, 0.2);
+  background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 12px 32px rgba(107, 114, 128, 0.4),
+    0 8px 16px rgba(107, 114, 128, 0.3);
 }
 
-/* Save/Apply Button - Optimized */
+/* SAVE/APPLY BUTTON */
 .form-actions button[id*="save"],
 .form-actions button[id*="apply"] { 
-  background: #28a745; 
-  color: #fff; 
-  border-color: #28a745;
-  order: 2;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  box-shadow: 
+    0 8px 24px rgba(16, 185, 129, 0.3),
+    0 4px 12px rgba(16, 185, 129, 0.2);
+  position: relative;
 }
 
 .form-actions button[id*="save"]:hover,
 .form-actions button[id*="apply"]:hover {
-  background: #218838;
-  border-color: #218838;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.2);
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 12px 32px rgba(16, 185, 129, 0.4),
+    0 8px 16px rgba(16, 185, 129, 0.3);
 }
 
-/* Delete Button - Optimized */
-.form-actions button[id*="delete"] {
-  background: #dc3545; 
-  color: #fff; 
-  border-color: #dc3545;
-  order: 0;
-}
-
-.form-actions button[id*="delete"]:hover {
-  background: #c82333;
-  border-color: #c82333;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.2);
-}
-
-/* ENHANCED: Loading Button Support */
+/* ========================================
+   LOADING STATES
+======================================== */
 .form-actions button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none !important;
+  box-shadow: none !important;
 }
 
 .form-actions button.loading {
   position: relative;
   color: transparent;
+  pointer-events: none;
 }
 
 .form-actions button.loading::after {
   content: '';
   position: absolute;
-  width: 16px;
-  height: 16px;
-  border: 2px solid transparent;
-  border-top: 2px solid currentColor;
+  width: 20px;
+  height: 20px;
+  border: 3px solid transparent;
+  border-top: 3px solid currentColor;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   top: 50%;
@@ -351,50 +587,299 @@
   color: white;
 }
 
-/* ENHANCED: Focus improvements for keyboard navigation */
-.form-actions button:focus-visible,
-.form-group input:focus-visible,
-.form-group select:focus-visible {
-  outline: 3px solid #3498db;
-  outline-offset: 2px;
-  z-index: 1;
+@keyframes spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
 }
 
-/* ENHANCED: Modal enhancement styles */
-.modal-enhanced {
-  isolation: isolate;
-  backdrop-filter: blur(8px);
-  background: rgba(0, 0, 0, 0.7);
-}
-
-.modal-mobile .modal-content {
-  border-radius: 16px 16px 0 0;
-  margin-top: auto;
-  max-height: 90vh;
-}
-
-.modal-open {
-  overflow: hidden !important;
-}
-
-/* Better modal content shadow */
-.modal-enhanced .modal-content {
+/* ========================================
+   ERROR STATES
+======================================== */
+.form-group.error input,
+.form-group.error select,
+.form-group.error .select-input {
+  border-color: #ef4444 !important;
   box-shadow: 
-    0 24px 48px rgba(0, 0, 0, 0.2),
-    0 8px 16px rgba(0, 0, 0, 0.1);
+    0 0 0 4px rgba(239, 68, 68, 0.15),
+    0 4px 12px rgba(239, 68, 68, 0.1) !important;
+  background: rgba(239, 68, 68, 0.02);
 }
 
-/* Smooth transitions for all interactive elements */
-.modal-enhanced input,
-.modal-enhanced select,
-.modal-enhanced button {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+.form-group.error .gender-radio-option {
+  border-color: #ef4444 !important;
+  background: rgba(239, 68, 68, 0.02) !important;
 }
 
-/* Responsive Design - Mobile Modal Adjustments */
+.error-message {
+  color: #ef4444;
+  font-size: 13px;
+  margin-top: 8px;
+  animation: slideDown 0.3s ease-out;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: rgba(239, 68, 68, 0.05);
+  border-radius: 12px;
+  border-left: 3px solid #ef4444;
+}
+
+.error-message::before {
+  content: "⚠️";
+  font-size: 14px;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 100px;
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+/* ========================================
+   CONFIRMATION MODALS
+======================================== */
+#deleteConfirmModal,
+#clearAllConfirmModal,
+#lineRemovalModal {
+  z-index: 1050 !important;
+  background: rgba(0, 0, 0, 0.85) !important;
+  backdrop-filter: blur(16px);
+}
+
+.confirmation-modal {
+  max-width: 420px !important;
+}
+
+.confirmation-content {
+  text-align: center;
+  padding: 8px 0 16px;
+}
+
+.warning-icon,
+.info-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  display: block;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.warning-icon {
+  color: #ef4444;
+}
+
+.info-icon {
+  color: #667eea;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.8; }
+}
+
+.confirmation-message {
+  font-size: 16px;
+  line-height: 1.6;
+  color: #374151;
+  margin-bottom: 24px;
+  font-weight: 500;
+}
+
+.consequence-list {
+  background: rgba(243, 244, 246, 0.7);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin: 0 auto;
+  max-width: 320px;
+  text-align: left;
+}
+
+.consequence-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+.consequence-item:last-child {
+  margin-bottom: 0;
+}
+
+.consequence-item .bullet {
+  color: #ef4444;
+  font-weight: 700;
+  font-size: 16px;
+  margin-top: 1px;
+  flex-shrink: 0;
+}
+
+#lineRemovalModal .consequence-item .bullet {
+  color: #667eea;
+}
+
+/* Confirmation modal specific button styling */
+.confirmation-modal .form-actions {
+  padding: 20px 32px 24px;
+  justify-content: center;
+}
+
+.confirmation-modal .form-actions-right {
+  justify-content: center;
+  width: 100%;
+  max-width: 300px;
+}
+
+.confirmation-modal .form-actions button {
+  min-width: 140px;
+}
+
+/* Enhanced confirmation button styling */
+.confirmation-modal button[id*="confirm"] {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  font-weight: 700;
+  position: relative;
+  overflow: hidden;
+}
+
+.confirmation-modal button[id*="confirm"]:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 12px 32px rgba(239, 68, 68, 0.5),
+    0 8px 16px rgba(239, 68, 68, 0.3);
+}
+
+.confirmation-modal button[id*="confirm"]::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s ease;
+}
+
+.confirmation-modal button[id*="confirm"]:hover::before {
+  left: 100%;
+}
+
+/* Line removal modal specific styling */
+#lineRemovalModal button[id*="confirm"] {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+#lineRemovalModal button[id*="confirm"]:hover {
+  background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+  box-shadow: 
+    0 12px 32px rgba(102, 126, 234, 0.5),
+    0 8px 16px rgba(102, 126, 234, 0.3);
+}
+
+/* ========================================
+   CONNECTION MODAL STYLES
+======================================== */
+.connection-content {
+  text-align: center;
+  margin-bottom: 24px;
+  padding: 0 8px;
+}
+
+.connection-content p {
+  font-size: 18px;
+  margin-bottom: 24px;
+  color: #374151;
+  font-weight: 500;
+  line-height: 1.6;
+}
+
+.connection-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.connection-btn {
+  padding: 20px 24px;
+  font-size: 15px;
+  font-weight: 600;
+  border: 2px solid #667eea;
+  background: #ffffff;
+  color: #667eea;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.connection-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.connection-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+  color: #ffffff;
+}
+
+.connection-btn:hover::before {
+  opacity: 1;
+}
+
+.connection-btn:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.connection-btn.line-only {
+  border-color: #8b5cf6;
+  color: #8b5cf6;
+}
+
+.connection-btn.line-only::before {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+}
+
+.connection-btn.line-only:hover {
+  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.3);
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+======================================== */
 @media (max-width: 768px) {
   .modal {
-    padding: 12px;
+    padding: 16px;
     align-items: flex-start;
     padding-top: 20px;
   }
@@ -404,123 +889,258 @@
     width: 100%;
     max-width: none;
     margin: 0;
-  }
-  
-  .modal-header {
-    padding: 16px 20px 12px;
+    border-radius: 16px;
   }
   
   .modal-content h2 {
-    font-size: 18px;
+    font-size: 20px;
+    padding: 20px 24px 16px;
+  }
+  
+  .modal-content h2::after {
+    left: 24px;
+    right: 24px;
   }
   
   .modal-content h2 .person-icon {
-    width: 20px;
-    height: 20px;
-    font-size: 11px;
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
   }
   
   .modal-body {
-    padding: 16px 20px 0;
+    padding: 0 24px 8px;
   }
   
-  /* ENHANCED: All buttons in one row for mobile */
   .form-actions {
-    padding: 16px 20px;
-    flex-direction: row;
-    gap: 12px;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: nowrap;
-  }
-  
-  .form-actions-right {
-    display: flex;
-    gap: 12px;
-    flex-shrink: 0;
-  }
-  
-  .form-actions button {
-    flex: 1;
-    max-width: 100px;
-    height: 44px;
-    font-size: 14px;
-    font-weight: 600;
-    padding: 10px 16px;
-    white-space: nowrap;
-  }
-  
-  .form-actions button[id*="delete"] {
-    order: -1;
-    flex: 1;
-    max-width: 100px;
-    margin: 0;
-  }
-  
-  .connection-buttons {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  /* Make connection buttons larger for touch */
-  .connection-btn {
-    padding: 16px 24px;
-    font-size: 18px;
-    min-height: 60px;
-  }
-}
-
-/* Additional mobile optimizations - Very Small Screens */
-@media (max-width: 480px) {
-  .modal-content {
-    padding: 20px;
-  }
-
-  .connection-buttons {
+    padding: 20px 24px;
     grid-template-columns: 1fr;
     gap: 16px;
   }
   
-  .modal {
-    padding: 8px;
-    padding-top: 16px;
+  .form-actions::before {
+    left: 24px;
+    right: 24px;
   }
   
-  .modal-header {
-    padding: 12px 16px;
+  .form-actions-right {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    grid-column: 1;
+    justify-self: stretch;
   }
   
-  .modal-body {
-    padding: 12px 16px 0;
+  .form-actions button {
+    height: 52px;
+    font-size: 14px;
+    padding: 14px 24px;
+    min-width: auto;
   }
   
-  .form-actions {
-    padding: 12px 16px;
+  .form-actions button[id*="delete"] {
+    grid-column: 1;
+    justify-self: stretch;
+    margin-bottom: 8px;
   }
   
-  /* Responsive text sizing */
-  .modal-enhanced .modal-content h2 {
+  .gender-radio-group {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .gender-radio-option {
+    padding: 16px 20px;
+    min-height: 56px;
+  }
+  
+  .connection-buttons {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .connection-btn {
+    padding: 18px 24px;
+    font-size: 16px;
+    min-height: 60px;
+  }
+  
+  .form-group input, 
+  .form-group select {
+    padding: 14px 18px;
     font-size: 16px;
   }
 }
 
-/* ENHANCED: Accessibility improvements */
-@media (prefers-reduced-motion: reduce) {
-  .modal,
-  .modal-content,
-  .form-actions button {
-    animation: none !important;
-    transition: none !important;
+@media (max-width: 480px) {
+  .modal {
+    padding: 12px;
+    padding-top: 16px;
   }
-}
-
-/* High contrast mode */
-@media (prefers-contrast: high) {
-  .modal-content {
-    border: 2px solid #000;
+  
+  .modal-content h2 {
+    font-size: 18px;
+    padding: 16px 20px 12px;
+  }
+  
+  .modal-body {
+    padding: 0 20px 8px;
   }
   
   .form-actions {
-    border-top: 2px solid #000;
+    padding: 16px 20px;
   }
+  
+  .form-actions::before {
+    left: 20px;
+    right: 20px;
+  }
+  
+  .form-actions button {
+    height: 48px;
+    font-size: 14px;
+    padding: 12px 20px;
+    border-radius: 12px;
+  }
+  
+  .form-group input, 
+  .form-group select {
+    padding: 12px 16px;
+  }
+  
+  .gender-radio-option {
+    padding: 14px 18px;
+    min-height: 52px;
+  }
+}
+
+/* ========================================
+   ENHANCED MODAL VARIANTS
+======================================== */
+.modal-enhanced {
+  isolation: isolate;
+  backdrop-filter: blur(16px);
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.modal-enhanced .modal-content {
+  box-shadow: 
+    0 32px 64px rgba(0, 0, 0, 0.25),
+    0 16px 32px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.modal-open {
+  overflow: hidden !important;
+}
+
+/* ========================================
+   KEYBOARD SHORTCUTS HINT
+======================================== */
+.modal-content::after {
+  content: 'Press ESC to close • TAB to navigate • ENTER to submit';
+  position: absolute;
+  bottom: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(0, 0, 0, 0.6);
+  padding: 4px 12px;
+  border-radius: 8px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ========================================
+   ENHANCED FOCUS MANAGEMENT
+======================================== */
+.modal-open {
+  overflow: hidden !important;
+}
+
+.modal[aria-hidden="false"] {
+  display: flex;
+}
+
+.modal[aria-hidden="true"] {
+  display: none;
+}
+
+/* Trap focus within modal */
+.modal-content {
+  isolation: isolate;
+}
+
+.modal-content:focus-within {
+  outline: none;
+}
+
+/* Enhanced tab order */
+.form-group input[tabindex="1"],
+.form-group select[tabindex="1"] {
+  outline-color: #667eea;
+  outline-width: 3px;
+  outline-style: solid;
+  outline-offset: 2px;
+}
+
+/* ========================================
+   ACCESSIBILITY & MOTION
+======================================== */
+@media (prefers-reduced-motion: reduce) {
+  .modal,
+  .modal-content,
+  .form-actions button,
+  .gender-radio-option,
+  .form-group input,
+  .form-group select,
+  .form-group {
+    animation: none !important;
+    transition: none !important;
+  }
+  
+  .form-actions button::before,
+  .modal-content h2 .person-icon::before {
+    display: none;
+  }
+  
+  .warning-icon,
+  .info-icon {
+    animation: none !important;
+  }
+}
+
+@media (prefers-contrast: high) {
+  .modal-content {
+    border: 2px solid #000000;
+  }
+  
+  .form-actions {
+    border-top: 2px solid #000000;
+  }
+  
+  .form-group input,
+  .form-group select,
+  .gender-radio-option {
+    border-width: 2px;
+  }
+}
+
+/* ========================================
+   FOCUS IMPROVEMENTS
+======================================== */
+.form-actions button:focus-visible,
+.form-group input:focus-visible,
+.form-group select:focus-visible,
+.gender-radio-option:focus-visible {
+  outline: 3px solid #667eea;
+  outline-offset: 2px;
+  z-index: 1;
+}
+
+.gender-radio-option input[type="radio"]:focus-visible {
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
 }
