@@ -48,14 +48,14 @@
 ======================================== */
 .modal-content { 
   background: #ffffff;
-  border-radius: 20px; 
+  border-radius: 16px; 
   width: 100%;
-  max-width: 480px;
+  max-width: 420px;
   max-height: calc(100vh - 40px);
   overflow: hidden;
   box-shadow: 
-    0 32px 64px rgba(0, 0, 0, 0.2),
-    0 16px 32px rgba(0, 0, 0, 0.1),
+    0 24px 48px rgba(0, 0, 0, 0.15),
+    0 12px 24px rgba(0, 0, 0, 0.08),
     0 0 0 1px rgba(255, 255, 255, 0.1);
   display: flex;
   flex-direction: column;
@@ -80,17 +80,17 @@
 ======================================== */
 .modal-content h2 {
   margin: 0;
-  padding: 28px 32px 20px;
-  font-size: 24px;
+  padding: 20px 24px 16px;
+  font-size: 20px;
   font-weight: 700;
   color: #1a202c;
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   line-height: 1.3;
   border-bottom: 1px solid #f1f5f9;
   background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
-  border-radius: 20px 20px 0 0;
+  border-radius: 16px 16px 0 0;
   letter-spacing: -0.02em;
   position: relative;
 }
@@ -99,22 +99,22 @@
   content: '';
   position: absolute;
   bottom: 0;
-  left: 32px;
-  right: 32px;
+  left: 24px;
+  right: 24px;
   height: 1px;
   background: linear-gradient(90deg, transparent 0%, #e2e8f0 50%, transparent 100%);
 }
 
 .modal-content h2 .person-icon {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 12px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
   flex-shrink: 0;
   box-shadow: 
@@ -148,7 +148,7 @@
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 0 32px 8px;
+  padding: 0 24px 8px;
   scrollbar-width: none;
   -ms-overflow-style: none;
   scroll-behavior: smooth;
@@ -162,7 +162,7 @@
    FORM GROUPS - ENHANCED DESIGN
 ======================================== */
 .form-group { 
-  margin-bottom: 28px;
+  margin-bottom: 20px;
   position: relative;
   animation: fadeInUp 0.4s ease-out;
   animation-fill-mode: both;
@@ -189,12 +189,12 @@
 }
 
 .form-group:last-of-type {
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
 
 .form-group label { 
   display: block; 
-  margin-bottom: 10px; 
+  margin-bottom: 8px; 
   font-weight: 600;
   color: #374151;
   font-size: 14px;
@@ -221,10 +221,10 @@
 .form-group input, 
 .form-group select { 
   width: 100%; 
-  padding: 16px 20px; 
-  font-size: 16px;
+  padding: 14px 16px; 
+  font-size: 15px;
   border: 2px solid #e5e7eb; 
-  border-radius: 16px; 
+  border-radius: 12px; 
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-sizing: border-box;
   background: #ffffff;
@@ -281,16 +281,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 10px;
   cursor: pointer;
-  padding: 20px 24px;
-  border-radius: 16px;
+  padding: 16px 20px;
+  border-radius: 12px;
   border: 2px solid #e5e7eb;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   background: #ffffff;
   position: relative;
   overflow: hidden;
-  min-height: 64px;
+  min-height: 52px;
+  user-select: none;
 }
 
 .gender-radio-option::before {
@@ -334,6 +335,7 @@
   accent-color: #667eea;
   margin: 0;
   position: relative;
+  pointer-events: none;
 }
 
 .gender-radio-option label {
@@ -345,6 +347,7 @@
   user-select: none;
   position: relative;
   z-index: 1;
+  pointer-events: none;
 }
 
 /* ========================================
@@ -356,10 +359,10 @@
 
 .searchable-select .select-input {
   width: 100%;
-  padding: 16px 20px;
-  font-size: 16px;
+  padding: 14px 16px;
+  font-size: 15px;
   border: 2px solid #e5e7eb;
-  border-radius: 16px;
+  border-radius: 12px;
   background: #ffffff;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -386,26 +389,18 @@
    HELP TEXT
 ======================================== */
 .help-text { 
-  font-size: 13px; 
+  font-size: 12px; 
   color: #6b7280; 
-  margin-top: 8px;
-  line-height: 1.5;
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  padding: 8px 16px;
-  background: #f9fafb;
-  border-radius: 12px;
-  border-left: 3px solid #667eea;
+  margin-top: 4px;
+  line-height: 1.4;
+  display: block;
+  padding: 6px 0;
+  background: none;
+  border: none;
+  font-style: italic;
 }
 
-.help-text::before {
-  content: "💡";
-  font-style: normal;
-  font-size: 14px;
-  flex-shrink: 0;
-  margin-top: 1px;
-}
+/* Remove the colored icon element */
 
 /* ========================================
    FORM ACTIONS - COMPLETELY REDESIGNED
@@ -415,32 +410,41 @@
   bottom: 0;
   background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
   border-top: 1px solid #f1f5f9;
-  padding: 24px 32px;
+  padding: 18px 24px;
   margin: 0;
   z-index: 10;
   display: grid;
   grid-template-columns: auto 1fr auto auto;
   align-items: center;
   flex-shrink: 0;
-  border-radius: 0 0 20px 20px;
+  border-radius: 0 0 16px 16px;
   box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.06);
-  gap: 16px;
+  gap: 12px;
   position: relative;
+}
+
+/* Ensure desktop grid layout doesn't interfere on mobile */
+@media (min-width: 769px) {
+  .form-actions {
+    display: grid !important;
+    grid-template-columns: auto 1fr auto auto !important;
+    flex-direction: unset !important;
+  }
 }
 
 .form-actions::before {
   content: '';
   position: absolute;
   top: 0;
-  left: 32px;
-  right: 32px;
+  left: 24px;
+  right: 24px;
   height: 1px;
   background: linear-gradient(90deg, transparent 0%, #e2e8f0 50%, transparent 100%);
 }
 
 .form-actions-right {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   align-items: center;
   grid-column: 3 / 5;
   justify-self: end;
@@ -450,15 +454,15 @@
    BUTTONS - MODERN DESIGN SYSTEM
 ======================================== */
 .form-actions button {
-  padding: 16px 32px;
-  border-radius: 16px;
-  font-size: 15px;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 14px;
   font-weight: 600;
   border: none;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  min-width: 120px;
-  height: 56px;
+  min-width: 100px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -749,6 +753,95 @@
   min-width: 140px;
 }
 
+/* Compact confirmation modals on mobile */
+@media (max-width: 768px) {
+  .confirmation-modal .form-actions {
+    padding: 14px 18px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 10px;
+  }
+  
+  .confirmation-modal .form-actions-right {
+    display: flex;
+    gap: 10px;
+    max-width: none;
+    width: auto;
+  }
+  
+  .confirmation-modal .form-actions button {
+    min-width: 110px;
+    height: 40px;
+    font-size: 13px;
+    flex: 1;
+  }
+  
+  .confirmation-content {
+    padding: 4px 0 12px;
+  }
+  
+  .warning-icon,
+  .info-icon {
+    font-size: 36px;
+    margin-bottom: 12px;
+  }
+  
+  .confirmation-message {
+    font-size: 15px;
+    margin-bottom: 16px;
+  }
+  
+  .consequence-list {
+    padding: 12px 16px;
+    margin: 0 8px;
+  }
+  
+  .consequence-item {
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .confirmation-modal .form-actions {
+    padding: 12px 16px;
+    gap: 8px;
+  }
+  
+  .confirmation-modal .form-actions-right {
+    gap: 8px;
+  }
+  
+  .confirmation-modal .form-actions button {
+    min-width: 100px;
+    height: 40px;
+    font-size: 12px;
+    padding: 8px 12px;
+  }
+  
+  .warning-icon,
+  .info-icon {
+    font-size: 32px;
+    margin-bottom: 10px;
+  }
+  
+  .confirmation-message {
+    font-size: 14px;
+    margin-bottom: 14px;
+  }
+  
+  .consequence-list {
+    padding: 10px 14px;
+    margin: 0 4px;
+  }
+  
+  .consequence-item {
+    font-size: 12px;
+    margin-bottom: 5px;
+  }
+}
+
 /* Enhanced confirmation button styling */
 .confirmation-modal button[id*="confirm"] {
   background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
@@ -875,107 +968,78 @@
 }
 
 /* ========================================
-   RESPONSIVE DESIGN
+   DESKTOP COMPACT OPTIMIZATION
 ======================================== */
-@media (max-width: 768px) {
-  .modal {
-    padding: 16px;
-    align-items: flex-start;
-    padding-top: 20px;
-  }
-  
+@media (min-width: 769px) {
   .modal-content {
-    max-height: calc(100vh - 40px);
-    width: 100%;
-    max-width: none;
-    margin: 0;
-    border-radius: 16px;
-  }
-  
-  .modal-content h2 {
-    font-size: 20px;
-    padding: 20px 24px 16px;
-  }
-  
-  .modal-content h2::after {
-    left: 24px;
-    right: 24px;
-  }
-  
-  .modal-content h2 .person-icon {
-    width: 28px;
-    height: 28px;
-    font-size: 12px;
+    max-width: 400px;
   }
   
   .modal-body {
-    padding: 0 24px 8px;
+    padding: 0 20px 8px;
   }
   
-  .form-actions {
-    padding: 20px 24px;
-    grid-template-columns: 1fr;
-    gap: 16px;
+  .form-group {
+    margin-bottom: 16px;
   }
   
-  .form-actions::before {
-    left: 24px;
-    right: 24px;
+  .form-group:last-of-type {
+    margin-bottom: 20px;
   }
   
-  .form-actions-right {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    grid-column: 1;
-    justify-self: stretch;
-  }
-  
-  .form-actions button {
-    height: 52px;
+  .form-group input,
+  .form-group select {
+    padding: 12px 14px;
     font-size: 14px;
-    padding: 14px 24px;
-    min-width: auto;
   }
   
-  .form-actions button[id*="delete"] {
-    grid-column: 1;
-    justify-self: stretch;
-    margin-bottom: 8px;
-  }
-  
-  .gender-radio-group {
-    grid-template-columns: 1fr;
-    gap: 12px;
+  .searchable-select .select-input {
+    padding: 12px 14px;
+    font-size: 14px;
   }
   
   .gender-radio-option {
+    padding: 14px 16px;
+    min-height: 48px;
+  }
+  
+  .gender-radio-option label {
+    font-size: 14px;
+  }
+  
+  .form-actions {
     padding: 16px 20px;
-    min-height: 56px;
+    gap: 10px;
   }
   
-  .connection-buttons {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  .connection-btn {
-    padding: 18px 24px;
-    font-size: 16px;
-    min-height: 60px;
+  .form-actions-right {
+    gap: 10px;
   }
   
-  .form-group input, 
-  .form-group select {
-    padding: 14px 18px;
-    font-size: 16px;
+  .form-actions button {
+    padding: 10px 20px;
+    height: 40px;
+    font-size: 13px;
+    min-width: 90px;
   }
 }
 
-@media (max-width: 480px) {
+/* ========================================
+   RESPONSIVE DESIGN - COMPACT MOBILE
+======================================== */
+@media (max-width: 768px) {
   .modal {
     padding: 12px;
+    align-items: flex-start;
     padding-top: 16px;
+  }
+  
+  .modal-content {
+    max-height: calc(100vh - 32px);
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    border-radius: 12px;
   }
   
   .modal-content h2 {
@@ -983,12 +1047,79 @@
     padding: 16px 20px 12px;
   }
   
-  .modal-body {
-    padding: 0 20px 8px;
+  .modal-content h2::after {
+    left: 20px;
+    right: 20px;
   }
   
-  .form-actions {
-    padding: 16px 20px;
+  .modal-content h2 .person-icon {
+    width: 24px;
+    height: 24px;
+    font-size: 11px;
+    border-radius: 8px;
+  }
+  
+  .modal-body {
+    padding: 0 20px 4px;
+  }
+  
+  /* COMPACT FORM GROUPS */
+  .form-group { 
+    margin-bottom: 18px;
+  }
+  
+  .form-group:last-of-type {
+    margin-bottom: 20px;
+  }
+  
+  .form-group label {
+    margin-bottom: 6px;
+    font-size: 11px;
+  }
+  
+  .form-group input, 
+  .form-group select {
+    padding: 12px 16px;
+    font-size: 16px;
+    border-radius: 12px;
+  }
+  
+  /* COMPACT GENDER BUTTONS */
+  .gender-radio-group {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  
+  .gender-radio-option {
+    padding: 12px 16px;
+    min-height: 48px;
+    border-radius: 12px;
+  }
+  
+  .gender-radio-option label {
+    font-size: 14px;
+  }
+  
+  /* COMPACT HELP TEXT */
+  .help-text {
+    font-size: 11px;
+    margin-top: 3px;
+    padding: 4px 0;
+  }
+  
+  /* COMPACT ACTIONS - ALL BUTTONS IN ONE ROW */
+  .form-actions,
+  .form-actions-enhanced {
+    padding: 16px 20px !important;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    gap: 8px !important;
+    grid-template-columns: none !important;
+    margin-top: 0 !important;
+    border-top: 1px solid #f1f5f9 !important;
   }
   
   .form-actions::before {
@@ -996,21 +1127,178 @@
     right: 20px;
   }
   
+  .form-actions-right {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 8px !important;
+    grid-column: unset !important;
+    justify-self: unset !important;
+    flex: 0 0 auto !important;
+    justify-content: flex-end !important;
+    width: auto !important;
+  }
+  
+  /* COMPACT BUTTONS - ALL IN ONE ROW */
   .form-actions button {
-    height: 48px;
-    font-size: 14px;
-    padding: 12px 20px;
+    height: 44px !important;
+    font-size: 13px !important;
+    font-weight: 600;
+    padding: 10px 16px !important;
+    min-width: 80px !important;
+    border-radius: 12px !important;
+    flex-shrink: 0;
+    margin: 0 !important;
+  }
+  
+  /* Delete button - direct child of form-actions */
+  .form-actions > button[id*="delete"] {
+    flex: 0 0 auto;
+    margin-right: auto !important;
+  }
+  
+  /* Buttons inside form-actions-right */
+  .form-actions-right button[id*="cancel"] {
+    flex: 0 0 auto;
+  }
+  
+  .form-actions-right button[id*="save"],
+  .form-actions-right button[id*="apply"] {
+    flex: 0 0 auto;
+  }
+  
+  /* COMPACT CONNECTION BUTTONS */
+  .connection-buttons {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .connection-btn {
+    padding: 14px 20px;
+    font-size: 15px;
+    min-height: 50px;
     border-radius: 12px;
+  }
+  
+  /* COMPACT SEARCHABLE SELECTS */
+  .searchable-select .select-input {
+    padding: 12px 16px;
+    font-size: 16px;
+    border-radius: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal {
+    padding: 8px;
+    padding-top: 12px;
+  }
+  
+  .modal-content {
+    border-radius: 10px;
+  }
+  
+  .modal-content h2 {
+    font-size: 16px;
+    padding: 14px 16px 10px;
+  }
+  
+  .modal-content h2::after {
+    left: 16px;
+    right: 16px;
+  }
+  
+  .modal-content h2 .person-icon {
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+    border-radius: 6px;
+  }
+  
+  .modal-body {
+    padding: 0 16px 4px;
+  }
+  
+  /* EXTRA COMPACT FORM GROUPS */
+  .form-group { 
+    margin-bottom: 14px;
+  }
+  
+  .form-group:last-of-type {
+    margin-bottom: 16px;
+  }
+  
+  .form-group label {
+    margin-bottom: 5px;
+    font-size: 10px;
   }
   
   .form-group input, 
   .form-group select {
-    padding: 12px 16px;
+    padding: 10px 14px;
+    font-size: 16px;
+    border-radius: 10px;
   }
   
+  /* EXTRA COMPACT GENDER BUTTONS */
   .gender-radio-option {
-    padding: 14px 18px;
-    min-height: 52px;
+    padding: 10px 14px;
+    min-height: 42px;
+    border-radius: 10px;
+  }
+  
+  .gender-radio-option label {
+    font-size: 13px;
+  }
+  
+  /* EXTRA COMPACT ACTIONS */
+  .form-actions,
+  .form-actions-enhanced {
+    padding: 12px 16px !important;
+    gap: 6px !important;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+  }
+  
+  .form-actions::before {
+    left: 16px;
+    right: 16px;
+  }
+  
+  .form-actions-right {
+    gap: 6px !important;
+    display: flex !important;
+    flex-direction: row !important;
+    width: auto !important;
+  }
+  
+  /* EXTRA COMPACT BUTTONS */
+  .form-actions button {
+    height: 40px !important;
+    font-size: 12px !important;
+    font-weight: 600;
+    padding: 8px 12px !important;
+    min-width: 70px !important;
+    border-radius: 10px !important;
+  }
+  
+  /* Delete button positioning for small screens */
+  .form-actions > button[id*="delete"] {
+    margin-right: auto !important;
+  }
+  
+  /* COMPACT HELP TEXT */
+  .help-text {
+    font-size: 11px;
+    padding: 5px 10px;
+    border-radius: 6px;
+  }
+  
+  /* COMPACT SEARCHABLE SELECTS */
+  .searchable-select .select-input {
+    padding: 10px 14px;
+    border-radius: 10px;
   }
 }
 

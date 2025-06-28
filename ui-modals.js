@@ -282,6 +282,13 @@ class ModalUXEnhancer {
 
   enhanceModal(modal) {
     if (this.isEnhancingModal) return; // Prevent enhancement loops
+    
+    // Skip enhancement for personModal - it has custom styling in modal.css
+    if (modal && modal.id === 'personModal') {
+      console.log('🚫 Skipping enhancement for personModal - using custom modal.css styles');
+      return;
+    }
+    
     this.isEnhancingModal = true;
 
     console.log('🔧 Enhancing modal:', modal.id || 'unnamed');
@@ -349,6 +356,13 @@ class ModalUXEnhancer {
   enhanceFormActions(modalContent) {
     const formActions = modalContent.querySelector('.form-actions');
     if (!formActions) return;
+
+    // Skip enhancement for person modal - it has custom styling in modal.css
+    const modal = modalContent.closest('.modal');
+    if (modal && modal.id === 'personModal') {
+      console.log('Skipping enhancement for personModal - using custom modal.css styles');
+      return;
+    }
 
     // Add enhanced class
     formActions.classList.add('form-actions-enhanced');
@@ -446,6 +460,13 @@ class ModalUXEnhancer {
   }
 
   optimizeFormActionsForMobile(formActions) {
+    // Skip mobile optimization for person modal - it has custom styling in modal.css
+    const modal = formActions.closest('.modal');
+    if (modal && modal.id === 'personModal') {
+      console.log('Skipping mobile optimization for personModal - using custom modal.css styles');
+      return;
+    }
+
     const buttons = formActions.querySelectorAll('button');
     
     // Ensure proper touch targets

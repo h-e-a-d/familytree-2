@@ -792,6 +792,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const maleRadio = document.getElementById('genderMale');
   const femaleRadio = document.getElementById('genderFemale');
   
+  // Add click listeners to the entire gender radio option containers
+  const genderOptions = document.querySelectorAll('.gender-radio-option');
+  genderOptions.forEach(option => {
+    option.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const radio = option.querySelector('input[type="radio"]');
+      if (radio && !radio.checked) {
+        radio.checked = true;
+        radio.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
+  });
+  
   if (maleRadio) {
     maleRadio.addEventListener('change', () => {
       if (maleRadio.checked) {
