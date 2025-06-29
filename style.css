@@ -1509,7 +1509,7 @@ html, body {
   align-items: center !important;
   justify-content: center !important;
   font-weight: 600 !important;
-  position: relative !important;
+  /* position: relative removed - conflicts with translateY positioning */
   margin-bottom: 0 !important;
   outline: none !important;
   user-select: none !important;
@@ -1609,25 +1609,25 @@ html, body {
   transform: scale(1);
 }
 
-/* UPDATED: Bring to Front Button Positioning (topmost) */
+/* UPDATED: Bring Front Button - top of stack */
 .floating-buttons.expanded #bringFrontBtn {
   transform: translateY(-280px) scale(1);
   transition-delay: 0.05s;
 }
 
-/* UPDATED: Edit Button Positioning (second) */
+/* UPDATED: Edit Button - third from bottom */
 .floating-buttons.expanded #editBtn {
   transform: translateY(-210px) scale(1);
   transition-delay: 0.1s;
 }
 
-/* UPDATED: Style Button Positioning (third) */
+/* UPDATED: Style Button - second from bottom */
 .floating-buttons.expanded #styleBtn {
   transform: translateY(-140px) scale(1);
   transition-delay: 0.15s;
 }
 
-/* UPDATED: Connect Button Positioning (fourth) */
+/* UPDATED: Connect Button - bottom (closest to + button) */
 .floating-buttons.expanded #connectBtn {
   transform: translateY(-70px) scale(1);
   transition-delay: 0.2s;
@@ -1645,31 +1645,28 @@ html, body {
   box-shadow: 0 6px 16px rgba(243, 156, 18, 0.4);
 }
 
-/* UPDATED: Bring to Front Button Hover State */
+/* UPDATED: Hover States with corrected spacing */
 .floating-buttons.expanded #bringFrontBtn:hover {
   transform: translateY(-280px) scale(1.1);
   box-shadow: 0 6px 16px rgba(243, 156, 18, 0.4);
 }
 
-/* UPDATED: Edit Button Hover State */
 .floating-buttons.expanded #editBtn:hover {
   transform: translateY(-210px) scale(1.1);
   box-shadow: 0 6px 16px rgba(52, 152, 219, 0.4);
 }
 
-/* UPDATED: Style Button Hover State */
 .floating-buttons.expanded #styleBtn:hover {
   transform: translateY(-140px) scale(1.1);
   box-shadow: 0 6px 16px rgba(52, 152, 219, 0.4);
 }
 
-/* UPDATED: Connect Button Hover State */
 .floating-buttons.expanded #connectBtn:hover {
   transform: translateY(-70px) scale(1.1);
   box-shadow: 0 6px 16px rgba(52, 152, 219, 0.4);
 }
 
-/* UPDATED: Active States */
+/* UPDATED: Active States with corrected spacing */
 .floating-buttons.expanded #bringFrontBtn:active {
   transform: translateY(-280px) scale(0.95);
 }
@@ -2065,59 +2062,59 @@ html, body {
     max-width: unset;
   }
   
-  /* UPDATED: Mobile positioning for buttons */
+  /* UPDATED: Mobile corrected positioning - 70px gaps */
   .floating-buttons.expanded #bringFrontBtn {
-    transform: translateY(-350px) scale(1);
+    transform: translateY(-280px) scale(1);
     transition-delay: 0.05s;
   }
 
   .floating-buttons.expanded #editBtn {
-    transform: translateY(-280px) scale(1);
+    transform: translateY(-210px) scale(1);
     transition-delay: 0.1s;
   }
 
   .floating-buttons.expanded #styleBtn {
-    transform: translateY(-210px) scale(1);
+    transform: translateY(-140px) scale(1);
     transition-delay: 0.15s;
   }
 
   .floating-buttons.expanded #connectBtn {
-    transform: translateY(-140px) scale(1);
+    transform: translateY(-70px) scale(1);
     transition-delay: 0.2s;
   }
 
-  /* UPDATED: Mobile hover states */
+  /* UPDATED: Mobile hover states with corrected spacing */
   .floating-buttons.expanded #bringFrontBtn:hover {
-    transform: translateY(-350px) scale(1.1);
-  }
-
-  .floating-buttons.expanded #editBtn:hover {
     transform: translateY(-280px) scale(1.1);
   }
 
-  .floating-buttons.expanded #styleBtn:hover {
+  .floating-buttons.expanded #editBtn:hover {
     transform: translateY(-210px) scale(1.1);
   }
 
-  .floating-buttons.expanded #connectBtn:hover {
+  .floating-buttons.expanded #styleBtn:hover {
     transform: translateY(-140px) scale(1.1);
   }
 
-  /* UPDATED: Mobile active states */
-  .floating-buttons.expanded #bringFrontBtn:active {
-    transform: translateY(-350px) scale(0.95);
+  .floating-buttons.expanded #connectBtn:hover {
+    transform: translateY(-70px) scale(1.1);
   }
 
-  .floating-buttons.expanded #editBtn:active {
+  /* UPDATED: Mobile active states with corrected spacing */
+  .floating-buttons.expanded #bringFrontBtn:active {
     transform: translateY(-280px) scale(0.95);
   }
 
-  .floating-buttons.expanded #styleBtn:active {
+  .floating-buttons.expanded #editBtn:active {
     transform: translateY(-210px) scale(0.95);
   }
 
-  .floating-buttons.expanded #connectBtn:active {
+  .floating-buttons.expanded #styleBtn:active {
     transform: translateY(-140px) scale(0.95);
+  }
+
+  .floating-buttons.expanded #connectBtn:active {
+    transform: translateY(-70px) scale(0.95);
   }
 
   /* Mobile optimizations for text inside circles */

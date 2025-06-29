@@ -1518,6 +1518,12 @@ class TreeCoreCanvas {
     const canConnect = this.selectedCircles.size === 2;
     const canEdit = this.selectedCircles.size === 1;
     
+    console.log('🔗 updateActionButtons:', { 
+      selectedCount: this.selectedCircles.size, 
+      canConnect, 
+      hasConnectBtn: !!this.connectBtn 
+    });
+    
     const floatingButtons = document.querySelector('.floating-buttons');
     if (!floatingButtons) return;
     
@@ -1538,10 +1544,14 @@ class TreeCoreCanvas {
       
       if (this.connectBtn) {
         if (canConnect) {
+          console.log('🔗 Showing connect button');
           this.connectBtn.classList.remove('hidden');
         } else {
+          console.log('🔗 Hiding connect button');
           this.connectBtn.classList.add('hidden');
         }
+      } else {
+        console.log('🔗 Connect button not found!');
       }
       
       if (this.styleBtn) {
