@@ -420,8 +420,11 @@ class ModalUXEnhancer {
       return; // Already enhanced
     }
 
-    // Skip sidebar buttons - they have their own styling
-    if (button.closest('.sidebar')) {
+    // Skip UI control buttons - they have their own styling
+    if (button.closest('.sidebar') || 
+        button.closest('.zoom-controls') || 
+        button.closest('.top-toolbar') || 
+        button.closest('.floating-buttons')) {
       return;
     }
 
@@ -486,8 +489,11 @@ class ModalUXEnhancer {
 
     const buttons = formActions.querySelectorAll('button');
     
-    // Ensure proper touch targets (skip if this is in a sidebar)
-    if (!formActions.closest('.sidebar')) {
+    // Ensure proper touch targets (skip if this is in UI control areas)
+    if (!formActions.closest('.sidebar') && 
+        !formActions.closest('.zoom-controls') && 
+        !formActions.closest('.top-toolbar') && 
+        !formActions.closest('.floating-buttons')) {
       buttons.forEach(button => {
         const currentHeight = parseFloat(getComputedStyle(button).height);
         if (currentHeight < 44) { // iOS minimum touch target
@@ -665,8 +671,11 @@ class ModalUXEnhancer {
   optimizeTouchTargets() {
     const buttons = document.querySelectorAll('button, .btn, [role="button"]');
     buttons.forEach(button => {
-      // Skip sidebar buttons - they have their own sizing
-      if (button.closest('.sidebar')) {
+      // Skip UI controls - they have their own sizing
+      if (button.closest('.sidebar') || 
+          button.closest('.zoom-controls') || 
+          button.closest('.top-toolbar') || 
+          button.closest('.floating-buttons')) {
         return;
       }
       
@@ -776,8 +785,11 @@ class ModalUXEnhancer {
         cursor: pointer;
       }
 
-      /* Exclude sidebar buttons from enhancement styles */
-      .sidebar .button-enhanced {
+      /* Exclude UI control buttons from enhancement styles */
+      .sidebar .button-enhanced,
+      .zoom-controls .button-enhanced,
+      .top-toolbar .button-enhanced,
+      .floating-buttons .button-enhanced {
         position: unset !important;
         overflow: unset !important;
         transition: unset !important;
@@ -793,8 +805,11 @@ class ModalUXEnhancer {
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       }
 
-      /* Don't apply hover effects to sidebar buttons */
-      .sidebar .button-enhanced:hover {
+      /* Don't apply hover effects to UI control buttons */
+      .sidebar .button-enhanced:hover,
+      .zoom-controls .button-enhanced:hover,
+      .top-toolbar .button-enhanced:hover,
+      .floating-buttons .button-enhanced:hover {
         transform: unset !important;
         box-shadow: unset !important;
       }
@@ -803,8 +818,11 @@ class ModalUXEnhancer {
         transform: translateY(0);
       }
 
-      /* Don't apply active effects to sidebar buttons */
-      .sidebar .button-enhanced:active {
+      /* Don't apply active effects to UI control buttons */
+      .sidebar .button-enhanced:active,
+      .zoom-controls .button-enhanced:active,
+      .top-toolbar .button-enhanced:active,
+      .floating-buttons .button-enhanced:active {
         transform: unset !important;
       }
 
