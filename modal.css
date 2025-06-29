@@ -1025,25 +1025,49 @@
 /* ========================================
    RESPONSIVE DESIGN - COMPACT MOBILE
 ======================================== */
+/* Mobile-specific viewport handling for URL bar issues */
+@supports (height: 100dvh) {
+  @media (max-width: 768px) {
+    .modal {
+      height: 100dvh !important;
+    }
+    .modal-content {
+      max-height: calc(100dvh - 120px) !important;
+    }
+  }
+}
+
 @media (max-width: 768px) {
   /* Support for dynamic viewport height (mobile URL bar) */
   .modal {
-    padding: 12px;
+    padding: 8px;
     align-items: flex-start;
-    padding-top: 16px;
-    padding-bottom: 20px;
-    /* Use dvh when available, fallback to vh */
-    height: 100dvh;
-    height: 100vh;
+    padding-top: 8px;
+    padding-bottom: 80px; /* Extra space for mobile URL bars */
+    /* Use multiple fallbacks for maximum compatibility */
+    height: calc(var(--vh, 1vh) * 100); /* JS-set custom property */
+    height: 100dvh; /* Dynamic viewport height */
+    height: 100vh; /* Standard viewport height */
+    min-height: -webkit-fill-available; /* iOS Safari support */
+    min-height: 100vh;
+    /* Prevent content from being hidden behind mobile UI */
+    box-sizing: border-box;
   }
   
   .modal-content {
-    max-height: calc(100dvh - 52px);
-    max-height: calc(100vh - 52px);
+    /* Use multiple fallbacks for maximum compatibility */
+    max-height: calc((var(--vh, 1vh) * 100) - 120px); /* JS-set custom property */
+    max-height: calc(100dvh - 120px); /* Dynamic viewport height */
+    max-height: calc(100vh - 120px); /* Standard viewport height */
+    max-height: calc(-webkit-fill-available - 120px); /* iOS Safari */
     width: 100%;
     max-width: none;
     margin: 0;
     border-radius: 12px;
+    /* Ensure content doesn't overflow */
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
   
   .modal-content h2 {
@@ -1065,6 +1089,13 @@
   
   .modal-body {
     padding: 0 20px 4px;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    /* Ensure scrolling works with iOS momentum */
+    -webkit-overflow-scrolling: touch;
+    /* Ensure minimum space above form actions */
+    padding-bottom: 20px;
   }
   
   /* COMPACT FORM GROUPS */
@@ -1124,6 +1155,14 @@
     grid-template-columns: none !important;
     margin-top: 0 !important;
     border-top: 1px solid #f1f5f9 !important;
+    /* Ensure form actions stay visible above mobile URL bar */
+    position: sticky !important;
+    bottom: 0 !important;
+    background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%) !important;
+    z-index: 20 !important;
+    /* Add extra padding to keep above URL bar */
+    margin-bottom: 0 !important;
+    flex-shrink: 0 !important;
   }
   
   .form-actions::before {
@@ -1193,18 +1232,25 @@
 
 @media (max-width: 480px) {
   .modal {
-    padding: 8px;
-    padding-top: 12px;
-    padding-bottom: 24px;
+    padding: 4px;
+    padding-top: 8px;
+    padding-bottom: 100px; /* Even more space for small phones */
     /* Use dvh when available, fallback to vh */
     height: 100dvh;
     height: 100vh;
+    min-height: -webkit-fill-available; /* iOS Safari support */
+    min-height: 100vh;
   }
   
   .modal-content {
     border-radius: 10px;
-    max-height: calc(100dvh - 68px);
-    max-height: calc(100vh - 68px);
+    max-height: calc(100dvh - 140px); /* Very conservative for small screens */
+    max-height: calc(100vh - 140px);
+    max-height: calc(-webkit-fill-available - 140px); /* iOS Safari */
+    /* Ensure content fits properly */
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
   
   .modal-content h2 {
@@ -1226,6 +1272,13 @@
   
   .modal-body {
     padding: 0 16px 4px;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    /* Ensure scrolling works with iOS momentum */
+    -webkit-overflow-scrolling: touch;
+    /* Extra padding for small screens */
+    padding-bottom: 24px;
   }
   
   /* EXTRA COMPACT FORM GROUPS */

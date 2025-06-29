@@ -198,8 +198,12 @@ class ModalUXEnhancer {
         this.isMobile = window.innerWidth <= 768;
         this.updateModalForScreenSize();
         this.recalculateModalPositions();
+        this.adjustMobileViewport();
       }, 100);
     });
+
+    // Initial mobile viewport adjustment
+    this.adjustMobileViewport();
 
     // Enhanced escape key handling
     document.addEventListener('keydown', (e) => {
@@ -998,6 +1002,7 @@ class ModalUXEnhancer {
     // Add mobile optimizations
     if (this.isMobile) {
       this.optimizeForMobile(modal);
+      this.adjustMobileViewport(); // Ensure proper viewport handling
     }
     
     // Setup focus trap
@@ -1244,6 +1249,44 @@ class ModalUXEnhancer {
 
   static getActiveModal() {
     return window.modalUXEnhancer ? window.modalUXEnhancer.activeModal : null;
+  }
+
+  // Mobile viewport adjustment for URL bar issues
+  adjustMobileViewport() {
+    if (!this.isMobile) return;
+    
+    // Set CSS custom property for actual viewport height
+    const actualVH = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty('--vh', `${actualVH}px`);
+    
+    // Adjust active modal if exists
+    if (this.activeModal) {
+      const modal = this.activeModal;
+      const modalContent = modal.querySelector('.modal-content');
+      
+      if (modalContent) {
+        // Calculate safe area for modal content
+        const safeHeight = window.innerHeight - 120; // Conservative spacing
+        modalContent.style.maxHeight = `${safeHeight}px`;
+        
+        // Ensure form actions are positioned safely
+        const formActions = modalContent.querySelector('.form-actions');
+        if (formActions) {
+          // Make sure form actions are sticky and visible
+          formActions.style.position = 'sticky';
+          formActions.style.bottom = '0';
+          formActions.style.zIndex = '30';
+          formActions.style.backgroundColor = '#ffffff';
+          formActions.style.borderTop = '1px solid #f1f5f9';
+        }
+      }
+    }
+    
+    console.log('📱 Mobile viewport adjusted:', { 
+      innerHeight: window.innerHeight, 
+      vh: actualVH,
+      isMobile: this.isMobile 
+    });
   }
 
   // Cleanup
