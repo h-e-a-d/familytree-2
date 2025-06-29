@@ -444,85 +444,85 @@ html, body {
 
 /* ENHANCED: Vertical Sidebar - Narrower with Better Design */
 .sidebar {
-  position: fixed;
-  left: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 1001;
-  background: rgba(255, 255, 255, 0.98);
-  border-radius: 12px;
-  padding: 4px;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 40px;
+  position: fixed !important;
+  left: 8px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  z-index: 1001 !important;
+  background: rgba(255, 255, 255, 0.98) !important;
+  border-radius: 12px !important;
+  padding: 4px !important;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+  min-width: 40px !important;
 }
 
 .sidebar-btn {
-  width: 32px;
-  height: 32px;
-  border: none;
-  background: transparent;
-  border-radius: 8px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  color: #6b7280;
-  position: relative;
+  width: 32px !important;
+  height: 32px !important;
+  border: none !important;
+  background: transparent !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  color: #6b7280 !important;
+  position: relative !important;
 }
 
 .sidebar-btn:hover {
-  background: rgba(52, 152, 219, 0.12);
-  color: #3498db;
-  transform: scale(1.1);
-  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2);
+  background: rgba(52, 152, 219, 0.12) !important;
+  color: #3498db !important;
+  transform: scale(1.1) !important;
+  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2) !important;
 }
 
 .sidebar-btn.active {
-  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-  color: white;
-  box-shadow: 0 2px 12px rgba(52, 152, 219, 0.3);
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%) !important;
+  color: white !important;
+  box-shadow: 0 2px 12px rgba(52, 152, 219, 0.3) !important;
 }
 
 .sidebar-btn svg {
-  width: 18px;
-  height: 18px;
-  stroke-width: 2.5;
+  width: 18px !important;
+  height: 18px !important;
+  stroke-width: 2.5 !important;
 }
 
 .sidebar-divider {
-  height: 1px;
-  background: rgba(0, 0, 0, 0.1);
-  margin: 4px 0;
+  height: 1px !important;
+  background: rgba(0, 0, 0, 0.1) !important;
+  margin: 4px 0 !important;
 }
 
 /* Undo/Redo buttons styling */
 #undoSidebarBtn, #redoSidebarBtn {
-  opacity: 0.7;
-  transition: all 0.2s ease;
+  opacity: 0.7 !important;
+  transition: all 0.2s ease !important;
 }
 
 #undoSidebarBtn:hover, #redoSidebarBtn:hover {
-  opacity: 1;
-  background: rgba(52, 152, 219, 0.1);
-  color: #3498db;
-  transform: scale(1.05);
+  opacity: 1 !important;
+  background: rgba(52, 152, 219, 0.1) !important;
+  color: #3498db !important;
+  transform: scale(1.05) !important;
 }
 
 #undoSidebarBtn:disabled, #redoSidebarBtn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-  pointer-events: none;
+  opacity: 0.3 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
 }
 
 #undoSidebarBtn.available, #redoSidebarBtn.available {
-  opacity: 1;
-  color: #3498db;
+  opacity: 1 !important;
+  color: #3498db !important;
 }
 
 /* ENHANCED: Settings Icon Improvements */

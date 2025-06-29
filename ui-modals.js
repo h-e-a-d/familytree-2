@@ -288,6 +288,12 @@ class ModalUXEnhancer {
       console.log('🚫 Skipping enhancement for personModal - using custom modal.css styles');
       return;
     }
+
+    // Skip enhancement for sidebar elements - they have their own styling
+    if (modal && modal.closest('.sidebar')) {
+      console.log('🚫 Skipping enhancement for sidebar elements - using custom sidebar styles');
+      return;
+    }
     
     this.isEnhancingModal = true;
 
@@ -364,6 +370,12 @@ class ModalUXEnhancer {
       return;
     }
 
+    // Skip enhancement for sidebar buttons - they have their own styling
+    if (modalContent.closest('.sidebar')) {
+      console.log('Skipping enhancement for sidebar buttons - using custom sidebar styles');
+      return;
+    }
+
     // Add enhanced class
     formActions.classList.add('form-actions-enhanced');
 
@@ -406,6 +418,11 @@ class ModalUXEnhancer {
   enhanceButton(button) {
     if (button.classList.contains('button-enhanced')) {
       return; // Already enhanced
+    }
+
+    // Skip sidebar buttons - they have their own styling
+    if (button.closest('.sidebar')) {
+      return;
     }
 
     button.classList.add('button-enhanced');
@@ -469,14 +486,16 @@ class ModalUXEnhancer {
 
     const buttons = formActions.querySelectorAll('button');
     
-    // Ensure proper touch targets
-    buttons.forEach(button => {
-      const currentHeight = parseFloat(getComputedStyle(button).height);
-      if (currentHeight < 44) { // iOS minimum touch target
-        button.style.minHeight = '44px';
-        button.style.padding = '12px 20px';
-      }
-    });
+    // Ensure proper touch targets (skip if this is in a sidebar)
+    if (!formActions.closest('.sidebar')) {
+      buttons.forEach(button => {
+        const currentHeight = parseFloat(getComputedStyle(button).height);
+        if (currentHeight < 44) { // iOS minimum touch target
+          button.style.minHeight = '44px';
+          button.style.padding = '12px 20px';
+        }
+      });
+    }
 
     // Stack buttons vertically on very small screens
     if (window.innerWidth < 480) {
@@ -646,6 +665,11 @@ class ModalUXEnhancer {
   optimizeTouchTargets() {
     const buttons = document.querySelectorAll('button, .btn, [role="button"]');
     buttons.forEach(button => {
+      // Skip sidebar buttons - they have their own sizing
+      if (button.closest('.sidebar')) {
+        return;
+      }
+      
       const rect = button.getBoundingClientRect();
       if (rect.height < 44 || rect.width < 44) {
         button.style.minHeight = '44px';
@@ -752,13 +776,36 @@ class ModalUXEnhancer {
         cursor: pointer;
       }
 
+      /* Exclude sidebar buttons from enhancement styles */
+      .sidebar .button-enhanced {
+        position: unset !important;
+        overflow: unset !important;
+        transition: unset !important;
+        border-radius: unset !important;
+        font-weight: unset !important;
+        cursor: unset !important;
+        transform: unset !important;
+        box-shadow: unset !important;
+      }
+
       .button-enhanced:hover {
         transform: translateY(-1px);
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       }
 
+      /* Don't apply hover effects to sidebar buttons */
+      .sidebar .button-enhanced:hover {
+        transform: unset !important;
+        box-shadow: unset !important;
+      }
+
       .button-enhanced:active {
         transform: translateY(0);
+      }
+
+      /* Don't apply active effects to sidebar buttons */
+      .sidebar .button-enhanced:active {
+        transform: unset !important;
       }
 
       .button-enhanced.loading {
