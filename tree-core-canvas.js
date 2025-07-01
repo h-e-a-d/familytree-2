@@ -1968,6 +1968,127 @@ class TreeCoreCanvas {
 
     requestAnimationFrame(animate);
   }
+
+  // Set up connection modal functionality
+  setupConnectionModal() {
+    const modal = document.getElementById('connectionModal');
+    const motherBtn = document.getElementById('motherBtn');
+    const fatherBtn = document.getElementById('fatherBtn');
+    const childBtn = document.getElementById('childBtn');
+    const spouseBtn = document.getElementById('spouseBtn');
+    const lineOnlyBtn = document.getElementById('lineOnlyBtn');
+    const cancelBtn = document.getElementById('cancelConnectionModal');
+
+    if (!modal) return;
+
+    // Set up connection type buttons
+    motherBtn?.addEventListener('click', () => this.createConnectionWithType('mother'));
+    fatherBtn?.addEventListener('click', () => this.createConnectionWithType('father'));
+    childBtn?.addEventListener('click', () => this.createConnectionWithType('child'));
+    spouseBtn?.addEventListener('click', () => this.createConnectionWithType('spouse'));
+    lineOnlyBtn?.addEventListener('click', () => this.createConnectionWithType('line-only'));
+    cancelBtn?.addEventListener('click', () => this.closeConnectionModal());
+
+    // Close modal when clicking outside
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        this.closeConnectionModal();
+      }
+    });
+  }
+
+  // Open connection modal
+  openConnectionModal() {
+    const modal = document.getElementById('connectionModal');
+    const connectionText = document.getElementById('connectionText');
+    
+    if (!modal || !this.connectionPersonA || !this.connectionPersonB) return;
+
+    // Update connection text
+    const personAData = this.personData.get(this.connectionPersonA);
+    const personBData = this.personData.get(this.connectionPersonB);
+    const personAName = personAData?.name || 'Person A';
+    const personBName = personBData?.name || 'Person B';
+    
+    if (connectionText) {
+      connectionText.textContent = `How is ${personAName} related to ${personBName}?`;
+    }
+
+    // Show modal
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+  }
+
+  // Close connection modal
+  closeConnectionModal() {
+    const modal = document.getElementById('connectionModal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.style.display = 'none';
+    }
+
+    // Clear connection persons
+    this.connectionPersonA = null;
+    this.connectionPersonB = null;
+  }
+
+  // Create connection with specific type
+  createConnectionWithType(type) {
+    if (!this.connectionPersonA || !this.connectionPersonB) return;
+
+    const personA = this.connectionPersonA;
+    const personB = this.connectionPersonB;
+
+    // Create the appropriate relationship based on type
+    switch (type) {
+      case 'mother':
+        this.setParentChild(personB, personA, 'mother');
+        break;
+      case 'father':
+        this.setParentChild(personB, personA, 'father');
+        break;
+      case 'child':
+        this.setParentChild(personA, personB);
+        break;
+      case 'spouse':
+        this.setSpouse(personA, personB);
+        break;
+      case 'line-only':
+        this.createLineOnlyConnection(personA, personB);
+        break;
+    }
+
+    // Close modal
+    this.closeConnectionModal();
+
+    // Update display
+    this.renderer.needsRedraw = true;
+    this.saveToCache();
+    this.undoRedoManager.pushUndoState();
+
+    // Show notification
+    const relationshipName = type === 'line-only' ? 'line connection' : `${type} relationship`;
+    const personAData = this.personData.get(personA);
+    const personBData = this.personData.get(personB);
+    const personAName = personAData?.name || 'Person';
+    const personBName = personBData?.name || 'Person';
+    notifications.success('Connection Created', `${relationshipName} added between ${personAName} and ${personBName}`);
+  }
+
+  // Create line-only connection
+  createLineOnlyConnection(personAId, personBId) {
+    // Add to line-only connections set
+    const connectionKey = `${personAId}-${personBId}`;
+    const reverseKey = `${personBId}-${personAId}`;
+    
+    this.lineOnlyConnections.add(connectionKey);
+    this.lineOnlyConnections.add(reverseKey);
+
+    // Create visual connection
+    if (this.renderer) {
+      this.renderer.addConnection(personAId, personBId, 'line-only');
+    }
+  }
 }
 
 // Create and export instance
@@ -2077,7 +2198,7 @@ if (typeof window !== 'undefined') {
   console.log('1. Run debugCache() to check cache state');
   console.log('2. Run fixConnections() to restore missing connections');
   console.log('3. If problem persists, run clearCacheAndReload()');
-}
+  }
 
 function devLog(...args) {
   if (window.NODE_ENV !== 'production') {
