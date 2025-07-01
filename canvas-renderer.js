@@ -233,31 +233,32 @@ export class CanvasRenderer {
 
   // Draw only connections (for export)
   drawConnectionsOnly(ctx) {
-    ctx.lineWidth = 2;
-    
     for (const conn of this.connections) {
       const fromNode = this.nodes.get(conn.from);
       const toNode = this.nodes.get(conn.to);
       
       if (!fromNode || !toNode) continue;
       
+      // Set line properties based on connection type (matching browser display logic)
       if (conn.type === 'spouse') {
-        ctx.strokeStyle = this.settings.spouseConnectionColor;
-        ctx.setLineDash([4, 2]);
+        ctx.strokeStyle = this.settings.spouseLineColor;
+        ctx.lineWidth = this.settings.spouseLineThickness;
+        this.setLineDash(ctx, this.settings.spouseLineStyle);
       } else if (conn.type === 'line-only') {
-        ctx.strokeStyle = '#9b59b6';
-        ctx.setLineDash([8, 4, 2, 4]);
+        ctx.strokeStyle = this.settings.lineOnlyColor;
+        ctx.lineWidth = this.settings.lineOnlyThickness;
+        this.setLineDash(ctx, this.settings.lineOnlyStyle);
       } else {
-        ctx.strokeStyle = this.settings.connectionColor;
-        ctx.setLineDash([]);
+        // Family connections (parent-child)
+        ctx.strokeStyle = this.settings.familyLineColor;
+        ctx.lineWidth = this.settings.familyLineThickness;
+        this.setLineDash(ctx, this.settings.familyLineStyle);
       }
       
       ctx.beginPath();
       ctx.moveTo(fromNode.x, fromNode.y);
       ctx.lineTo(toNode.x, toNode.y);
       ctx.stroke();
-      
-      ctx.setLineDash([]);
     }
   }
 
@@ -278,13 +279,17 @@ export class CanvasRenderer {
     
     // Draw circle
     ctx.fillStyle = node.color || this.settings.nodeColor;
-    ctx.strokeStyle = this.settings.strokeColor;
-    ctx.lineWidth = this.settings.strokeWidth;
     
     ctx.beginPath();
     ctx.arc(node.x, node.y, radius, 0, Math.PI * 2);
     ctx.fill();
-    ctx.stroke();
+    
+    // Draw outline only if enabled (matching browser display logic)
+    if (this.settings.showNodeOutline) {
+      ctx.strokeStyle = this.settings.outlineColor;
+      ctx.lineWidth = this.settings.outlineThickness;
+      ctx.stroke();
+    }
     
     // Draw text
     this.drawNodeText(ctx, node, radius * 1.8);
@@ -297,11 +302,15 @@ export class CanvasRenderer {
     
     // Draw rectangle
     ctx.fillStyle = node.color || this.settings.nodeColor;
-    ctx.strokeStyle = this.settings.strokeColor;
-    ctx.lineWidth = this.settings.strokeWidth;
     
     ctx.fillRect(node.x - width/2, node.y - height/2, width, height);
-    ctx.strokeRect(node.x - width/2, node.y - height/2, width, height);
+    
+    // Draw outline only if enabled (matching browser display logic)
+    if (this.settings.showNodeOutline) {
+      ctx.strokeStyle = this.settings.outlineColor;
+      ctx.lineWidth = this.settings.outlineThickness;
+      ctx.strokeRect(node.x - width/2, node.y - height/2, width, height);
+    }
     
     // Draw text
     this.drawNodeText(ctx, node, width - 20);

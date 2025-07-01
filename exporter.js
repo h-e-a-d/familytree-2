@@ -24,11 +24,18 @@ export function exportTree(format) {
         clone.querySelectorAll('.grid-line').forEach((el) => el.remove());
         
         // Ensure the clone has proper styling
+        const treeCore = window.treeCore;
+        const showOutline = treeCore?.renderer?.settings?.showNodeOutline ?? true;
+        const outlineColor = treeCore?.renderer?.settings?.outlineColor ?? '#2c3e50';
+        const outlineThickness = treeCore?.renderer?.settings?.outlineThickness ?? 2;
+        
         const style = document.createElementNS('http://www.w3.org/2000/svg', 'style');
         style.textContent = `
           .person-group circle { 
-            stroke: #2c3e50; 
-            stroke-width: 2px; 
+            ${showOutline ? `stroke: ${outlineColor}; stroke-width: ${outlineThickness}px;` : 'stroke: none;'}
+          }
+          .person-group rect { 
+            ${showOutline ? `stroke: ${outlineColor}; stroke-width: ${outlineThickness}px;` : 'stroke: none;'}
           }
           .person-group text.name { 
             font-weight: 600; 
