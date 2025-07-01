@@ -1040,11 +1040,52 @@
                 this.expandTimeout = null;
               }
             });
+            
+            // Prevent clicks on expanded content from closing the panel
+            const expandedContent = this.indicator.querySelector('.cache-expanded-content');
+            if (expandedContent) {
+              expandedContent.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.clearCollapseTimer(); // Clear timer when clicking anywhere in expanded content
+              });
+              
+              // Also clear timer when mouse enters expanded content
+              expandedContent.addEventListener('mouseenter', () => {
+                this.clearCollapseTimer();
+              });
+            }
           }
           
           if (this.treeNameInput) {
             this.treeNameInput.addEventListener('change', () => this.saveTreeName());
-            this.treeNameInput.addEventListener('blur', () => this.saveTreeName());
+            
+            // Prevent click events from bubbling up to parent (which would close the panel)
+            this.treeNameInput.addEventListener('click', (e) => {
+              e.stopPropagation();
+              this.clearCollapseTimer(); // Clear timer when clicking input
+            });
+            
+            // Also prevent focus events from triggering parent click
+            this.treeNameInput.addEventListener('focus', (e) => {
+              e.stopPropagation();
+              this.clearCollapseTimer(); // Clear timer when focusing input
+            });
+            
+            // Clear timer while user is typing
+            this.treeNameInput.addEventListener('input', () => {
+              this.clearCollapseTimer();
+            });
+            
+            // Clear timer while user is actively in the input field
+            this.treeNameInput.addEventListener('keydown', () => {
+              this.clearCollapseTimer();
+            });
+            
+            // Only start collapse timer when user leaves the input field
+            this.treeNameInput.addEventListener('blur', () => {
+              this.saveTreeName();
+              this.scheduleCollapse(2000); // Give some time after losing focus
+            });
           }
           
           this.updateStats();
@@ -1078,6 +1119,13 @@
               this.indicator.classList.remove('expanded');
             }
           }, delay);
+        }
+        
+        clearCollapseTimer() {
+          if (this.expandTimeout) {
+            clearTimeout(this.expandTimeout);
+            this.expandTimeout = null;
+          }
         }
         
         updateStats() {

@@ -79,6 +79,129 @@ The codebase has been significantly enhanced with critical improvements:
 - **CSS Specificity Management**: Prevented inline style conflicts by exempting personModal from automatic enhancement
 - **Responsive Design**: Comprehensive mobile optimization with proper touch targets and compact layouts
 
+### Recent Critical Fixes (January 2025)
+
+#### Export System Improvements
+- **Outline Export Fix**: Fixed "Show outline" feature not applying to exported files (PNG, SVG, PDF)
+  - **Issue**: Canvas export methods ignored `showNodeOutline` setting, always drawing outlines
+  - **Solution**: Updated `drawCircleNodeExport()` and `drawRectangleNodeExport()` methods in `canvas-renderer.js:276-308` to respect outline settings
+  - **SVG Export**: Made SVG styling conditional based on `window.treeCore.renderer.settings.showNodeOutline`
+  - **Result**: Exported files now match browser display exactly for outline visibility
+
+- **Connection Lines Export Restoration**: Fixed connection lines disappearing in exports after outline fix
+  - **Issue**: `drawConnectionsOnly()` method used hardcoded colors instead of user settings
+  - **Solution**: Updated method to match browser display logic with proper line styles, colors, and thickness
+  - **Pattern Applied**: Used same pattern as outline fix - export methods now mirror browser display settings
+  - **Result**: Both outlines and connection lines export correctly with user's configured appearance
+
+#### Connection Modal Implementation
+- **Link Modal Functionality**: Implemented complete connection modal system for relationship creation
+  - **Missing Functions**: Added `setupConnectionModal()`, `openConnectionModal()`, `closeConnectionModal()`, `createConnectionWithType()`, `createLineOnlyConnection()` methods
+  - **Modal Integration**: Connected existing HTML/CSS structure with JavaScript functionality
+  - **Relationship Types**: Full support for Mother, Father, Child, Spouse, and Line-only connections
+  - **User Experience**: Personalized modal text showing actual person names, proper notifications
+  - **Event Handling**: Modal closes on cancel, outside click, with proper state cleanup
+
+- **Line-Only Connection Fix**: Resolved line-only connections not being drawn
+  - **Root Cause**: Parameter handling error - functions expected person IDs but received objects
+  - **Fix**: Corrected `createConnectionWithType()` to pass IDs directly instead of `personA.id`
+  - **Data Flow**: `handleConnectSelected()` → modal functions now handle IDs correctly
+  - **Result**: Line-only connections now draw properly between selected people
+
+#### Cache Indicator User Experience
+- **Auto-Close Prevention**: Fixed cache indicator closing immediately when trying to edit tree name
+  - **Issue 1**: Input field clicks triggered parent element's toggle function
+  - **Solution 1**: Added `e.stopPropagation()` to input field and expanded content event handlers
+  - **Issue 2**: Auto-collapse timer continued despite user interaction
+  - **Solution 2**: Added `clearCollapseTimer()` method with comprehensive event handling
+  - **Interaction Events**: Clear timer on click, focus, input, keydown events
+  - **Smart Timing**: Only auto-close 2 seconds after losing focus, with hover protection
+  - **Result**: Panel stays open reliably while actively editing tree name
+
+### Export Rendering Architecture
+
+The application now uses a **dual rendering system** that ensures visual consistency:
+
+#### Browser Display Rendering
+- **Location**: `canvas-renderer.js` methods like `drawConnections()`, `drawCircleNode()`, `drawRectangleNode()`
+- **Features**: Full user preference support, complex styling, UI state awareness
+- **Settings Used**: `showNodeOutline`, `outlineColor`, `outlineThickness`, line style settings
+
+#### Export Rendering  
+- **Location**: `canvas-renderer.js` export methods like `drawConnectionsOnly()`, `drawCircleNodeExport()`, `drawRectangleNodeExport()`
+- **Pattern**: Mirror browser display logic but with simplified, export-optimized rendering
+- **Consistency**: Export methods now respect the same user settings as browser display
+- **Formats**: Applies to PNG, SVG, PDF exports through canvas and SVG generation
+
+#### SVG Export Styling
+- **Dynamic CSS**: `exporter.js` generates conditional CSS based on current renderer settings
+- **Outline Support**: `stroke: ${outlineColor}` or `stroke: none` based on `showNodeOutline`
+- **Settings Access**: Uses `window.treeCore.renderer.settings` for live configuration
+- **Element Types**: Supports both circle and rectangle node styles
+
+### Connection Modal System Architecture
+
+#### HTML Structure (`builder.html:150-165`)
+```html
+<div id="connectionModal" class="modal hidden">
+  <div class="modal-content connection-content">
+    <h2 id="connectionModalTitle">Connect People</h2>
+    <p id="connectionText">Person A is __ to Person B</p>
+    <div class="connection-buttons">
+      <button id="motherBtn" class="connection-btn">Mother</button>
+      <button id="fatherBtn" class="connection-btn">Father</button>
+      <button id="childBtn" class="connection-btn">Child</button>
+      <button id="spouseBtn" class="connection-btn">Spouse</button>
+      <button id="lineOnlyBtn" class="connection-btn line-only">Line only</button>
+    </div>
+    <button id="cancelConnectionModal">Cancel</button>
+  </div>
+</div>
+```
+
+#### JavaScript Implementation (`tree-core-canvas.js:1972-2085`)
+- **Setup Function**: `setupConnectionModal()` - Initializes all event listeners
+- **Modal Control**: `openConnectionModal()`, `closeConnectionModal()` - Handle visibility and state
+- **Relationship Logic**: `createConnectionWithType(type)` - Creates appropriate relationships
+- **Connection Types**: Supports all family relationship types plus visual-only connections
+- **Data Integration**: Proper integration with existing person data and renderer systems
+
+#### User Interaction Flow
+1. **Selection**: User selects exactly 2 people on canvas
+2. **Trigger**: "Link" button appears and user clicks it
+3. **Modal Display**: Connection modal opens with personalized text
+4. **Relationship Choice**: User selects relationship type (mother, father, child, spouse, line-only)
+5. **Creation**: Appropriate relationship is created in family tree data
+6. **Visual Update**: Canvas re-renders with new connection, auto-save triggers
+7. **Notification**: Success message shows relationship created between named people
+
+### Cache Indicator Smart Behavior (`builder.html:1015-1150`)
+
+#### Enhanced Timer Management
+- **Auto-Collapse**: 4-second timer when expanded, 2-second timer after input blur
+- **Smart Clearing**: Timer cleared during any user interaction (hover, click, type, focus)
+- **Event Prevention**: Input field interactions don't trigger parent element handlers
+- **Hover Protection**: Mouse presence in expanded area prevents auto-collapse
+
+#### Multi-Level Event Handling
+```javascript
+// Parent container - only responds to clicks on save indicator text
+this.indicator.addEventListener('click', () => this.toggleExpand());
+
+// Expanded content - prevents parent clicks, clears timer
+expandedContent.addEventListener('click', (e) => {
+  e.stopPropagation();
+  this.clearCollapseTimer();
+});
+
+// Input field - comprehensive interaction handling
+this.treeNameInput.addEventListener('input', () => this.clearCollapseTimer());
+this.treeNameInput.addEventListener('focus', (e) => {
+  e.stopPropagation();
+  this.clearCollapseTimer();
+});
+```
+
 ## Core Architecture
 
 ### Module System
