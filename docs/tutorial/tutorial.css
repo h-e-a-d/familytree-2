@@ -1,0 +1,974 @@
+/**
+ * Tutorial System Styles for MapMyRoots
+ * Complete styling for tutorial modal and animations
+ */
+
+/* ==================== MODAL BASE STYLES ==================== */
+.tutorial-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    font-family: 'Arial', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.tutorial-modal.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.tutorial-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(4px);
+}
+
+.tutorial-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow: hidden;
+    animation: slideInUp 0.4s ease-out;
+}
+
+@keyframes slideInUp {
+    from {
+        transform: translate(-50%, -40%);
+        opacity: 0;
+    }
+    to {
+        transform: translate(-50%, -50%);
+        opacity: 1;
+    }
+}
+
+/* ==================== HEADER STYLES ==================== */
+.tutorial-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 32px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 16px 16px 0 0;
+}
+
+.tutorial-header h2 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.tutorial-skip-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.tutorial-skip-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
+}
+
+/* ==================== BODY STYLES ==================== */
+.tutorial-body {
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.tutorial-animation {
+    height: 200px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.tutorial-text {
+    text-align: center;
+}
+
+.tutorial-text h3 {
+    margin: 0 0 12px 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.tutorial-text p {
+    margin: 0;
+    font-size: 16px;
+    color: #4a5568;
+    line-height: 1.6;
+}
+
+/* ==================== FOOTER STYLES ==================== */
+.tutorial-footer {
+    padding: 24px 32px;
+    background: #f8fafc;
+    border-radius: 0 0 16px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tutorial-progress {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.progress-bar {
+    width: 200px;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    transition: width 0.4s ease;
+    border-radius: 3px;
+}
+
+#tutorialStepCount {
+    font-size: 14px;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.tutorial-controls {
+    display: flex;
+    gap: 12px;
+}
+
+.tutorial-btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 80px;
+}
+
+.tutorial-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.tutorial-btn-secondary {
+    background: #e2e8f0;
+    color: #475569;
+}
+
+.tutorial-btn-secondary:hover:not(:disabled) {
+    background: #cbd5e1;
+    transform: translateY(-1px);
+}
+
+.tutorial-btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.tutorial-btn-primary:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+/* ==================== ANIMATION STYLES ==================== */
+
+/* Welcome Animation */
+.welcome-animation {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    animation: fadeInScale 1s ease-out;
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.family-tree-logo {
+    position: relative;
+    width: 150px;
+    height: 100px;
+}
+
+.tree-node {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    animation: bounceIn 0.8s ease-out;
+}
+
+.tree-node.root {
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    animation-delay: 0.2s;
+}
+
+.tree-node.child-1 {
+    top: 60px;
+    left: 20px;
+    animation-delay: 0.4s;
+}
+
+.tree-node.child-2 {
+    top: 60px;
+    right: 20px;
+    animation-delay: 0.6s;
+}
+
+.tree-branches {
+    position: absolute;
+    top: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.branch {
+    position: absolute;
+    width: 2px;
+    height: 30px;
+    background: #667eea;
+    animation: growLine 1s ease-out 0.8s both;
+}
+
+.branch-1 {
+    transform: rotate(-30deg);
+    left: -20px;
+}
+
+.branch-2 {
+    transform: rotate(30deg);
+    right: -20px;
+}
+
+@keyframes bounceIn {
+    from {
+        opacity: 0;
+        transform: scale(0.3);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.05);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes growLine {
+    from {
+        height: 0;
+    }
+    to {
+        height: 30px;
+    }
+}
+
+.welcome-text h3 {
+    color: #667eea;
+    font-size: 18px;
+    margin: 0;
+    animation: slideInUp 0.6s ease-out 1s both;
+}
+
+/* Add Button Animation */
+.add-button-demo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.mock-toolbar {
+    display: flex;
+    gap: 12px;
+    padding: 12px 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.mock-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.mock-add-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.mock-btn:not(.mock-add-btn) {
+    background: #e2e8f0;
+    color: #475569;
+}
+
+.pulsing {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.4);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 0 10px rgba(102, 126, 234, 0);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(102, 126, 234, 0);
+    }
+}
+
+.click-indicator {
+    position: relative;
+    animation: slideInUp 0.5s ease-out 1s both;
+}
+
+.click-circle {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #667eea;
+    border-radius: 50%;
+    animation: clickRipple 1.5s infinite;
+}
+
+.click-text {
+    position: absolute;
+    top: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #667eea;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+@keyframes clickRipple {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(2);
+        opacity: 0;
+    }
+}
+
+/* Person Form Animation */
+.person-form-demo {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.mock-form {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 300px;
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 2px solid #e5e7eb;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+    box-sizing: border-box;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.typing-animation {
+    position: relative;
+}
+
+.typing-animation::after {
+    content: '|';
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    0%, 50% {
+        opacity: 1;
+    }
+    51%, 100% {
+        opacity: 0;
+    }
+}
+
+/* Drag Animation */
+.drag-demo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.mock-canvas {
+    position: relative;
+    width: 250px;
+    height: 120px;
+    background: #f8fafc;
+    border: 2px dashed #cbd5e1;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.mock-person {
+    position: absolute;
+    top: 35px;
+    left: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: move;
+    transition: transform 0.3s ease;
+}
+
+.mock-person.draggable {
+    animation: dragFloat 3s ease-in-out infinite;
+}
+
+@keyframes dragFloat {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+.person-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.person-name {
+    margin-top: 4px;
+    font-size: 10px;
+    color: #374151;
+    font-weight: 500;
+}
+
+.drag-path {
+    position: absolute;
+    top: 50%;
+    left: 30px;
+    width: 100px;
+    height: 2px;
+    background: #667eea;
+    display: none;
+    animation: drawPath 1s ease-out;
+}
+
+@keyframes drawPath {
+    from {
+        width: 0;
+    }
+    to {
+        width: 100px;
+    }
+}
+
+.drag-instruction {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #667eea;
+    font-size: 14px;
+    font-weight: 500;
+    animation: fadeInUp 0.5s ease-out 1s both;
+}
+
+.drag-icon {
+    font-size: 18px;
+    animation: wave 1s ease-in-out infinite;
+}
+
+@keyframes wave {
+    0%, 100% {
+        transform: rotate(0deg);
+    }
+    50% {
+        transform: rotate(20deg);
+    }
+}
+
+/* Connection Animation */
+.connection-demo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.mock-person.selected {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    animation: selectGlow 2s ease-in-out infinite;
+}
+
+@keyframes selectGlow {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba(102, 126, 234, 0);
+    }
+}
+
+.connection-line {
+    position: absolute;
+    top: 70px;
+    left: 70px;
+    width: 60px;
+    height: 2px;
+    background: #667eea;
+    animation: drawConnection 2s ease-out infinite;
+}
+
+@keyframes drawConnection {
+    0% {
+        width: 0;
+    }
+    50% {
+        width: 60px;
+    }
+    100% {
+        width: 60px;
+    }
+}
+
+.link-button {
+    margin-top: 20px;
+}
+
+/* Export Animation */
+.export-demo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.mock-tree {
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.tree-visualization {
+    text-align: center;
+}
+
+.tree-visualization .node {
+    font-size: 24px;
+    margin-bottom: 10px;
+    animation: treeGrow 2s ease-out infinite;
+}
+
+@keyframes treeGrow {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.export-options {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.export-btn {
+    padding: 6px 12px;
+    background: #f1f5f9;
+    border: 2px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 12px;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    animation: fadeInUp 0.5s ease-out both;
+}
+
+.export-btn:nth-child(1) { animation-delay: 0.1s; }
+.export-btn:nth-child(2) { animation-delay: 0.2s; }
+.export-btn:nth-child(3) { animation-delay: 0.3s; }
+.export-btn:nth-child(4) { animation-delay: 0.4s; }
+
+.export-btn:hover {
+    background: #667eea;
+    color: white;
+    transform: translateY(-2px);
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Celebration Animation */
+.celebration-animation {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    position: relative;
+}
+
+.confetti {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.confetti-piece {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: #667eea;
+    animation: confettiFall 3s linear infinite;
+}
+
+.confetti-piece:nth-child(1) {
+    left: 10%;
+    background: #f59e0b;
+    animation-delay: 0.1s;
+}
+
+.confetti-piece:nth-child(2) {
+    left: 30%;
+    background: #10b981;
+    animation-delay: 0.3s;
+}
+
+.confetti-piece:nth-child(3) {
+    left: 50%;
+    background: #ef4444;
+    animation-delay: 0.5s;
+}
+
+.confetti-piece:nth-child(4) {
+    left: 70%;
+    background: #8b5cf6;
+    animation-delay: 0.7s;
+}
+
+.confetti-piece:nth-child(5) {
+    left: 90%;
+    background: #06b6d4;
+    animation-delay: 0.9s;
+}
+
+@keyframes confettiFall {
+    0% {
+        top: -10px;
+        transform: rotateZ(0deg);
+    }
+    100% {
+        top: 100%;
+        transform: rotateZ(360deg);
+    }
+}
+
+.success-message {
+    text-align: center;
+    z-index: 1;
+    animation: celebrationBounce 1s ease-out;
+}
+
+@keyframes celebrationBounce {
+    0% {
+        transform: scale(0.3);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.checkmark {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: bold;
+    margin: 0 auto 16px;
+    animation: checkmarkPulse 2s ease-in-out infinite;
+}
+
+@keyframes checkmarkPulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+.success-message h3 {
+    color: #059669;
+    margin: 0 0 8px 0;
+    font-size: 20px;
+}
+
+.success-message p {
+    color: #6b7280;
+    margin: 0;
+    font-size: 14px;
+}
+
+/* ==================== COMPLETION NOTIFICATION ==================== */
+.tutorial-completion-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10001;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    padding: 16px 20px;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+    transform: translateX(100%);
+    transition: all 0.4s ease;
+    max-width: 300px;
+}
+
+.tutorial-completion-notification.show {
+    transform: translateX(0);
+}
+
+.notification-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.notification-icon {
+    font-size: 20px;
+    animation: bounce 1s ease-in-out infinite;
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-10px);
+    }
+    60% {
+        transform: translateY(-5px);
+    }
+}
+
+.notification-text {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* ==================== RESPONSIVE DESIGN ==================== */
+@media (max-width: 768px) {
+    .tutorial-content {
+        width: 95%;
+        max-width: none;
+        margin: 20px;
+    }
+    
+    .tutorial-header {
+        padding: 20px;
+    }
+    
+    .tutorial-header h2 {
+        font-size: 20px;
+    }
+    
+    .tutorial-body {
+        padding: 20px;
+    }
+    
+    .tutorial-animation {
+        height: 150px;
+    }
+    
+    .tutorial-footer {
+        padding: 20px;
+        flex-direction: column;
+        gap: 16px;
+    }
+    
+    .progress-bar {
+        width: 150px;
+    }
+    
+    .tutorial-controls {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .tutorial-btn {
+        flex: 1;
+        max-width: 120px;
+    }
+    
+    .mock-toolbar {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .mock-canvas {
+        width: 200px;
+        height: 100px;
+    }
+    
+    .export-options {
+        justify-content: center;
+    }
+    
+    .tutorial-completion-notification {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .tutorial-content {
+        width: 100%;
+        height: 100%;
+        max-height: 100vh;
+        border-radius: 0;
+        margin: 0;
+    }
+    
+    .tutorial-header {
+        border-radius: 0;
+    }
+    
+    .tutorial-footer {
+        border-radius: 0;
+    }
+    
+    .tutorial-animation {
+        height: 120px;
+    }
+    
+    .progress-bar {
+        width: 120px;
+    }
+}

@@ -1,0 +1,601 @@
+{
+  "meta": {
+    "title": "MapMyRoots - Constructor Gratuito de Árboles Genealógicos y Software de Genealogía",
+    "description": "Crea hermosos árboles genealógicos interactivos con MapMyRoots - el software gratuito de genealogía en línea. Construye árboles familiares ilimitados, visualiza ancestros, conecta familiares y preserva tu historia familiar para siempre. Sin costos ocultos, interfaz intuitiva de arrastrar y soltar.",
+    "keywords": "creador gratuito de árbol genealógico, software de genealogía en línea, constructor interactivo de árbol familiar, herramienta de visualización de historia familiar, seguimiento de ancestros, mapeo de linaje, preservación del patrimonio, investigación genealógica, creador de árbol familiar, genealogía en línea, conexiones familiares",
+    "og": {
+      "title": "MapMyRoots - Constructor Gratuito de Árboles Genealógicos y Software de Genealogía",
+      "description": "Construye hermosos árboles genealógicos interactivos con nuestro software gratuito de arrastrar y soltar. Conecta generaciones, preserva memorias y descubre tu historia familiar. No requiere registro."
+    },
+    "twitter": {
+      "title": "MapMyRoots - Constructor Gratuito de Árboles Genealógicos y Software de Genealogía",
+      "description": "Construye hermosos árboles genealógicos interactivos con nuestro software gratuito de arrastrar y soltar. Conecta generaciones, preserva memorias y descubre tu historia familiar."
+    }
+  },
+  "languages": {
+    "english": "English",
+    "spanish": "Español",
+    "russian": "Русский",
+    "german": "Deutsch"
+  },
+  "accessibility": {
+    "skip_to_content": "Saltar al contenido principal"
+  },
+  "nav": {
+    "features": "Características",
+    "how_it_works": "Cómo Funciona",
+    "examples": "Ejemplos",
+    "reviews": "Reseñas",
+    "glossary": "Glosario",
+    "faq": "FAQ",
+    "start_building": "Comenzar Gratis"
+  },
+  "hero": {
+    "title": "Constructor Gratuito de Árboles Genealógicos y Software de Genealogía",
+    "subtitle": "Crea hermosos árboles genealógicos interactivos con nuestra intuitiva interfaz de arrastrar y soltar. Construye árboles familiares ilimitados, preserva memorias y descubre tu patrimonio familiar - completamente gratis para siempre.",
+    "trust": {
+      "families": "Familias Confían en Nosotros",
+      "free": "Gratis Para Siempre",
+      "rating": "Calificación de Usuarios"
+    },
+    "buttons": {
+      "start_building": "Comenzar a Construir Gratis",
+      "watch_demo": "Ver Demo (2 min)"
+    },
+    "note": "✓ No requiere registro ✓ No se necesita tarjeta de crédito ✓ Exporta en cualquier momento"
+  },
+  "about": {
+    "title": "¿Qué es MapMyRoots?",
+    "description": "MapMyRoots es una <strong>herramienta gratuita en línea para crear árboles genealógicos</strong> que te ayuda a visualizar y preservar tu historia familiar. A diferencia de los costosos servicios de genealogía, nos enfocamos en hacer que la creación de árboles genealógicos sea simple, hermosa y accesible para todos.",
+    "points": {
+      "purpose": {
+        "title": "🎯 Diseñado Específicamente para Árboles Genealógicos",
+        "description": "Diseñado específicamente para crear árboles genealógicos visuales, no investigación genealógica abrumadora"
+      },
+      "free": {
+        "title": "💰 Completamente Gratuito",
+        "description": "Sin tarifas de suscripción, niveles premium o costos ocultos. Todas las funciones incluidas para siempre"
+      },
+      "control": {
+        "title": "🔒 Tus Datos, Tu Control",
+        "description": "Exporta tus árboles genealógicos en cualquier momento en múltiples formatos. Sin dependencia de proveedores"
+      }
+    },
+    "demo": {
+      "title": "Vista Previa del Árbol Genealógico Interactivo",
+      "description": "Ve qué fácil es construir hermosos árboles genealógicos",
+      "link": "Probar Demo en Vivo →"
+    }
+  },
+  "features": {
+    "title": "Poderosas Características de Árboles Genealógicos",
+    "subtitle": "Todo lo que necesitas para crear árboles genealógicos completos y preservar tu historia familiar",
+    "cards": {
+      "drag_drop": {
+        "title": "Interfaz Intuitiva de Arrastrar y Soltar",
+        "description": "Construye árboles genealógicos sin esfuerzo con nuestra interfaz intuitiva de arrastrar y soltar. Agrega, mueve y conecta miembros familiares con gestos simples. Perfecto para principiantes y expertos en genealogía."
+      },
+      "interactive": {
+        "title": "Lienzo Interactivo de Árbol Genealógico",
+        "description": "Hermosos árboles genealógicos responsivos con animaciones suaves, controles de zoom y múltiples modos de visualización. Funciona perfectamente en computadoras de escritorio, tabletas y dispositivos móviles."
+      },
+      "profiles": {
+        "title": "Perfiles Familiares Detallados",
+        "description": "Almacena información completa para cada miembro de la familia incluyendo nombres, fechas de nacimiento/muerte, relaciones, fotos y notas personales. Construye historias familiares ricas."
+      },
+      "views": {
+        "title": "Múltiples Modos de Vista",
+        "description": "Cambia entre vista de árbol visual y vista de tabla organizada. Ordena, filtra y busca tus datos familiares de la manera que mejor funcione para tu investigación genealógica."
+      },
+      "export": {
+        "title": "Opciones de Exportación y Compartir",
+        "description": "Exporta tu árbol genealógico como imágenes de alta resolución, PDFs para imprimir o datos JSON para respaldo. Comparte tu historia familiar con familiares en todo el mundo."
+      },
+      "free": {
+        "title": "100% Gratuito Para Siempre",
+        "description": "Sin costos ocultos, tarifas de suscripción o características premium. Construye árboles genealógicos ilimitados y preserva tu historia familiar para siempre, completamente gratis."
+      }
+    }
+  },
+  "examples": {
+    "title": "Ejemplos de Árboles Genealógicos y Casos de Uso",
+    "subtitle": "Ve cómo las familias usan MapMyRoots para diferentes propósitos",
+    "cards": {
+      "reunions": {
+        "title": "Reuniones Familiares",
+        "description": "Perfecto para reuniones familiares - crea árboles de gran formato para mostrar en eventos y ayudar a los familiares a conectarse"
+      },
+      "school": {
+        "title": "Proyectos Escolares",
+        "description": "A los estudiantes les encanta usar MapMyRoots para tareas de genealogía y proyectos de historia familiar"
+      },
+      "memorial": {
+        "title": "Regalos Conmemorativos",
+        "description": "Crea hermosos árboles genealógicos como regalos conmemorativos o para preservar el legado de familiares mayores"
+      }
+    }
+  },
+  "how_it_works": {
+    "title": "Cómo Construir Tu Árbol Genealógico",
+    "subtitle": "Comienza en minutos con nuestro simple proceso de 3 pasos",
+    "steps": {
+      "add": {
+        "title": "Agregar Miembros de la Familia",
+        "description": "Comienza agregándote a ti mismo y comienza a construir hacia afuera. Agrega padres, hermanos, hijos y familia extendida con perfiles detallados incluyendo fotos e información personal."
+      },
+      "connect": {
+        "title": "Conectar Relaciones",
+        "description": "Usa nuestras herramientas simples de conexión para vincular miembros de la familia. Define relaciones como padre-hijo, cónyuge o conexiones personalizadas. El árbol genealógico se actualiza automáticamente."
+      },
+      "customize": {
+        "title": "Personalizar y Compartir",
+        "description": "Personaliza tu árbol con colores y estilos. Exporta como hermosas imágenes de alta resolución, PDFs para imprimir, o comparte tu historia familiar digitalmente con seres queridos."
+      }
+    }
+  },
+  "comparison": {
+    "title": "¿Por Qué Elegir MapMyRoots?",
+    "subtitle": "Ve cómo nos comparamos con otro software de árboles genealógicos",
+    "header": {
+      "feature": "Característica"
+    },
+    "rows": {
+      "cost": "Costo Mensual",
+      "cost_us": "✅ Gratis Para Siempre",
+      "cost_ancestry": "❌ $24.99/mes",
+      "cost_heritage": "❌ $12.95/mes",
+      "builder": "Constructor de Árbol Genealógico",
+      "builder_us": "✅ Avanzado",
+      "builder_others": "✅ Básico",
+      "export": "Opciones de Exportación",
+      "export_us": "✅ Todos los Formatos",
+      "export_others": "❌ Limitado",
+      "registration": "Sin Registro",
+      "registration_us": "✅ Comienza Inmediatamente",
+      "registration_others": "❌ Requerido"
+    }
+  },
+  "testimonials": {
+    "title": "Lo Que las Familias Dicen Sobre MapMyRoots",
+    "subtitle": "Únete a más de 15,000 familias preservando su patrimonio con nuestro software gratuito de árboles genealógicos",
+    "sarah": {
+      "text": "\"Esta herramienta hizo que crear nuestro árbol genealógico fuera mucho más fácil de lo que esperaba. La interfaz de arrastrar y soltar es intuitiva y los resultados son hermosos. Mi abuela estaba emocionada de ver cuatro generaciones mostradas tan claramente.\"",
+      "name": "Sarah Martinez",
+      "title": "Historiadora Familiar • Usada para 3 generaciones"
+    },
+    "david": {
+      "text": "\"¡Usamos esto para nuestra reunión familiar y fue un gran éxito! Poder imprimir árboles de gran formato y guardarlos digitalmente fue perfecto para compartir con familiares alrededor del mundo. La mejor herramienta genealógica que he encontrado.\"",
+      "name": "David Johnson",
+      "title": "Entusiasta de la Genealogía • Árbol familiar de 50+ personas"
+    },
+    "maria": {
+      "text": "\"La interfaz basada en lienzo es tan suave y responsiva. Me encanta cómo puedo hacer zoom, arrastrar personas y todo funciona perfectamente tanto en mi computadora como en mi tableta. Mucho mejor que las alternativas costosas.\"",
+      "name": "Maria Rodriguez",
+      "title": "Coordinadora Familiar • Usuario móvil"
+    }
+  },
+  "faq": {
+    "title": "Preguntas Frecuentes",
+    "subtitle": "Todo lo que necesitas saber sobre el software de árboles genealógicos MapMyRoots",
+    "free": {
+      "question": "¿Es MapMyRoots completamente gratuito de usar?",
+      "answer": "Sí, MapMyRoots es completamente gratuito sin costos ocultos, tarifas de suscripción o niveles premium. Puedes crear árboles genealógicos ilimitados y acceder a todas las funciones para siempre. Creemos que la preservación de la historia familiar debe ser accesible para todos."
+    },
+    "compare": {
+      "question": "¿Cómo se compara MapMyRoots con Ancestry.com o MyHeritage?",
+      "answer": "A diferencia de servicios pagados como Ancestry.com ($24.99/mes) o MyHeritage ($12.95/mes), MapMyRoots es completamente gratuito y se enfoca en la visualización de árboles genealógicos en lugar de investigación genealógica. Eres dueño de tus datos y puedes exportarlos en cualquier momento en múltiples formatos."
+    },
+    "export": {
+      "question": "¿En qué formatos de archivo puedo exportar mi árbol genealógico?",
+      "answer": "Puedes exportar tu árbol genealógico como imágenes de alta resolución (PNG, JPG), documentos PDF perfectos para imprimir, o datos JSON para respaldo y compartir con otro software genealógico. Sin restricciones o marcas de agua."
+    },
+    "register": {
+      "question": "¿Necesito registrarme o crear una cuenta?",
+      "answer": "¡No se requiere registro! Puedes comenzar a construir tu árbol genealógico inmediatamente. Sin embargo, crear una cuenta gratuita te permite guardar tus árboles en línea y acceder a ellos desde cualquier dispositivo."
+    },
+    "mobile": {
+      "question": "¿Puedo usar MapMyRoots en dispositivos móviles?",
+      "answer": "Sí, MapMyRoots funciona perfectamente en computadoras de escritorio, tabletas y teléfonos móviles. El diseño responsivo se adapta al tamaño de tu pantalla manteniendo la funcionalidad completa."
+    },
+    "limit": {
+      "question": "¿Cuántas personas puedo agregar a mi árbol genealógico?",
+      "answer": "¡No hay límite! Puedes agregar tantos miembros de la familia como quieras y crear múltiples árboles genealógicos. Los usuarios han creado exitosamente árboles con cientos de miembros familiares."
+    }
+  },
+  "cta": {
+    "title": "Comienza a Construir Tu Árbol Genealógico Hoy",
+    "description": "Únete a más de 15,000 familias que ya han descubierto su patrimonio. Crea tu primer árbol genealógico en minutos, completamente gratis sin registro requerido.",
+    "features": {
+      "credit_card": "✓ No se necesita tarjeta de crédito",
+      "download": "✓ No hay software que descargar",
+      "devices": "✓ Funciona en todos los dispositivos",
+      "export": "✓ Exporta en cualquier momento"
+    },
+    "button": "Comenzar a Construir Gratis Ahora"
+  },
+  "footer": {
+    "description": "Constructor gratuito de árboles genealógicos y software de genealogía. Preserva tu historia familiar para siempre.",
+    "stats": {
+      "families": "15,000+ familias atendidas",
+      "rating": "4.8★ calificación promedio"
+    },
+    "product": {
+      "title": "Producto",
+      "features": "Características",
+      "builder": "Constructor de Árbol Genealógico",
+      "how_it_works": "Cómo Funciona",
+      "examples": "Ejemplos",
+      "comparison": "vs Competidores"
+    },
+    "support": {
+      "title": "Soporte",
+      "faq": "FAQ",
+      "help": "Centro de Ayuda",
+      "contact": "Contáctanos",
+      "tutorials": "Tutoriales",
+      "community": "Comunidad"
+    },
+    "resources": {
+      "title": "Recursos",
+      "glossary": "Glosario de Genealogía",
+      "tips": "Consejos de Genealogía",
+      "blog": "Blog",
+      "templates": "Plantillas",
+      "export": "Guía de Exportación",
+      "practices": "Mejores Prácticas"
+    },
+    "legal": {
+      "title": "Legal",
+      "privacy": "Política de Privacidad",
+      "terms": "Términos de Servicio",
+      "cookies": "Política de Cookies",
+      "opensource": "Código Abierto"
+    },
+    "copyright": "© 2024 MapMyRoots. Todos los derechos reservados. Hecho con ❤️ para familias en todo el mundo.",
+    "badges": {
+      "privacy": "🔒 Privacidad Primero",
+      "mobile": "📱 Amigable con Móviles",
+      "free": "💯 Gratis Para Siempre"
+    }
+  },
+  "builder": {
+    "meta": {
+      "title": "MapMyRoots - Construye Tu Árbol Genealógico",
+      "description": "Constructor interactivo de árboles genealógicos con interfaz de arrastrar y soltar. Crea, edita y visualiza tus conexiones familiares con MapMyRoots."
+    },
+    "cache": {
+      "auto_save": "Guardado automático habilitado",
+      "saved": "Guardado",
+      "last_saved": "Último guardado",
+      "cached_available": "Datos en caché disponibles",
+      "saving": "Guardando...",
+      "tree_name_placeholder": "Ingrese nombre del árbol...",
+      "people": "personas",
+      "connections": "conexiones",
+      "auto_save_status": "Guardado automático:",
+      "enabled": "habilitado",
+      "tree_stats": "Estadísticas del Árbol",
+      "expand_info": "Haga clic para expandir detalles"
+    },
+    "modals": {
+      "delete_person": {
+        "title": "Eliminar Persona",
+        "message": "¿Estás seguro de que quieres eliminar a esta persona? Esta acción no se puede deshacer.",
+        "confirm": "Sí, Eliminar"
+      },
+      "clear_all": {
+        "title": "Limpiar Todos los Datos",
+        "message": "¿Estás seguro de que quieres limpiar todos los datos del árbol genealógico? Esta acción no se puede deshacer.",
+        "confirm": "Sí, Limpiar Todo"
+      },
+      "line_removal": {
+        "title": "Eliminar Línea de Conexión",
+        "message": "Esto ocultará la línea de conexión visual pero preservará los datos de relación. La relación familiar permanecerá intacta y puede ser restaurada más tarde.",
+        "confirm": "Ocultar Línea",
+        "description": "Ocultar conexión visual preservando datos familiares"
+      },
+      "connection": {
+        "title": "Conectar Personas",
+        "text": "La Persona A es __ de la Persona B",
+        "mother": "Madre",
+        "father": "Padre",
+        "child": "Hijo/a",
+        "spouse": "Cónyuge",
+        "line_only": "Solo línea"
+      },
+      "style": {
+        "title": "Estilizar Círculos Seleccionados",
+        "apply": "Aplicar Cambios",
+        "preview": "Vista Previa"
+      },
+      "person": {
+        "add_title": "Agregar Persona",
+        "edit_title": "Editar Persona",
+        "editing": "Editando:",
+        "new_person": "Nueva Persona"
+      }
+    },
+    "buttons": {
+      "bring_front": "FRENTE",
+      "edit": "Editar",
+      "cancel": "Cancelar",
+      "save": "Guardar",
+      "delete": "Eliminar",
+      "style": "Estilo",
+      "link": "Enlazar",
+      "undo": "Deshacer"
+    },
+    "zoom": {
+      "zoom_in": "Acercar",
+      "zoom_out": "Alejar", 
+      "zoom_reset": "Restablecer Zoom",
+      "zoom_display": "Nivel de zoom actual"
+    },
+    "search": {
+      "placeholder": "Buscar miembros de la familia...",
+      "no_results": "No se encontraron miembros de la familia",
+      "results_count": "{{count}} resultados encontrados",
+      "clear": "Limpiar búsqueda"
+    },
+    "sidebar": {
+      "home": "Volver al Inicio",
+      "search": "Buscar Miembros Familiares",
+      "center_selected": "Centrar Persona Seleccionada",
+      "zoom_in": "Acercar",
+      "zoom_out": "Alejar",
+      "settings": "Abrir Configuración",
+      "toggle_view": "Cambiar Modo de Vista",
+      "undo": "Deshacer Última Acción",
+      "redo": "Rehacer Última Acción"
+    },
+    "settings": {
+      "title": "Configuración del Árbol Genealógico",
+      "node_style": "Estilo de Nodo",
+      "style_circle": "Círculo",
+      "style_rectangle": "Rectángulo",
+      "display_preferences": "Preferencias de Visualización",
+      "show_maiden_name": "Mostrar Apellido de Soltera",
+      "show_date_of_birth": "Mostrar Fecha de Nacimiento",
+      "show_father_name": "Mostrar Nombre del Padre",
+      "node_appearance": "Apariencia del Nodo",
+      "node_color": "Color del Nodo:",
+      "node_size": "Tamaño del Nodo:",
+      "apply": "Aplicar",
+      "node_outline": "Contorno del Nodo",
+      "show_outline": "Mostrar Contorno",
+      "outline_thickness": "Grosor del Contorno:",
+      "outline_color": "Color del Contorno:",
+      "connector_lines": "Líneas Conectoras",
+      "family_connections": "Conexiones Familiares",
+      "spouse_connections": "Conexiones de Cónyuge",
+      "line_only_connections": "Conexiones Solo Línea",
+      "line_style": "Estilo de Línea:",
+      "line_thickness": "Grosor de Línea:",
+      "line_color": "Color de Línea:",
+      "style_solid": "Sólida",
+      "style_dashed": "Discontinua",
+      "style_dotted": "Punteada",
+      "style_dash_dot": "Discontinua-Punto",
+      "text_settings": "Configuración de Texto",
+      "font": "Fuente:",
+      "font_size": "Tamaño de Fuente:",
+      "name_color": "Color del Nombre:",
+      "date_color": "Color de Fecha:",
+      "basic_export": "Exportación Básica",
+      "advanced_export": "Exportación Avanzada",
+      "pdf_layout": "Diseño PDF",
+      "export_formats": "Básico: SVG (vector), PNG (imagen), PDF (documento)<br>Avanzado: GEDCOM (genealogía), PDF con diseños",
+      "data_management": "Gestión de Datos",
+      "save_family_tree": "Guardar Árbol Genealógico",
+      "load_family_tree": "Cargar Árbol Genealógico",
+      "format_support": "Soporta archivos de formato JSON",
+      "reset": "Restablecer",
+      "clear_all_data": "Limpiar Todos los Datos",
+      "clear_warning": "Advertencia: Esto eliminará permanentemente todos los datos del árbol genealógico"
+    },
+    "table": {
+      "search_placeholder": "Buscar...",
+      "sort_name": "Nombre",
+      "sort_father_name": "Nombre del Padre",
+      "sort_surname": "Apellido",
+      "sort_dob": "Fecha de Nacimiento",
+      "sort_gender": "Género",
+      "header_name": "Nombre",
+      "header_father_name": "Nombre del Padre",
+      "header_surname": "Apellido",
+      "header_maiden_name": "Apellido de Soltera",
+      "header_dob": "Fecha de Nacimiento",
+      "header_gender": "Género",
+      "header_mother": "Madre",
+      "header_father": "Padre",
+      "header_spouse": "Cónyuge",
+      "header_actions": "Acciones",
+      "no_results": "Ningún miembro de la familia coincide con su búsqueda",
+      "total_people": "Total: {{count}} personas"
+    },
+    "form": {
+      "gender": "Género",
+      "gender_male": "Masculino",
+      "gender_female": "Femenino",
+      "given_name": "Nombre de Pila",
+      "father_name": "Nombre del Padre",
+      "father_name_placeholder": "Nombre de pila del padre",
+      "father_name_help": "Nombre de pila del padre (no apellido)",
+      "surname": "Apellido",
+      "maiden_name": "Apellido de Soltera",
+      "date_of_birth": "Fecha de Nacimiento",
+      "dob_placeholder": "dd.mm.aaaa o aaaa",
+      "dob_help": "Ingresa fecha completa dd.mm.aaaa o solo año aaaa",
+      "mother": "Madre",
+      "father": "Padre",
+      "spouse": "Cónyuge",
+      "select_person": "Seleccionar una persona...",
+      "no_selection": "Sin selección"
+    },
+    "validation": {
+      "name_required": "Por favor ingresa un nombre.",
+      "gender_required": "Por favor selecciona un género.",
+      "invalid_date": "Por favor ingresa una fecha válida.",
+      "form_errors": "Por favor corrige los errores siguientes:"
+    },
+    "zoom": {
+      "zoom_in": "Acercar",
+      "zoom_out": "Alejar", 
+      "zoom_reset": "Restablecer Zoom",
+      "zoom_display": "Nivel de zoom actual"
+    },
+    "search": {
+      "placeholder": "Buscar miembros de la familia...",
+      "no_results": "No se encontraron miembros de la familia",
+      "results_count": "{{count}} resultados encontrados",
+      "clear": "Limpiar búsqueda"
+    },
+    "sidebar": {
+      "home": "Volver al Inicio",
+      "search": "Buscar Miembros Familiares",
+      "center_selected": "Centrar Persona Seleccionada",
+      "zoom_in": "Acercar",
+      "zoom_out": "Alejar",
+      "settings": "Abrir Configuración",
+      "toggle_view": "Cambiar Modo de Vista",
+      "undo": "Deshacer Última Acción",
+      "redo": "Rehacer Última Acción"
+    },
+    "notifications": {
+      "unknown_person": "Desconocido",
+      "person_deleted": "Persona Eliminada",
+      "delete_success": "{{name}} ha sido eliminado del árbol",
+      "delete_failed": "Eliminación Fallida",
+      "delete_error": "No se pudo eliminar la persona. Por favor intenta de nuevo.",
+      "invalid_file": "Archivo Inválido",
+      "drop_json": "Por favor suelta un archivo JSON",
+      "bring_front_title": "Traído al Frente",
+      "bring_front_single": "Persona traída al frente",
+      "bring_front_multiple": "{{count}} personas traídas al frente",
+      "no_selection_front": "Por favor seleccione una persona para traer al frente.",
+      "save_success": "Cambios guardados exitosamente",
+      "save_error": "Error al guardar cambios",
+      "connection_added": "Conexión agregada exitosamente",
+      "connection_removed": "Conexión eliminada",
+      "style_applied": "Estilo aplicado a nodos seleccionados",
+      "tree_cleared": "Árbol genealógico limpiado",
+      "export_success": "Exportación completada exitosamente",
+      "export_error": "Falló la exportación",
+      "loading": "Cargando...",
+      "processing": "Procesando..."
+    },
+    "actions": {
+      "add_person": "Agregar Nueva Persona",
+      "edit_person": "Editar Detalles de Persona",
+      "delete_person": "Eliminar Persona",
+      "connect_people": "Conectar Personas",
+      "style_nodes": "Estilizar Nodos Seleccionados",
+      "bring_to_front": "Traer al Frente",
+      "center_view": "Centrar en Vista",
+      "zoom_to_fit": "Ajustar Zoom",
+      "export_tree": "Exportar Árbol Genealógico",
+      "save_tree": "Guardar Árbol Genealógico",
+      "load_tree": "Cargar Árbol Genealógico"
+    },
+    "toolbar": {
+      "save": "Guardar Árbol Genealógico",
+      "load": "Cargar Árbol Genealógico",
+      "export": "Exportar Árbol Genealógico"
+    },
+    "status": {
+      "ready": "Listo",
+      "loading": "Cargando árbol genealógico...",
+      "saving": "Guardando cambios...",
+      "error": "Ocurrió un error",
+      "success": "Operación completada exitosamente",
+      "no_changes": "No hay cambios para guardar",
+      "unsaved_changes": "Tienes cambios sin guardar"
+    },
+    "toolbar": {
+      "save": "Guardar Árbol Genealógico",
+      "load": "Cargar Árbol Genealógico",
+      "export": "Exportar Árbol Genealógico"
+    }
+  },
+  "glossary": {
+    "meta": {
+      "title": "Glosario de Genealogía - Términos Esenciales para Investigación de Historia Familiar | MapMyRoots",
+      "description": "Glosario completo de términos y definiciones genealógicas. Aprende vocabulario esencial para la investigación de historia familiar y construcción de árboles genealógicos con MapMyRoots.",
+      "keywords": "glosario de genealogía, términos genealógicos, vocabulario de historia familiar, definiciones de ancestros, diccionario de genealogía, términos de investigación",
+      "og": {
+        "title": "Glosario de Genealogía - Términos Esenciales para Investigación de Historia Familiar",
+        "description": "Domina el vocabulario genealógico con nuestro glosario completo. Términos y definiciones esenciales para una investigación exitosa de historia familiar."
+      },
+      "twitter": {
+        "title": "Glosario de Genealogía - Términos Esenciales para Investigación de Historia Familiar",
+        "description": "Domina el vocabulario genealógico con nuestro glosario completo. Términos y definiciones esenciales para una investigación exitosa de historia familiar."
+      }
+    },
+    "breadcrumb": {
+      "home": "Inicio",
+      "current": "Glosario"
+    },
+    "hero": {
+      "title": "Glosario de Genealogía",
+      "subtitle": "Domina el lenguaje de la investigación de historia familiar con nuestra colección completa de términos y definiciones genealógicas."
+    },
+    "navigation": {
+      "title": "Navegación Rápida"
+    },
+    "search": {
+      "placeholder": "Buscar un término de genealogía...",
+      "no_results_title": "No se encontraron resultados",
+      "no_results_text": "Intenta buscar un término diferente o navega por letra arriba."
+    },
+    "terms": {
+      "abstract": {
+        "name": "Resumen",
+        "definition": "Una transcripción abreviada de un documento que incluye la fecha del registro y cada nombre que contiene. También puede proporcionar relaciones o descripciones de las personas mencionadas."
+      },
+      "affinity": {
+        "name": "Afinidad",
+        "definition": "Una relación creada por el matrimonio. Se refiere a la conexión entre una persona y los parientes consanguíneos de su cónyuge, o entre una persona y el cónyuge de su pariente."
+      },
+      "ahnentafel": {
+        "name": "Ahnentafel",
+        "definition": "Una palabra alemana que significa \"tabla de ancestros\". Este sistema de numeración asigna a cada ancestro un número, facilitando la organización. El sujeto es #1, padre #2, madre #3, etc."
+      },
+      "ancestor": {
+        "name": "Ancestro",
+        "definition": "Una persona de la cual uno desciende, típicamente más distante que los abuelos. Incluye padres, abuelos, bisabuelos y generaciones anteriores."
+      },
+      "ancestry": {
+        "name": "Ascendencia",
+        "definition": "La descendencia familiar o étnica de uno; la línea de personas de las cuales una persona desciende. También se refiere a los ancestros colectivos de una familia."
+      },
+      "autosomal_dna": {
+        "name": "ADN Autosómico",
+        "definition": "ADN heredado de ambos padres que puede ayudar a identificar parientes dentro de aproximadamente 5-7 generaciones. Usado en pruebas de ADN modernas para genealogía."
+      },
+      "banns": {
+        "name": "Amonestaciones",
+        "definition": "Anuncios públicos de un matrimonio previsto, tradicionalmente hechos en la iglesia en tres domingos sucesivos antes de la ceremonia de boda."
+      },
+      "birth_record": {
+        "name": "Registro de Nacimiento",
+        "definition": "Un documento oficial que registra el nacimiento de una persona, típicamente incluyendo nombre, fecha, lugar de nacimiento y nombres de los padres."
+      },
+      "brick_wall": {
+        "name": "Muro de Ladrillo",
+        "definition": "Un término genealógico para un obstáculo de investigación donde no se puede encontrar información adicional sobre un ancestro, creando un callejón sin salida en la investigación."
+      },
+      "census": {
+        "name": "Censo",
+        "definition": "Un conteo y encuesta oficial de una población, típicamente incluyendo nombres, edades, ocupaciones y relaciones familiares. Realizado periódicamente por gobiernos."
+      },
+      "family_tree": {
+        "name": "Árbol Genealógico",
+        "definition": "Un gráfico que muestra las relaciones familiares en una estructura de árbol, mostrando ancestros, descendientes y parientes colaterales."
+      },
+      "genealogy": {
+        "name": "Genealogía",
+        "definition": "El estudio y rastreo de linajes e historias familiares; la práctica de investigar y documentar relaciones familiares."
+      }
+    }
+  }
+}

@@ -21,8 +21,9 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Roboto:wght@400;500&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="style.css" />
-  <link rel="stylesheet" href="modal.css" />
+  <link rel="stylesheet" href="src/ui/styles/style.css" />
+  <link rel="stylesheet" href="src/ui/styles/modal.css" />
+  <link rel="stylesheet" href="docs/tutorial/tutorial.css" />
   
   <!-- Language Switcher Styles -->
   <style>
@@ -119,6 +120,7 @@
   <!-- Delete Confirmation Modal -->
   <div id="deleteConfirmModal" class="modal hidden">
     <div class="modal-content confirmation-modal">
+      <button class="modal-close-btn" aria-label="Close">&times;</button>
       <h2>
         <span class="person-icon">🗑️</span>
         <span data-i18n="builder.modals.delete_person.title">Delete Person</span>
@@ -157,6 +159,7 @@
   <!-- Clear All Confirmation Modal -->
   <div id="clearAllConfirmModal" class="modal hidden">
     <div class="modal-content confirmation-modal">
+      <button class="modal-close-btn" aria-label="Close">&times;</button>
       <h2>
         <span class="person-icon">🔄</span>
         <span data-i18n="builder.modals.clear_all.title">Clear All Data</span>
@@ -335,19 +338,25 @@
 
   <!-- Enhanced Settings Panel -->
   <div id="settingsPanel" class="panel hidden">
+    <button class="modal-close-btn" aria-label="Close">&times;</button>
     <h3 data-i18n="builder.settings.title">Settings</h3>
     
     <!-- Node Style Selection -->
-    <div class="setting-section">
-      <h4 data-i18n="builder.settings.node_style">Node Style</h4>
-      <div class="node-style-grid">
-        <div class="node-style-option selected" data-style="circle">
-          <div class="node-style-preview circle">JD</div>
-          <div class="node-style-label" data-i18n="builder.settings.style_circle">Circle</div>
-        </div>
-        <div class="node-style-option" data-style="rectangle">
-          <div class="node-style-preview rectangle">John Doe</div>
-          <div class="node-style-label" data-i18n="builder.settings.style_rectangle">Rectangle</div>
+    <div class="collapsible-section">
+      <div class="collapsible-header" data-target="nodeStyleSection">
+        <h4 data-i18n="builder.settings.node_style">Node Style</h4>
+        <span class="collapsible-toggle">▼</span>
+      </div>
+      <div class="collapsible-content" id="nodeStyleSection">
+        <div class="node-style-grid">
+          <div class="node-style-option selected" data-style="circle">
+            <div class="node-style-preview circle">JD</div>
+            <div class="node-style-label" data-i18n="builder.settings.style_circle">Circle</div>
+          </div>
+          <div class="node-style-option" data-style="rectangle">
+            <div class="node-style-preview rectangle">John Doe</div>
+            <div class="node-style-label" data-i18n="builder.settings.style_rectangle">Rectangle</div>
+          </div>
         </div>
       </div>
     </div>
@@ -376,188 +385,215 @@
       </div>
     </div>
     
-    <!-- Node Settings -->
-    <div class="setting-section">
-      <h4 data-i18n="builder.settings.node_appearance">Node Appearance</h4>
-      <div class="setting-group">
-        <label for="nodeColorPicker" data-i18n="builder.settings.node_color">Node Color:</label>
-        <input type="color" id="nodeColorPicker" value="#3498db" />
+    <!-- Node Appearance -->
+    <div class="collapsible-section">
+      <div class="collapsible-header" data-target="nodeAppearance">
+        <h4 data-i18n="builder.settings.node_appearance">Node Appearance</h4>
+        <span class="collapsible-toggle">▼</span>
       </div>
-      <div class="setting-group">
-        <label for="nodeSizeInput" data-i18n="builder.settings.node_size">Node Size:</label>
-        <input type="number" id="nodeSizeInput" min="10" max="100" value="40" />
-      </div>
-      <div class="setting-group">
-        <button id="applyNodeStyle" data-i18n="builder.settings.apply">Apply</button>
-      </div>
-    </div>
-
-    <!-- Node Outline Settings -->
-    <div class="setting-section">
-      <h4 data-i18n="builder.settings.node_outline">Node Outline</h4>
-      <div class="setting-group">
-        <div class="checkbox-item">
-          <input type="checkbox" id="showNodeOutline" checked>
-          <label for="showNodeOutline" data-i18n="builder.settings.show_outline">Show Outline</label>
+      <div class="collapsible-content" id="nodeAppearance">
+        <div class="setting-group">
+          <label for="nodeColorPicker" data-i18n="builder.settings.node_color">Node Color:</label>
+          <input type="color" id="nodeColorPicker" value="#3498db" />
+        </div>
+        <div class="setting-group">
+          <label for="nodeSizeInput" data-i18n="builder.settings.node_size">Node Size:</label>
+          <input type="number" id="nodeSizeInput" min="10" max="100" value="40" />
+        </div>
+        <div class="setting-group">
+          <button id="applyNodeStyle" data-i18n="builder.settings.apply">Apply</button>
         </div>
       </div>
-      <div class="setting-group">
-        <label for="outlineThicknessInput" data-i18n="builder.settings.outline_thickness">Outline Thickness:</label>
-        <input type="number" id="outlineThicknessInput" min="0" max="10" value="2" />
+    </div>
+
+    <!-- Node Outline -->
+    <div class="collapsible-section">
+      <div class="collapsible-header" data-target="nodeOutline">
+        <h4 data-i18n="builder.settings.node_outline">Node Outline</h4>
+        <span class="collapsible-toggle">▼</span>
       </div>
-      <div class="setting-group">
-        <label for="outlineColorPicker" data-i18n="builder.settings.outline_color">Outline Color:</label>
-        <input type="color" id="outlineColorPicker" value="#2c3e50" />
-      </div>
-      <div class="setting-group">
-        <button id="applyOutlineStyle" data-i18n="builder.settings.apply">Apply</button>
+      <div class="collapsible-content" id="nodeOutline">
+        <div class="setting-group">
+          <div class="checkbox-item">
+            <input type="checkbox" id="showNodeOutline" checked>
+            <label for="showNodeOutline" data-i18n="builder.settings.show_outline">Show Outline</label>
+          </div>
+        </div>
+        <div class="setting-group">
+          <label for="outlineThicknessInput" data-i18n="builder.settings.outline_thickness">Outline Thickness:</label>
+          <input type="number" id="outlineThicknessInput" min="0" max="10" value="2" />
+        </div>
+        <div class="setting-group">
+          <label for="outlineColorPicker" data-i18n="builder.settings.outline_color">Outline Color:</label>
+          <input type="color" id="outlineColorPicker" value="#2c3e50" />
+        </div>
+        <div class="setting-group">
+          <button id="applyOutlineStyle" data-i18n="builder.settings.apply">Apply</button>
+        </div>
       </div>
     </div>
 
-    <!-- Connector Line Settings -->
-    <div class="setting-section">
-      <h4 data-i18n="builder.settings.connector_lines">Connector Lines</h4>
-      
-      <!-- Family Connection Lines -->
-      <div class="setting-subsection">
-        <h5 data-i18n="builder.settings.family_connections">Family Connections</h5>
+    <!-- Connector Lines -->
+    <div class="collapsible-section">
+      <div class="collapsible-header" data-target="connectorLines">
+        <h4 data-i18n="builder.settings.connector_lines">Connector Lines</h4>
+        <span class="collapsible-toggle">▼</span>
+      </div>
+      <div class="collapsible-content" id="connectorLines">
+        <!-- Family Connection Lines -->
+        <div class="setting-subsection">
+          <h5 data-i18n="builder.settings.family_connections">Family Connections</h5>
+          <div class="setting-group">
+            <label for="familyLineStyleSelect" data-i18n="builder.settings.line_style">Line Style:</label>
+            <select id="familyLineStyleSelect">
+              <option value="solid" data-i18n="builder.settings.style_solid">Solid</option>
+              <option value="dashed" data-i18n="builder.settings.style_dashed">Dashed</option>
+              <option value="dotted" data-i18n="builder.settings.style_dotted">Dotted</option>
+              <option value="dash-dot" data-i18n="builder.settings.style_dash_dot">Dash-Dot</option>
+            </select>
+          </div>
+          <div class="setting-group">
+            <label for="familyLineThicknessInput" data-i18n="builder.settings.line_thickness">Line Thickness:</label>
+            <input type="number" id="familyLineThicknessInput" min="1" max="10" value="2" />
+          </div>
+          <div class="setting-group">
+            <label for="familyLineColorPicker" data-i18n="builder.settings.line_color">Line Color:</label>
+            <input type="color" id="familyLineColorPicker" value="#7f8c8d" />
+          </div>
+        </div>
+
+        <!-- Spouse Connection Lines -->
+        <div class="setting-subsection">
+          <h5 data-i18n="builder.settings.spouse_connections">Spouse Connections</h5>
+          <div class="setting-group">
+            <label for="spouseLineStyleSelect" data-i18n="builder.settings.line_style">Line Style:</label>
+            <select id="spouseLineStyleSelect">
+              <option value="solid" data-i18n="builder.settings.style_solid">Solid</option>
+              <option value="dashed" data-i18n="builder.settings.style_dashed">Dashed</option>
+              <option value="dotted" data-i18n="builder.settings.style_dotted">Dotted</option>
+              <option value="dash-dot" data-i18n="builder.settings.style_dash_dot">Dash-Dot</option>
+            </select>
+          </div>
+          <div class="setting-group">
+            <label for="spouseLineThicknessInput" data-i18n="builder.settings.line_thickness">Line Thickness:</label>
+            <input type="number" id="spouseLineThicknessInput" min="1" max="10" value="2" />
+          </div>
+          <div class="setting-group">
+            <label for="spouseLineColorPicker" data-i18n="builder.settings.line_color">Line Color:</label>
+            <input type="color" id="spouseLineColorPicker" value="#e74c3c" />
+          </div>
+        </div>
+
+        <!-- Line-Only Connections -->
+        <div class="setting-subsection">
+          <h5 data-i18n="builder.settings.line_only_connections">Line-Only Connections</h5>
+          <div class="setting-group">
+            <label for="lineOnlyStyleSelect" data-i18n="builder.settings.line_style">Line Style:</label>
+            <select id="lineOnlyStyleSelect">
+              <option value="solid" data-i18n="builder.settings.style_solid">Solid</option>
+              <option value="dashed" data-i18n="builder.settings.style_dashed">Dashed</option>
+              <option value="dotted" data-i18n="builder.settings.style_dotted">Dotted</option>
+              <option value="dash-dot" data-i18n="builder.settings.style_dash_dot">Dash-Dot</option>
+            </select>
+          </div>
+          <div class="setting-group">
+            <label for="lineOnlyThicknessInput" data-i18n="builder.settings.line_thickness">Line Thickness:</label>
+            <input type="number" id="lineOnlyThicknessInput" min="1" max="10" value="2" />
+          </div>
+          <div class="setting-group">
+            <label for="lineOnlyColorPicker" data-i18n="builder.settings.line_color">Line Color:</label>
+            <input type="color" id="lineOnlyColorPicker" value="#9b59b6" />
+          </div>
+        </div>
+
         <div class="setting-group">
-          <label for="familyLineStyleSelect" data-i18n="builder.settings.line_style">Line Style:</label>
-          <select id="familyLineStyleSelect">
-            <option value="solid" data-i18n="builder.settings.style_solid">Solid</option>
-            <option value="dashed" data-i18n="builder.settings.style_dashed">Dashed</option>
-            <option value="dotted" data-i18n="builder.settings.style_dotted">Dotted</option>
-            <option value="dash-dot" data-i18n="builder.settings.style_dash_dot">Dash-Dot</option>
+          <button id="applyLineStyles" data-i18n="builder.settings.apply">Apply Line Styles</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Text Settings -->
+    <div class="collapsible-section">
+      <div class="collapsible-header" data-target="textSettings">
+        <h4 data-i18n="builder.settings.text_settings">Text Settings</h4>
+        <span class="collapsible-toggle">▼</span>
+      </div>
+      <div class="collapsible-content" id="textSettings">
+        <div class="setting-group">
+          <label for="fontSelect" data-i18n="builder.settings.font">Font:</label>
+          <select id="fontSelect">
+            <optgroup label="Modern Sans-Serif">
+              <option value="Inter">Inter</option>
+              <option value="Roboto">Roboto</option>
+              <option value="Lato">Lato</option>
+              <option value="Montserrat">Montserrat</option>
+              <option value="Poppins">Poppins</option>
+              <option value="Open Sans">Open Sans</option>
+            </optgroup>
+            <optgroup label="Serif">
+              <option value="Merriweather">Merriweather</option>
+              <option value="Playfair Display">Playfair Display</option>
+              <option value="Roboto Slab">Roboto Slab</option>
+            </optgroup>
+            <optgroup label="Monospace">
+              <option value="Courier New">Courier New</option>
+              <option value="Roboto Mono">Roboto Mono</option>
+            </optgroup>
           </select>
         </div>
         <div class="setting-group">
-          <label for="familyLineThicknessInput" data-i18n="builder.settings.line_thickness">Line Thickness:</label>
-          <input type="number" id="familyLineThicknessInput" min="1" max="10" value="2" />
+          <label for="fontSizeInput" data-i18n="builder.settings.font_size">Font Size:</label>
+          <input type="number" id="fontSizeInput" min="6" max="72" value="14" />
         </div>
         <div class="setting-group">
-          <label for="familyLineColorPicker" data-i18n="builder.settings.line_color">Line Color:</label>
-          <input type="color" id="familyLineColorPicker" value="#7f8c8d" />
-        </div>
-      </div>
-
-      <!-- Spouse Connection Lines -->
-      <div class="setting-subsection">
-        <h5 data-i18n="builder.settings.spouse_connections">Spouse Connections</h5>
-        <div class="setting-group">
-          <label for="spouseLineStyleSelect" data-i18n="builder.settings.line_style">Line Style:</label>
-          <select id="spouseLineStyleSelect">
-            <option value="solid" data-i18n="builder.settings.style_solid">Solid</option>
-            <option value="dashed" data-i18n="builder.settings.style_dashed">Dashed</option>
-            <option value="dotted" data-i18n="builder.settings.style_dotted">Dotted</option>
-            <option value="dash-dot" data-i18n="builder.settings.style_dash_dot">Dash-Dot</option>
-          </select>
+          <label for="nameColorPicker" data-i18n="builder.settings.name_color">Name Color:</label>
+          <input type="color" id="nameColorPicker" value="#333333" />
         </div>
         <div class="setting-group">
-          <label for="spouseLineThicknessInput" data-i18n="builder.settings.line_thickness">Line Thickness:</label>
-          <input type="number" id="spouseLineThicknessInput" min="1" max="10" value="2" />
+          <label for="dateColorPicker" data-i18n="builder.settings.date_color">Date Color:</label>
+          <input type="color" id="dateColorPicker" value="#757575" />
         </div>
-        <div class="setting-group">
-          <label for="spouseLineColorPicker" data-i18n="builder.settings.line_color">Line Color:</label>
-          <input type="color" id="spouseLineColorPicker" value="#e74c3c" />
-        </div>
-      </div>
-
-      <!-- Line-Only Connections -->
-      <div class="setting-subsection">
-        <h5 data-i18n="builder.settings.line_only_connections">Line-Only Connections</h5>
-        <div class="setting-group">
-          <label for="lineOnlyStyleSelect" data-i18n="builder.settings.line_style">Line Style:</label>
-          <select id="lineOnlyStyleSelect">
-            <option value="solid" data-i18n="builder.settings.style_solid">Solid</option>
-            <option value="dashed" data-i18n="builder.settings.style_dashed">Dashed</option>
-            <option value="dotted" data-i18n="builder.settings.style_dotted">Dotted</option>
-            <option value="dash-dot" data-i18n="builder.settings.style_dash_dot">Dash-Dot</option>
-          </select>
-        </div>
-        <div class="setting-group">
-          <label for="lineOnlyThicknessInput" data-i18n="builder.settings.line_thickness">Line Thickness:</label>
-          <input type="number" id="lineOnlyThicknessInput" min="1" max="10" value="2" />
-        </div>
-        <div class="setting-group">
-          <label for="lineOnlyColorPicker" data-i18n="builder.settings.line_color">Line Color:</label>
-          <input type="color" id="lineOnlyColorPicker" value="#9b59b6" />
-        </div>
-      </div>
-
-      <div class="setting-group">
-        <button id="applyLineStyles" data-i18n="builder.settings.apply">Apply Line Styles</button>
       </div>
     </div>
 
-    <!-- Font Settings -->
-    <div class="setting-section">
-      <h4 data-i18n="builder.settings.text_settings">Text Settings</h4>
-      <div class="setting-group">
-        <label for="fontSelect" data-i18n="builder.settings.font">Font:</label>
-        <select id="fontSelect">
-          <optgroup label="Modern Sans-Serif">
-            <option value="Inter">Inter</option>
-            <option value="Roboto">Roboto</option>
-            <option value="Lato">Lato</option>
-            <option value="Montserrat">Montserrat</option>
-            <option value="Poppins">Poppins</option>
-            <option value="Open Sans">Open Sans</option>
-          </optgroup>
-          <optgroup label="Serif">
-            <option value="Merriweather">Merriweather</option>
-            <option value="Playfair Display">Playfair Display</option>
-            <option value="Roboto Slab">Roboto Slab</option>
-          </optgroup>
-          <optgroup label="Monospace">
-            <option value="Courier New">Courier New</option>
-            <option value="Roboto Mono">Roboto Mono</option>
-          </optgroup>
-        </select>
+    <!-- Data Management -->
+    <div class="collapsible-section">
+      <div class="collapsible-header" data-target="dataManagement">
+        <h4 data-i18n="builder.settings.data_management">Data Management</h4>
+        <span class="collapsible-toggle">▼</span>
       </div>
-      <div class="setting-group">
-        <label for="fontSizeInput" data-i18n="builder.settings.font_size">Font Size:</label>
-        <input type="number" id="fontSizeInput" min="6" max="72" value="14" />
-      </div>
-      <div class="setting-group">
-        <label for="nameColorPicker" data-i18n="builder.settings.name_color">Name Color:</label>
-        <input type="color" id="nameColorPicker" value="#333333" />
-      </div>
-      <div class="setting-group">
-        <label for="dateColorPicker" data-i18n="builder.settings.date_color">Date Color:</label>
-        <input type="color" id="dateColorPicker" value="#757575" />
+      <div class="collapsible-content" id="dataManagement">
+        <!-- Enhanced Import/Export Area -->
+        <div class="import-export-enhanced" id="importExportArea">
+          <div class="setting-group">
+            <button id="saveData" data-i18n="builder.settings.save_family_tree">Save Family Tree</button>
+            <label for="loadData" class="file-label">
+              <span data-i18n="builder.settings.load_family_tree">Load Family Tree</span>
+              <input type="file" id="loadData" accept=".json" />
+            </label>
+          </div>
+          <div class="format-support" data-i18n="builder.settings.format_support">
+            Supports JSON format files
+          </div>
+        </div>
+        
+        <!-- Auto-save Controls will be added here by JavaScript -->
       </div>
     </div>
 
-
-    <!-- Enhanced Data Settings with Import/Export -->
-    <div class="setting-section">
-      <h4 data-i18n="builder.settings.data_management">Data Management</h4>
-      
-      <!-- Enhanced Import/Export Area -->
-      <div class="import-export-enhanced" id="importExportArea">
+    <!-- Reset -->
+    <div class="collapsible-section">
+      <div class="collapsible-header" data-target="resetSection">
+        <h4 data-i18n="builder.settings.reset">Reset</h4>
+        <span class="collapsible-toggle">▼</span>
+      </div>
+      <div class="collapsible-content" id="resetSection">
         <div class="setting-group">
-          <button id="saveData" data-i18n="builder.settings.save_family_tree">Save Family Tree</button>
-          <label for="loadData" class="file-label">
-            <span data-i18n="builder.settings.load_family_tree">Load Family Tree</span>
-            <input type="file" id="loadData" accept=".json" />
-          </label>
+          <button id="clearAllBtn" class="btn-danger-outline" data-i18n="builder.settings.clear_all_data">Clear All Data</button>
         </div>
-        <div class="format-support" data-i18n="builder.settings.format_support">
-          Supports JSON format files
+        <div class="format-support" data-i18n="builder.settings.clear_warning">
+          Warning: This will permanently delete all family tree data
         </div>
-      </div>
-      
-      <!-- Auto-save Controls will be added here by JavaScript -->
-    </div>
-
-    <!-- Clear All Section -->
-    <div class="setting-section clear-all-section">
-      <h4 data-i18n="builder.settings.reset">Reset</h4>
-      <div class="setting-group">
-        <button id="clearAllBtn" class="btn-danger-outline" data-i18n="builder.settings.clear_all_data">Clear All Data</button>
-      </div>
-      <div class="format-support" data-i18n="builder.settings.clear_warning">
-        Warning: This will permanently delete all family tree data
       </div>
     </div>
   </div>
@@ -715,6 +751,7 @@
   <!-- Connection Modal - UPDATED with Line Only option -->
   <div id="connectionModal" class="modal hidden">
     <div class="modal-content">
+      <button class="modal-close-btn" aria-label="Close">&times;</button>
       <h2 id="connectionModalTitle" data-i18n="builder.modals.connection.title">Connect People</h2>
       <div class="connection-content">
         <p id="connectionText" data-i18n="builder.modals.connection.text">Person A is __ to Person B</p>
@@ -735,6 +772,7 @@
   <!-- Style Modal for Selected Circles -->
   <div id="styleModal" class="modal hidden">
     <div class="modal-content">
+      <button class="modal-close-btn" aria-label="Close">&times;</button>
       <h2 id="styleModalTitle" data-i18n="builder.modals.style.title">Style Selected Circles</h2>
       <div class="modal-body">
         <form id="styleForm">
@@ -801,6 +839,7 @@
 <!-- Person Modal (Enhanced with Radio Buttons, Sticky Buttons, and Delete) -->
   <div id="personModal" class="modal hidden">
     <div class="modal-content">
+      <button class="modal-close-btn" aria-label="Close">&times;</button>
       <h2 id="modalTitle" data-i18n="builder.modals.person.add_title">Add Person</h2>
       <div class="modal-body">
         <form id="personForm">
@@ -866,21 +905,22 @@
   </div>
 
   <!-- i18n Script -->
-  <script src="./i18n.js"></script>
+  <script src="./src/features/i18n/i18n.js"></script>
   <!-- Language Switcher -->
-  <script src="./language-switcher.js"></script>
+  <script src="./src/features/i18n/language-switcher.js"></script>
   
   <!-- Scripts as ES modules -->
-  <script type="module" src="searchableSelect.js"></script>
-  <script type="module" src="modal.js"></script>
+  <script type="module" src="src/ui/components/searchableSelect.js"></script>
+  <script type="module" src="src/ui/modals/modal.js"></script>
   <script type="module" src="tree.js"></script>
-  <script type="module" src="table.js"></script>
-  <script type="module" src="exporter.js"></script>
-  <script type="module" src="notifications.js"></script>
-  <script type="module" src="search.js"></script>
+  <script type="module" src="src/ui/components/table.js"></script>
+  <script type="module" src="src/features/export/exporter.js"></script>
+  <script type="module" src="src/ui/components/notifications.js"></script>
+  <script type="module" src="src/features/search/search.js"></script>
+  <script src="docs/tutorial/tutorial.js"></script>
   
   <script type="module">
-    import { rebuildTableView } from './table.js';
+    import { rebuildTableView } from './src/ui/components/table.js';
     
     // Enhanced App Initialization with i18n support
     document.addEventListener('DOMContentLoaded', async () => {

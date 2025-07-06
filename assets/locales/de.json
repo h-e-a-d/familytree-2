@@ -1,0 +1,278 @@
+{
+  "meta": {
+    "title": "MapMyRoots - Kostenloser Stammbaum-Generator und Online-Genealogie-Software",
+    "description": "Erstellen Sie schöne, interaktive Stammbäume mit MapMyRoots - der kostenlosen Online-Genealogie-Software. Bauen Sie unbegrenzte Stammbäume, visualisieren Sie Ahnenforschung, verbinden Sie Verwandte und bewahren Sie Ihre Familiengeschichte für immer auf. Keine versteckten Kosten, intuitive Drag-and-Drop-Oberfläche.",
+    "keywords": "kostenloser Stammbaum-Ersteller, Online-Genealogie-Software, interaktiver Stammbaum-Generator, Familiengeschichte-Visualisierungstool, Ahnenforschung-Tracking, Stammbaum-Mapping, Erbe-Bewahrung, genealogische Forschung, Stammbaum-Ersteller, Online-Genealogie, Familienverbindungen",
+    "og": {
+      "title": "MapMyRoots - Kostenloser Online-Stammbaum-Generator und Genealogie-Software",
+      "description": "Erstellen Sie beeindruckende interaktive Stammbäume mit unserer kostenlosen Drag-and-Drop-Genealogie-Software. Verbinden Sie Generationen, bewahren Sie Erinnerungen und entdecken Sie Ihre Familiengeschichte. Keine Registrierung erforderlich."
+    },
+    "twitter": {
+      "title": "MapMyRoots - Kostenloser Online-Stammbaum-Generator und Genealogie-Software",
+      "description": "Erstellen Sie beeindruckende interaktive Stammbäume mit unserer kostenlosen Drag-and-Drop-Genealogie-Software. Verbinden Sie Generationen, bewahren Sie Erinnerungen und entdecken Sie Ihre Familiengeschichte."
+    }
+  },
+  "languages": {
+    "english": "English",
+    "spanish": "Español",
+    "russian": "Русский",
+    "german": "Deutsch"
+  },
+  "accessibility": {
+    "skip_to_content": "Zum Hauptinhalt springen"
+  },
+  "nav": {
+    "features": "Funktionen",
+    "how_it_works": "Wie es funktioniert",
+    "examples": "Beispiele",
+    "reviews": "Bewertungen",
+    "glossary": "Glossar",
+    "faq": "FAQ",
+    "start_building": "Kostenlos starten"
+  },
+  "hero": {
+    "title": "Kostenloser Stammbaum-Generator und Genealogie-Software",
+    "subtitle": "Erstellen Sie schöne, interaktive Stammbäume mit unserer intuitiven Drag-and-Drop-Oberfläche. Bauen Sie unbegrenzte Stammbäume, bewahren Sie Erinnerungen und entdecken Sie Ihr Familien-Erbe - völlig kostenlos für immer.",
+    "trust": {
+      "families": "Familien vertrauen uns",
+      "free": "Kostenlos für immer",
+      "rating": "Benutzerbewertung"
+    },
+    "buttons": {
+      "start_building": "Kostenlos starten",
+      "watch_demo": "Demo ansehen (2 Min)"
+    },
+    "note": "✓ Keine Registrierung erforderlich ✓ Keine Kreditkarte erforderlich ✓ Jederzeit exportieren"
+  },
+  "builder": {
+    "meta": {
+      "title": "MapMyRoots - Erstellen Sie Ihren Stammbaum",
+      "description": "Interaktiver Stammbaum-Builder mit Drag-and-Drop-Oberfläche. Erstellen, bearbeiten und visualisieren Sie Ihre Familienverbindungen mit MapMyRoots."
+    },
+    "cache": {
+      "auto_save": "Automatisches Speichern aktiviert",
+      "saved": "Gespeichert",
+      "last_saved": "Zuletzt gespeichert",
+      "cached_available": "Zwischengespeicherte Daten verfügbar",
+      "saving": "Speichern...",
+      "tree_name_placeholder": "Stammbaum-Namen eingeben...",
+      "people": "Personen",
+      "connections": "Verbindungen",
+      "auto_save_status": "Automatisches Speichern:",
+      "enabled": "aktiviert",
+      "tree_stats": "Stammbaum-Statistiken",
+      "expand_info": "Klicken Sie, um Details zu erweitern"
+    },
+    "modals": {
+      "delete_person": {
+        "title": "Person löschen",
+        "message": "Sind Sie sicher, dass Sie diese Person löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+        "confirm": "Ja, löschen"
+      },
+      "clear_all": {
+        "title": "Alle Daten löschen",
+        "message": "Sind Sie sicher, dass Sie alle Stammbaum-Daten löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+        "confirm": "Ja, alles löschen"
+      },
+      "line_removal": {
+        "title": "Verbindungslinie entfernen",
+        "message": "Dies verbirgt die visuelle Verbindungslinie, behält aber die Beziehungsdaten bei. Die Familienbeziehung bleibt intakt und kann später wiederhergestellt werden.",
+        "confirm": "Linie verbergen",
+        "description": "Visuelle Verbindung verbergen, Familiendaten beibehalten"
+      },
+      "connection": {
+        "title": "Personen verbinden",
+        "text": "Person A ist __ von Person B",
+        "mother": "Mutter",
+        "father": "Vater",
+        "child": "Kind",
+        "spouse": "Ehepartner",
+        "line_only": "Nur Linie"
+      },
+      "style": {
+        "title": "Ausgewählte Kreise gestalten",
+        "apply": "Änderungen anwenden",
+        "preview": "Vorschau der Änderungen"
+      },
+      "person": {
+        "add_title": "Person hinzufügen",
+        "edit_title": "Person bearbeiten",
+        "editing": "Bearbeitung:",
+        "new_person": "Neue Person"
+      }
+    },
+    "buttons": {
+      "bring_front": "VORNE",
+      "edit": "Bearbeiten",
+      "cancel": "Abbrechen",
+      "save": "Speichern",
+      "delete": "Löschen",
+      "style": "Stil",
+      "link": "Verknüpfen",
+      "undo": "Rückgängig"
+    },
+    "zoom": {
+      "zoom_in": "Vergrößern",
+      "zoom_out": "Verkleinern", 
+      "zoom_reset": "Zoom zurücksetzen",
+      "zoom_display": "Aktueller Zoom-Level"
+    },
+    "search": {
+      "placeholder": "Familienmitglieder suchen...",
+      "no_results": "Keine Familienmitglieder gefunden",
+      "results_count": "{{count}} Ergebnisse gefunden",
+      "clear": "Suche löschen"
+    },
+    "sidebar": {
+      "home": "Zur Startseite",
+      "search": "Familienmitglieder suchen",
+      "center_selected": "Ausgewählte Person zentrieren",
+      "zoom_in": "Vergrößern",
+      "zoom_out": "Verkleinern",
+      "settings": "Einstellungen öffnen",
+      "toggle_view": "Ansichtsmodus wechseln",
+      "undo": "Letzte Aktion rückgängig",
+      "redo": "Letzte Aktion wiederholen"
+    },
+    "settings": {
+      "title": "Stammbaum-Einstellungen",
+      "node_style": "Knoten-Stil",
+      "style_circle": "Kreis",
+      "style_rectangle": "Rechteck",
+      "display_preferences": "Anzeige-Einstellungen",
+      "show_maiden_name": "Mädchenname anzeigen",
+      "show_date_of_birth": "Geburtsdatum anzeigen",
+      "show_father_name": "Vatername anzeigen",
+      "node_appearance": "Knoten-Erscheinungsbild",
+      "node_color": "Knoten-Farbe:",
+      "node_size": "Knoten-Größe:",
+      "apply": "Anwenden",
+      "node_outline": "Knoten-Umriss",
+      "show_outline": "Umriss anzeigen",
+      "outline_thickness": "Umriss-Dicke:",
+      "outline_color": "Umriss-Farbe:",
+      "connector_lines": "Verbindungslinien",
+      "family_connections": "Familienverbindungen",
+      "spouse_connections": "Ehepartner-Verbindungen",
+      "line_only_connections": "Nur-Linien-Verbindungen",
+      "line_style": "Linien-Stil:",
+      "line_thickness": "Linien-Dicke:",
+      "line_color": "Linien-Farbe:",
+      "style_solid": "Durchgezogen",
+      "style_dashed": "Gestrichelt",
+      "style_dotted": "Gepunktet",
+      "style_dash_dot": "Strich-Punkt",
+      "text_settings": "Text-Einstellungen",
+      "font": "Schriftart:",
+      "font_size": "Schriftgröße:",
+      "name_color": "Namen-Farbe:",
+      "date_color": "Datum-Farbe:",
+      "basic_export": "Grundlegender Export",
+      "advanced_export": "Erweiterter Export",
+      "pdf_layout": "PDF-Layout",
+      "export_formats": "Grundlegend: SVG (Vektor), PNG (Bild), PDF (Dokument)<br>Erweitert: GEDCOM (Genealogie), PDF mit Layouts",
+      "data_management": "Datenverwaltung",
+      "save_family_tree": "Stammbaum speichern",
+      "load_family_tree": "Stammbaum laden",
+      "format_support": "Unterstützt JSON-Format-Dateien",
+      "reset": "Zurücksetzen",
+      "clear_all_data": "Alle Daten löschen",
+      "clear_warning": "Warnung: Dies löscht alle Stammbaum-Daten dauerhaft"
+    },
+    "table": {
+      "search_placeholder": "Suchen...",
+      "sort_name": "Name",
+      "sort_father_name": "Vatername",
+      "sort_surname": "Nachname",
+      "sort_dob": "Geburtsdatum",
+      "sort_gender": "Geschlecht",
+      "header_name": "Name",
+      "header_father_name": "Vatername",
+      "header_surname": "Nachname",
+      "header_maiden_name": "Mädchenname",
+      "header_dob": "Geburtsdatum",
+      "header_gender": "Geschlecht",
+      "header_mother": "Mutter",
+      "header_father": "Vater",
+      "header_spouse": "Ehepartner",
+      "header_actions": "Aktionen",
+      "no_results": "Keine Familienmitglieder entsprechen Ihrer Suche",
+      "total_people": "Gesamt: {{count}} Personen"
+    },
+    "form": {
+      "gender": "Geschlecht",
+      "gender_male": "Männlich",
+      "gender_female": "Weiblich",
+      "given_name": "Vorname",
+      "father_name": "Vatername",
+      "father_name_placeholder": "Vorname des Vaters",
+      "father_name_help": "Vorname des Vaters (nicht Nachname)",
+      "surname": "Nachname",
+      "maiden_name": "Mädchenname",
+      "date_of_birth": "Geburtsdatum",
+      "dob_placeholder": "tt.mm.jjjj oder jjjj",
+      "dob_help": "Vollständiges Datum tt.mm.jjjj oder nur Jahr jjjj eingeben",
+      "mother": "Mutter",
+      "father": "Vater",
+      "spouse": "Ehepartner",
+      "select_person": "Person auswählen...",
+      "no_selection": "Keine Auswahl"
+    },
+    "validation": {
+      "name_required": "Bitte geben Sie einen Namen ein.",
+      "gender_required": "Bitte wählen Sie ein Geschlecht.",
+      "invalid_date": "Bitte geben Sie ein gültiges Datum ein.",
+      "form_errors": "Bitte korrigieren Sie die folgenden Fehler:"
+    },
+    "notifications": {
+      "unknown_person": "Unbekannt",
+      "person_deleted": "Person gelöscht",
+      "delete_success": "{{name}} wurde aus dem Stammbaum entfernt",
+      "delete_failed": "Löschen fehlgeschlagen",
+      "delete_error": "Person konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
+      "invalid_file": "Ungültige Datei",
+      "drop_json": "Bitte ziehen Sie eine JSON-Datei hierher",
+      "bring_front_title": "In den Vordergrund gebracht",
+      "bring_front_single": "Person in den Vordergrund gebracht",
+      "bring_front_multiple": "{{count}} Personen in den Vordergrund gebracht",
+      "no_selection_front": "Bitte wählen Sie eine Person aus, um sie in den Vordergrund zu bringen.",
+      "save_success": "Änderungen erfolgreich gespeichert",
+      "save_error": "Fehler beim Speichern der Änderungen",
+      "connection_added": "Verbindung erfolgreich hinzugefügt",
+      "connection_removed": "Verbindung entfernt",
+      "style_applied": "Stil auf ausgewählte Knoten angewendet",
+      "tree_cleared": "Stammbaum geleert",
+      "export_success": "Export erfolgreich abgeschlossen",
+      "export_error": "Export fehlgeschlagen",
+      "loading": "Laden...",
+      "processing": "Verarbeitung..."
+    },
+    "actions": {
+      "add_person": "Neue Person hinzufügen",
+      "edit_person": "Personendaten bearbeiten",
+      "delete_person": "Person löschen",
+      "connect_people": "Personen verbinden",
+      "style_nodes": "Ausgewählte Knoten gestalten",
+      "bring_to_front": "In den Vordergrund bringen",
+      "center_view": "In der Ansicht zentrieren",
+      "zoom_to_fit": "Zoom anpassen",
+      "export_tree": "Stammbaum exportieren",
+      "save_tree": "Stammbaum speichern",
+      "load_tree": "Stammbaum laden"
+    },
+    "toolbar": {
+      "save": "Stammbaum speichern",
+      "load": "Stammbaum laden", 
+      "export": "Stammbaum exportieren"
+    },
+    "status": {
+      "ready": "Bereit",
+      "loading": "Stammbaum wird geladen...",
+      "saving": "Änderungen werden gespeichert...",
+      "error": "Ein Fehler ist aufgetreten",
+      "success": "Vorgang erfolgreich abgeschlossen",
+      "no_changes": "Keine Änderungen zu speichern",
+      "unsaved_changes": "Sie haben ungespeicherte Änderungen"
+    }
+  }
+} 

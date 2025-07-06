@@ -36,4 +36,10 @@ build/
 
 # Backup files
 *.bak
-*.backup 
+*.backup
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

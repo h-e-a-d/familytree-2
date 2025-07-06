@@ -1,0 +1,22 @@
+{
+  "name": "familytree-2",
+  "version": "1.0.0",
+  "description": "A modern, interactive web application for creating and managing family trees with a beautiful visual interface.",
+  "main": "accessibility.js",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/h-e-a-d/familytree-2.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/h-e-a-d/familytree-2/issues"
+  },
+  "homepage": "https://github.com/h-e-a-d/familytree-2#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.53.2",
+    "@types/node": "^24.0.10"
+  }
+}
