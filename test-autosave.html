@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Auto-save Test</title>
+</head>
+<body>
+    <h1>Auto-save Debug Test</h1>
+    <button onclick="testAutoSave()">Test Auto-save</button>
+    <button onclick="checkCache()">Check Cache</button>
+    <button onclick="clearCache()">Clear Cache</button>
+    <div id="output"></div>
+
+    <script>
+        function log(message) {
+            const output = document.getElementById('output');
+            output.innerHTML += `<div>${new Date().toLocaleTimeString()}: ${message}</div>`;
+        }
+
+        function testAutoSave() {
+            log('Testing auto-save functionality...');
+            
+            // Test localStorage
+            try {
+                const testData = {
+                    version: '2.6',
+                    persons: [{
+                        id: 'person1',
+                        name: 'Test Person',
+                        x: 300,
+                        y: 300
+                    }],
+                    timestamp: Date.now()
+                };
+                
+                localStorage.setItem('familyTreeCanvas_state', JSON.stringify(testData));
+                log('✅ Successfully saved test data to localStorage');
+                
+                const retrieved = localStorage.getItem('familyTreeCanvas_state');
+                if (retrieved) {
+                    const parsed = JSON.parse(retrieved);
+                    log(`✅ Successfully retrieved data: ${parsed.persons.length} person(s)`);
+                } else {
+                    log('❌ Failed to retrieve saved data');
+                }
+                
+            } catch (error) {
+                log(`❌ Error during auto-save test: ${error.message}`);
+            }
+        }
+
+        function checkCache() {
+            log('Checking current cache state...');
+            
+            const cached = localStorage.getItem('familyTreeCanvas_state');
+            if (cached) {
+                try {
+                    const data = JSON.parse(cached);
+                    log(`✅ Cache found with ${data.persons?.length || 0} person(s)`);
+                    log(`Cache version: ${data.version || 'unknown'}`);
+                    log(`Cache timestamp: ${data.timestamp ? new Date(data.timestamp).toLocaleString() : 'none'}`);
+                } catch (error) {
+                    log(`❌ Cache exists but is invalid: ${error.message}`);
+                }
+            } else {
+                log('❌ No cache found');
+            }
+        }
+
+        function clearCache() {
+            localStorage.removeItem('familyTreeCanvas_state');
+            log('🗑️ Cache cleared');
+        }
+
+        // Auto-check cache on load
+        window.onload = () => {
+            log('Auto-save debug test loaded');
+            checkCache();
+        };
+    </script>
+</body>
+</html>

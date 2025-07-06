@@ -196,9 +196,9 @@ export class TreeEngine {
   }
 
   /**
-   * Load initial state from cache or create new tree
+   * Load initial state from cache or create new tree (DEPRECATED - replaced by version at end of file)
    */
-  async loadInitialState() {
+  async loadInitialStateOld() {
     const loaded = await this.loadCachedState();
     if (!loaded) {
       console.log('No cached state found, starting with empty tree');
@@ -489,34 +489,50 @@ export class TreeEngine {
     console.log(`Generated ${this.renderer.connections.length} connections (including ${this.lineOnlyConnections.size} line-only)`);
   }
 
-  autoSave() {
-    // Implementation will be moved from original file
+  autoSaveOld() {
+    // DEPRECATED: Auto-save functionality moved to end of file
+    this.autoSave();
   }
 
   loadCachedState() {
-    // Implementation will be moved from original file
+    if (this.cacheManager) {
+      return this.cacheManager.loadCachedState();
+    }
+    return false;
   }
 
   pushUndoState() {
-    // Implementation will be moved from original file
+    if (this.undoRedoManager) {
+      this.undoRedoManager.pushUndoState();
+    }
   }
 
   initializeEnhancedCacheIndicator() {
-    // Implementation will be moved from original file
+    // Enhanced cache indicator initialization
+    if (window.enhancedCacheIndicator) {
+      this.enhancedCacheIndicator = window.enhancedCacheIndicator;
+      console.log('Enhanced cache indicator connected');
+    } else {
+      console.log('Enhanced cache indicator not found');
+    }
   }
 
   setupBringToFront() {
-    // Implementation will be moved from original file
+    // Bring to front functionality is already implemented in handleBringToFront
+    console.log('Bring to front setup complete');
   }
 
   openLineRemovalModal(connection) {
-    // Implementation will be moved from original file
+    const lineRemovalModal = document.getElementById('lineRemovalModal');
+    if (lineRemovalModal) {
+      lineRemovalModal.classList.remove('hidden');
+    }
   }
 
   /**
-   * Get current state for caching with comprehensive relationship data
+   * Get current state for caching with comprehensive relationship data (DEPRECATED - use other getCurrentState)
    */
-  getCurrentState() {
+  getCurrentStateOld() {
     console.log('Saving current state with enhanced relationship data...');
     
     // Get all person data with relationship information
@@ -1675,6 +1691,95 @@ export class TreeEngine {
     } catch (error) {
       console.error('Error processing loaded data:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Get current state for saving/caching
+   */
+  getCurrentState() {
+    const persons = [];
+    
+    // Convert person data to saveable format
+    for (const [personId, personData] of this.personData) {
+      const node = this.renderer?.nodes.get(personId);
+      
+      const person = {
+        id: personId,
+        name: personData.name || '',
+        fatherName: personData.fatherName || '',
+        surname: personData.surname || '',
+        maidenName: personData.maidenName || '',
+        dob: personData.dob || '',
+        gender: personData.gender || '',
+        motherId: personData.motherId || '',
+        fatherId: personData.fatherId || '',
+        spouseId: personData.spouseId || '',
+        x: node?.x || 300,
+        y: node?.y || 300,
+        color: node?.color || this.defaultColor,
+        radius: node?.radius || this.nodeRadius,
+        zIndex: node?.zIndex || 0
+      };
+      
+      persons.push(person);
+    }
+    
+    return {
+      version: this.cacheVersion,
+      persons: persons,
+      settings: {
+        nodeRadius: this.nodeRadius,
+        defaultColor: this.defaultColor,
+        fontFamily: this.fontFamily,
+        fontSize: this.fontSize,
+        nameColor: this.nameColor,
+        dateColor: this.dateColor
+      },
+      displayPreferences: this.displayPreferences,
+      nodeStyle: this.nodeStyle,
+      camera: this.renderer?.camera || { x: 0, y: 0, scale: 1 },
+      hiddenConnections: Array.from(this.hiddenConnections),
+      lineOnlyConnections: Array.from(this.lineOnlyConnections),
+      nextId: this.nextId
+    };
+  }
+
+  /**
+   * Load initial state from cache
+   */
+  async loadInitialState() {
+    console.log('Loading initial state from cache...');
+    
+    if (this.cacheManager) {
+      const loaded = await this.cacheManager.loadCachedState();
+      
+      if (loaded) {
+        console.log('Successfully loaded cached state');
+        
+        // Update cache indicator
+        if (this.enhancedCacheIndicator) {
+          this.enhancedCacheIndicator.updateStats();
+          this.enhancedCacheIndicator.updateSaveStatus('Cached data loaded');
+        }
+        
+        return true;
+      } else {
+        console.log('No cached state found, starting fresh');
+        return false;
+      }
+    } else {
+      console.warn('Cache manager not available');
+      return false;
+    }
+  }
+
+  /**
+   * Auto-save current state
+   */
+  autoSave() {
+    if (this.cacheManager) {
+      this.cacheManager.autoSave();
     }
   }
 }
