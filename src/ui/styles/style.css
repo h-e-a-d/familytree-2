@@ -876,6 +876,28 @@ html, body {
   cursor: pointer;
 }
 
+.btn-success:hover {
+  background-color: #229954;
+}
+
+.btn-success-outline {
+  background-color: transparent;
+  color: #27ae60;
+  border: 2px solid #27ae60;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.btn-success-outline:hover {
+  background-color: #27ae60;
+  color: white;
+}
+
 
 /* ENHANCED: Validation Error Styles - Optimized */
 .form-group.error input,

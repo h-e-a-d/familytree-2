@@ -974,26 +974,46 @@ export class TreeEngine {
   centerSelectedNode() {
     if (!this.renderer) {
       console.error('Renderer not available for centering');
+      if (window.notifications) {
+        window.notifications.error('Error', 'Tree renderer not available');
+      }
       return;
     }
 
     const selectedNodes = this.renderer.getSelectedNodes();
     
     if (selectedNodes.size === 0) {
-      console.log('No nodes selected, centering on all nodes');
-      // Center on all nodes if none selected
-      const allNodes = Array.from(this.renderer.nodes.values());
-      if (allNodes.length > 0) {
-        this.centerOnNodes(allNodes);
+      console.log('No nodes selected for centering');
+      if (window.notifications) {
+        window.notifications.warning('No Selection', 'Please select a person to locate');
+      }
+      return;
+    }
+    
+    if (selectedNodes.size > 1) {
+      console.log('Multiple nodes selected for centering');
+      if (window.notifications) {
+        window.notifications.warning('Multiple Selection', 'Only one node can be located. Please select a single person.');
+      }
+      return;
+    }
+
+    // Center on the single selected node
+    const selectedNodeId = Array.from(selectedNodes)[0];
+    const selectedNode = this.renderer.nodes.get(selectedNodeId);
+    
+    if (selectedNode) {
+      console.log('Centering on selected node:', selectedNodeId);
+      this.centerOnNodes([selectedNode]);
+      
+      if (window.notifications) {
+        const personName = selectedNode.name || 'Person';
+        window.notifications.success('Located', `Centered view on ${personName}`);
       }
     } else {
-      // Center on selected nodes
-      const selectedNodeData = Array.from(selectedNodes).map(id => 
-        this.renderer.nodes.get(id)
-      ).filter(node => node);
-      
-      if (selectedNodeData.length > 0) {
-        this.centerOnNodes(selectedNodeData);
+      console.error('Selected node not found:', selectedNodeId);
+      if (window.notifications) {
+        window.notifications.error('Error', 'Selected person not found');
       }
     }
   }
@@ -1008,18 +1028,53 @@ export class TreeEngine {
     const centerX = nodes.reduce((sum, node) => sum + node.x, 0) / nodes.length;
     const centerY = nodes.reduce((sum, node) => sum + node.y, 0) / nodes.length;
 
-    // Get canvas dimensions
+    // Use the same logic as search function - this works perfectly
+    this.centerOnNodeUsingSearchLogic({x: centerX, y: centerY});
+  }
+
+  /**
+   * Center camera using the same proven logic as search function
+   */
+  centerOnNodeUsingSearchLogic(node) {
+    if (!this.renderer || !this.renderer.canvas) {
+      console.error('Renderer or canvas not available');
+      return;
+    }
+    
     const canvas = this.renderer.canvas;
-    if (!canvas) return;
-
-    const targetCamera = {
-      x: canvas.width / 2 - centerX,
-      y: canvas.height / 2 - centerY,
-      scale: this.renderer.camera.scale
-    };
-
-    // Animate to target position
-    this.animateCamera(targetCamera);
+    const canvasWidth = canvas.width / (this.renderer.dpr || 1);
+    const canvasHeight = canvas.height / (this.renderer.dpr || 1);
+    
+    console.log('🎯 Centering using search logic:');
+    console.log('  Canvas dimensions:', canvasWidth, 'x', canvasHeight);
+    console.log('  Node position:', node.x, node.y);
+    console.log('  Current camera:', this.renderer.camera);
+    
+    // Ensure we have a reasonable zoom level (same as search function)
+    let targetScale = this.renderer.camera.scale;
+    
+    // If current scale is too small (zoomed out too much), zoom in to a reasonable level
+    if (targetScale < 0.8) {
+      targetScale = 1.0;
+    }
+    // If current scale is too large (zoomed in too much), zoom out a bit
+    else if (targetScale > 3.0) {
+      targetScale = 2.0;
+    }
+    
+    // Calculate the exact center position (SAME FORMULA AS SEARCH)
+    // We want the node to be at the center of the visible canvas
+    const targetCameraX = (canvasWidth / 2) - (node.x * targetScale);
+    const targetCameraY = (canvasHeight / 2) - (node.y * targetScale);
+    
+    console.log('  Target camera position:', targetCameraX, targetCameraY, 'scale:', targetScale);
+    
+    // Animate to the new position
+    this.animateCamera({
+      x: targetCameraX,
+      y: targetCameraY,
+      scale: targetScale
+    });
   }
 
   /**
@@ -1029,23 +1084,38 @@ export class TreeEngine {
     if (!this.renderer) return;
 
     const startCamera = { ...this.renderer.camera };
-    const duration = 500; // ms
+    const duration = 1000; // Same duration as search function
     const startTime = performance.now();
+
+    console.log('🎬 Starting camera animation:');
+    console.log('  From:', startCamera.x, startCamera.y, 'scale:', startCamera.scale);
+    console.log('  To:', targetCamera.x, targetCamera.y, 'scale:', targetCamera.scale);
 
     const animate = (currentTime) => {
       const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / duration, 1);
       
-      // Easing function
-      const easeProgress = 1 - Math.pow(1 - progress, 3);
+      // Improved easing function (ease-in-out cubic) - same as search
+      const easeProgress = progress < 0.5 
+        ? 4 * progress * progress * progress 
+        : 1 - Math.pow(-2 * progress + 2, 3) / 2;
       
       this.renderer.camera.x = startCamera.x + (targetCamera.x - startCamera.x) * easeProgress;
       this.renderer.camera.y = startCamera.y + (targetCamera.y - startCamera.y) * easeProgress;
+      
+      // Animate scale as well (this was missing!)
+      if (targetCamera.scale !== undefined) {
+        this.renderer.camera.scale = startCamera.scale + (targetCamera.scale - startCamera.scale) * easeProgress;
+      }
       
       this.renderer.needsRedraw = true;
       
       if (progress < 1) {
         requestAnimationFrame(animate);
+      } else {
+        console.log('✅ Camera animation complete:');
+        console.log('  Final position:', this.renderer.camera.x, this.renderer.camera.y);
+        console.log('  Final scale:', this.renderer.camera.scale);
       }
     };
 

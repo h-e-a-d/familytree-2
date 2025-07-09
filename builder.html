@@ -23,7 +23,6 @@
   />
   <link rel="stylesheet" href="src/ui/styles/style.css" />
   <link rel="stylesheet" href="src/ui/styles/modal.css" />
-  <link rel="stylesheet" href="docs/tutorial/tutorial.css" />
   
   <!-- Language Switcher Styles -->
   <style>
@@ -195,6 +194,45 @@
     </div>
   </div>
 
+  <!-- Load Default Tree Confirmation Modal -->
+  <div id="loadDefaultConfirmModal" class="modal hidden">
+    <div class="modal-content confirmation-modal">
+      <button class="modal-close-btn" aria-label="Close">&times;</button>
+      <h2>
+        <span class="person-icon">🌳</span>
+        <span data-i18n="builder.modals.load_default.title">Load Default Tree</span>
+      </h2>
+      <div class="modal-body">
+        <div class="confirmation-content">
+          <div class="warning-icon">⚠️</div>
+          <p class="confirmation-message" data-i18n="builder.modals.load_default.message">
+            Are you sure you want to load the default family tree template? This will replace all current data with a 3-generation sample family tree.
+          </p>
+          <div class="consequence-list">
+            <div class="consequence-item">
+              <span class="bullet">•</span>
+              <span>All current family members will be replaced</span>
+            </div>
+            <div class="consequence-item">
+              <span class="bullet">•</span>
+              <span>All existing relationships will be lost</span>
+            </div>
+            <div class="consequence-item">
+              <span class="bullet">•</span>
+              <span>A new 3-generation template will be loaded</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="form-actions">
+        <div class="form-actions-right">
+          <button type="button" id="cancelLoadDefault" data-i18n="builder.buttons.cancel">Cancel</button>
+          <button type="button" id="confirmLoadDefault" class="btn-success" data-i18n="builder.modals.load_default.confirm">Yes, Load Template</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Enhanced Line Removal Modal -->
   <div id="lineRemovalModal" class="modal hidden">
     <div class="modal-content confirmation-modal">
@@ -295,8 +333,9 @@
     
     <button class="sidebar-btn" id="centerSelectedBtn" data-i18n-title="builder.sidebar.center_selected">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="3"/>
-        <path d="M12 1v6M12 17v6M4.22 4.22l4.24 4.24M15.54 15.54l4.24 4.24M1 12h6M17 12h6M4.22 19.78l4.24-4.24M15.54 8.46l4.24-4.24"/>
+        <circle cx="12" cy="12" r="10"/>
+        <circle cx="12" cy="12" r="3" fill="currentColor"/>
+        <path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>
       </svg>
     </button>
     
@@ -305,16 +344,15 @@
     <button class="sidebar-btn" id="settingsToggle" data-i18n-title="builder.sidebar.settings">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="12" cy="12" r="3"/>
-        <path d="m12 1 1.5 4 3.5-1-1 3.5 4 1.5-4 1.5 1 3.5-3.5-1L12 23l-1.5-4-3.5 1 1-3.5L4 14.5l4-1.5-1-3.5 3.5 1L12 1z"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
       </svg>
     </button>
     
     <button class="sidebar-btn" id="viewToggle" data-i18n-title="builder.sidebar.toggle_view">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <rect x="3" y="3" width="7" height="7"/>
-        <rect x="14" y="3" width="7" height="7"/>
-        <rect x="14" y="14" width="7" height="7"/>
-        <rect x="3" y="14" width="7" height="7"/>
+        <rect x="3" y="3" width="18" height="4" rx="1"/>
+        <rect x="3" y="10" width="18" height="4" rx="1"/>
+        <rect x="3" y="17" width="18" height="4" rx="1"/>
       </svg>
     </button>
     
@@ -590,6 +628,7 @@
       <div class="collapsible-content" id="resetSection">
         <div class="setting-group">
           <button id="clearAllBtn" class="btn-danger-outline" data-i18n="builder.settings.clear_all_data">Clear All Data</button>
+          <button id="loadDefaultBtn" class="btn-success-outline" data-i18n="builder.settings.load_default_tree">Load Default Tree</button>
         </div>
         <div class="format-support" data-i18n="builder.settings.clear_warning">
           Warning: This will permanently delete all family tree data
@@ -917,7 +956,6 @@
   <script type="module" src="src/features/export/exporter.js"></script>
   <script type="module" src="src/ui/components/notifications.js"></script>
   <script type="module" src="src/features/search/search.js"></script>
-  <script src="docs/tutorial/tutorial.js"></script>
   
   <script type="module">
     import { rebuildTableView } from './src/ui/components/table.js';
@@ -948,6 +986,15 @@
         initializeEnhancedSettings();
         initializeEnhancedCacheIndicator();
       }, 1000);
+      
+      // Initialize tutorial system
+      console.log('About to initialize tutorial...');
+      await initializeTutorial();
+      console.log('Tutorial initialization complete');
+      
+      // Add debug controls if needed
+      addTutorialControls();
+      console.log('Debug controls added');
     });
     
     function setupDragAndDrop() {
@@ -1415,6 +1462,71 @@
       
       console.log('Enhanced settings initialized');
     }
+
+    // Initialize Simple Tutorial System
+    async function initializeTutorial() {
+      try {
+        const SimpleTutorial = await import('./src/tutorial/SimpleTutorial.js');
+        const TutorialClass = SimpleTutorial.default;
+        
+        // Create global tutorial class reference
+        window.SimpleTutorial = TutorialClass;
+        
+        console.log('SimpleTutorial class:', TutorialClass);
+        
+        // Auto-start tutorial for new users
+        if (TutorialClass.shouldAutoStart()) {
+          setTimeout(() => {
+            const tutorial = new TutorialClass();
+            tutorial.start();
+            window.currentTutorial = tutorial; // For debugging
+          }, 1500); // Wait for page to fully load
+        }
+        
+        console.log('Simple tutorial system initialized');
+      } catch (error) {
+        console.warn('Tutorial system failed to initialize:', error);
+        console.error(error);
+      }
+    }
+
+    // Add tutorial control buttons (optional - for testing/admin)
+    function addTutorialControls() {
+      if (window.location.search.includes('debug') || window.location.search.includes('tutorial')) {
+        const controls = document.createElement('div');
+        controls.style.cssText = `
+          position: fixed;
+          top: 10px;
+          right: 10px;
+          z-index: 100001;
+          background: white;
+          padding: 10px;
+          border-radius: 8px;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+          display: flex;
+          gap: 8px;
+        `;
+        
+        controls.innerHTML = `
+          <button onclick="startTutorialManually()" style="padding: 4px 8px; font-size: 12px;">Start Tutorial</button>
+          <button onclick="localStorage.removeItem('family-tree-tutorial-completed')" style="padding: 4px 8px; font-size: 12px;">Reset Progress</button>
+        `;
+        
+        // Add manual start function to global scope
+        window.startTutorialManually = function() {
+          if (window.SimpleTutorial) {
+            const tutorial = new window.SimpleTutorial();
+            tutorial.start();
+          } else {
+            alert('Tutorial not loaded yet');
+          }
+        };
+        
+        document.body.appendChild(controls);
+      }
+    }
+
+    // Tutorial initialization moved to main DOMContentLoaded above
   </script>
 </body>
 </html>

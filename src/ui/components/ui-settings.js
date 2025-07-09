@@ -248,6 +248,99 @@ export function setupSettings(treeCore) {
     }
   });
 
+  // --- Load Default Tree Button ---
+  const loadDefaultBtn = document.getElementById('loadDefaultBtn');
+  if (loadDefaultBtn) {
+    loadDefaultBtn.addEventListener('click', () => {
+      openLoadDefaultModal();
+    });
+  }
+
+  // Load Default Tree Modal handlers
+  function openLoadDefaultModal() {
+    const modal = document.getElementById('loadDefaultConfirmModal');
+    if (modal) {
+      modal.classList.remove('hidden');
+    }
+  }
+
+  function closeLoadDefaultModal() {
+    const modal = document.getElementById('loadDefaultConfirmModal');
+    if (modal) {
+      modal.classList.add('hidden');
+    }
+  }
+
+  // Modal event listeners
+  const cancelLoadDefaultBtn = document.getElementById('cancelLoadDefault');
+  const confirmLoadDefaultBtn = document.getElementById('confirmLoadDefault');
+  const loadDefaultModal = document.getElementById('loadDefaultConfirmModal');
+
+  if (cancelLoadDefaultBtn) {
+    cancelLoadDefaultBtn.addEventListener('click', closeLoadDefaultModal);
+  }
+
+  if (confirmLoadDefaultBtn) {
+    confirmLoadDefaultBtn.addEventListener('click', () => {
+      loadDefaultTemplate(treeCore);
+      closeLoadDefaultModal();
+    });
+  }
+
+  if (loadDefaultModal) {
+    const closeBtn = loadDefaultModal.querySelector('.modal-close-btn');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', closeLoadDefaultModal);
+    }
+
+    // Close on background click
+    loadDefaultModal.addEventListener('click', (e) => {
+      if (e.target === loadDefaultModal) {
+        closeLoadDefaultModal();
+      }
+    });
+  }
+
+  // Load Default Template Function
+  async function loadDefaultTemplate(treeCore) {
+    try {
+      notifications.info('Loading Template', 'Loading default family tree template...');
+      
+      const response = await fetch('./docs/templates/default.json');
+      if (!response.ok) {
+        throw new Error(`Failed to load template: ${response.status}`);
+      }
+      
+      const defaultData = await response.json();
+      
+      // Process the template data
+      treeCore.processLoadedData(defaultData);
+      
+      // Update cache indicator if available
+      if (treeCore.enhancedCacheIndicator) {
+        treeCore.enhancedCacheIndicator.updateStats();
+        treeCore.enhancedCacheIndicator.updateSaveStatus('Template loaded');
+      }
+      
+      // Auto-save the new data
+      if (treeCore.cacheManager) {
+        treeCore.cacheManager.autoSave();
+      }
+      
+      // Update undo/redo state
+      if (treeCore.undoRedoManager) {
+        treeCore.undoRedoManager.clearStacks();
+        treeCore.undoRedoManager.pushUndoState();
+      }
+      
+      notifications.success('Template Loaded', 'Default family tree template loaded successfully');
+      
+    } catch (error) {
+      console.error('Failed to load default template:', error);
+      notifications.error('Load Failed', 'Failed to load default template. Please try again.');
+    }
+  }
+
   // Attach helpers to treeCore
   treeCore.updateRendererSettings = function() {
     if (!this.renderer) return;

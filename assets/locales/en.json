@@ -288,6 +288,11 @@
         "message": "Are you sure you want to clear all family tree data? This action cannot be undone.",
         "confirm": "Yes, Clear All"
       },
+      "load_default": {
+        "title": "Load Default Tree",
+        "message": "Are you sure you want to load the default family tree template? This will replace all current data with a 3-generation sample family tree.",
+        "confirm": "Yes, Load Template"
+      },
       "line_removal": {
         "title": "Remove Connection Line",
         "message": "This will hide the visual connection line but preserve the relationship data. The family relationship will remain intact and can be restored later.",
@@ -391,6 +396,7 @@
       "format_support": "Supports JSON format files",
       "reset": "Reset",
       "clear_all_data": "Clear All Data",
+      "load_default_tree": "Load Default Tree",
       "clear_warning": "Warning: This will permanently delete all family tree data"
     },
     "table": {

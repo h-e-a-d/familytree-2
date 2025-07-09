@@ -288,6 +288,11 @@
         "message": "¿Estás seguro de que quieres limpiar todos los datos del árbol genealógico? Esta acción no se puede deshacer.",
         "confirm": "Sí, Limpiar Todo"
       },
+      "load_default": {
+        "title": "Cargar Árbol Predeterminado",
+        "message": "¿Estás seguro de que quieres cargar la plantilla de árbol genealógico predeterminado? Esto reemplazará todos los datos actuales con un árbol familiar de muestra de 3 generaciones.",
+        "confirm": "Sí, Cargar Plantilla"
+      },
       "line_removal": {
         "title": "Eliminar Línea de Conexión",
         "message": "Esto ocultará la línea de conexión visual pero preservará los datos de relación. La relación familiar permanecerá intacta y puede ser restaurada más tarde.",
@@ -391,6 +396,7 @@
       "format_support": "Soporta archivos de formato JSON",
       "reset": "Restablecer",
       "clear_all_data": "Limpiar Todos los Datos",
+      "load_default_tree": "Cargar Árbol Predeterminado",
       "clear_warning": "Advertencia: Esto eliminará permanentemente todos los datos del árbol genealógico"
     },
     "table": {
