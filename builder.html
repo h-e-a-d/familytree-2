@@ -14,13 +14,58 @@
   })(window,document,'script','dataLayer','GTM-MNZ4MJB7');</script>
   <!-- End Google Tag Manager -->
   
-  <!-- Google Fonts -->
+  <!-- Google Fonts with optimized loading -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Roboto:wght@400;500&display=swap"
     rel="stylesheet"
+    media="print"
+    onload="this.media='all'"
   />
+  <noscript>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Roboto:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+  </noscript>
+  <!-- Critical CSS variables to prevent FOUC -->
+  <style>
+    :root {
+      --primary-color: #0f866c;
+      --primary-dark: #0a6b56;
+      --secondary-color: #2563eb;
+      --text-primary: #2c3e50;
+      --text-secondary: #7f8c8d;
+      --background: #ffffff;
+      --background-alt: #f8f9fa;
+      --background-card: #ffffff;
+      --border-color: #e9ecef;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    }
+    
+    /* Prevent flash of unstyled content */
+    body {
+      font-family: var(--font-primary);
+      background-color: var(--background);
+      color: var(--text-primary);
+      visibility: hidden;
+    }
+    
+    /* Show body after fonts and styles are loaded */
+    body.fonts-loaded {
+      visibility: visible;
+    }
+    
+    /* Disable animations until page is fully loaded */
+    .no-animations * {
+      animation-duration: 0s !important;
+      animation-delay: 0s !important;
+      transition-duration: 0s !important;
+    }
+  </style>
+  
   <link rel="stylesheet" href="src/ui/styles/style.css" />
   <link rel="stylesheet" href="src/ui/styles/modal.css" />
   
@@ -96,7 +141,7 @@
     }
   </style>
 </head>
-<body>
+<body class="no-animations">
   <!-- Google Tag Manager (noscript) -->
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MNZ4MJB7"
   height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
@@ -1527,6 +1572,26 @@
     }
 
     // Tutorial initialization moved to main DOMContentLoaded above
+  </script>
+  
+  <!-- Font loading optimization -->
+  <script>
+    // Prevent FOUC and enable animations after fonts load
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check if fonts are loaded
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(function() {
+          document.body.classList.remove('no-animations');
+          document.body.classList.add('fonts-loaded');
+        });
+      } else {
+        // Fallback for browsers without font loading API
+        setTimeout(function() {
+          document.body.classList.remove('no-animations');
+          document.body.classList.add('fonts-loaded');
+        }, 100);
+      }
+    });
   </script>
 </body>
 </html>

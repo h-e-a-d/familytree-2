@@ -121,11 +121,45 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&display=swap&display=swap" rel="stylesheet">
+  <!-- Google Fonts with optimized loading -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+    media="print"
+    onload="this.media='all'"
+  />
+  <noscript>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </noscript>
   
   <!-- Favicon -->
   <link rel="icon" type="image/x-icon" href="./public/favicon.ico">
+  
+  <!-- Critical CSS to prevent FOUC -->
+  <style>
+    /* Prevent flash of unstyled content */
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background-color: #ffffff;
+      color: #2c3e50;
+      visibility: hidden;
+    }
+    
+    /* Show body after fonts and styles are loaded */
+    body.fonts-loaded {
+      visibility: visible;
+    }
+    
+    /* Disable animations until page is fully loaded */
+    .no-animations * {
+      animation-duration: 0s !important;
+      animation-delay: 0s !important;
+      transition-duration: 0s !important;
+    }
+  </style>
   
   <!-- Main Stylesheet -->
   <link rel="stylesheet" href="./src/ui/styles/homepage.css">
@@ -202,7 +236,7 @@
     }
   </style>
 </head>
-<body>
+<body class="no-animations">
   <!-- Google Tag Manager (noscript) -->
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MNZ4MJB7"
   height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
@@ -769,6 +803,26 @@
   <script src="./src/features/i18n/i18n.js"></script>
   <!-- Language Switcher -->
   <script src="./src/features/i18n/language-switcher.js"></script>
+  <!-- Font loading optimization -->
+  <script>
+    // Prevent FOUC and enable animations after fonts load
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check if fonts are loaded
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(function() {
+          document.body.classList.remove('no-animations');
+          document.body.classList.add('fonts-loaded');
+        });
+      } else {
+        // Fallback for browsers without font loading API
+        setTimeout(function() {
+          document.body.classList.remove('no-animations');
+          document.body.classList.add('fonts-loaded');
+        }, 100);
+      }
+    });
+  </script>
+  
   <!-- Main JavaScript -->
   <script src="./src/ui/components/homepage.js" defer></script>
 </body>

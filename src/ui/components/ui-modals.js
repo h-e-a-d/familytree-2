@@ -646,6 +646,16 @@ class ModalUXEnhancer {
   optimizeTouchTargets() {
     const buttons = document.querySelectorAll('button, .btn, [role="button"]');
     buttons.forEach(button => {
+      // Skip sidebar buttons and toolbar buttons
+      if (button.classList.contains('sidebar-btn') || 
+          button.classList.contains('toolbar-btn') ||
+          button.classList.contains('zoom-btn') ||
+          button.closest('.sidebar') ||
+          button.closest('.top-toolbar') ||
+          button.closest('.zoom-controls')) {
+        return;
+      }
+      
       const rect = button.getBoundingClientRect();
       if (rect.height < 44 || rect.width < 44) {
         button.style.minHeight = '44px';
@@ -858,8 +868,10 @@ class ModalUXEnhancer {
       /* Mobile optimizations */
       @media (max-width: 768px) {
         .modal-enhanced .modal-content {
-          margin: 16px;
-          max-height: calc(100vh - 32px);
+          margin: 16px 16px 24px 16px;
+          max-height: calc(100dvh - 96px);
+          max-height: calc(100vh - 96px);
+          max-height: calc(100svh - 96px);
           width: calc(100vw - 32px);
         }
 
@@ -875,6 +887,16 @@ class ModalUXEnhancer {
 
         .gender-enhanced {
           flex-direction: column;
+        }
+      }
+      
+      @media (max-width: 480px) {
+        .modal-enhanced .modal-content {
+          margin: 16px 16px 30px 16px;
+          max-height: calc(100dvh - 120px);
+          max-height: calc(100vh - 120px);
+          max-height: calc(100svh - 120px);
+          width: calc(100vw - 32px);
         }
       }
     `;

@@ -1,3 +1,32 @@
+/* CSS Variable Definitions with Fallbacks */
+:root {
+  --primary-color: #0f866c;
+  --primary-dark: #0a6b56;
+  --secondary-color: #2563eb;
+  --accent-color: #e74c3c;
+  --success-color: #27ae60;
+  --warning-color: #f39c12;
+  --text-primary: #2c3e50;
+  --text-secondary: #7f8c8d;
+  --text-light: #bdc3c7;
+  --background: #ffffff;
+  --background-alt: #f8f9fa;
+  --background-card: #ffffff;
+  --border-color: #e9ecef;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  --shadow-hover: 0 20px 40px rgba(0, 0, 0, 0.15);
+  --shadow-card: 0 4px 6px rgba(0, 0, 0, 0.05);
+  --border-radius: 50px;
+  --border-radius-card: 12px;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-display: 'Playfair Display', Georgia, serif;
+  --max-width: 1200px;
+  --header-height: 80px;
+  --gradient-primary: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  --gradient-success: linear-gradient(135deg, var(--success-color), var(--primary-color));
+}
+
 /* Basic Reset */
 * {
   margin: 0;
@@ -25,8 +54,10 @@
 
 html, body {
   height: 100%;
-  font-family: 'Inter', sans-serif;
-  background-color: #f4f4f4;
+  height: 100dvh;
+  font-family: var(--font-primary, 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif);
+  background-color: var(--background-alt, #f4f4f4);
+  color: var(--text-primary, #2c3e50);
   overflow: hidden; /* Prevent page scrolling */
   touch-action: manipulation; /* Allow only basic touch actions */
   -webkit-overflow-scrolling: touch;
@@ -38,6 +69,7 @@ html, body {
 #mainContainer {
   display: flex;
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
   touch-action: none; /* Disable default touch behaviors */
   position: relative;
@@ -976,6 +1008,7 @@ html, body {
   right: 16px;
   width: 340px;
   max-height: calc(100vh - 100px);
+  max-height: calc(100dvh - 100px);
   overflow-y: auto;
   background: #ffffff;
   border: 1px solid #e0e0e0;
@@ -1472,7 +1505,7 @@ html, body {
 .export-menu {
   position: fixed;
   top: 70px;
-  left: 16px;
+  left: 70px;
   background: rgba(255, 255, 255, 0.95);
   border-radius: 12px;
   padding: 8px;
@@ -1555,6 +1588,7 @@ html, body {
   left: 0;
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   background: rgba(0, 0, 0, 0);
   opacity: 0;
   transition: all 0.3s ease;
@@ -2047,6 +2081,7 @@ html, body {
     right: 16px;
     left: 16px;
     max-height: calc(100vh - 80px);
+    max-height: calc(100dvh - 80px);
   }
   
   .collapsible-header {
@@ -2337,4 +2372,35 @@ html, body {
   font-size: 12px;
   color: #6c757d;
   margin-top: 4px;
+}
+
+/* ========================================
+   MOBILE VIEWPORT HEIGHT FIXES - TARGETED APPROACH
+   Only fix the modal height issue without breaking layout
+======================================== */
+@media screen and (max-width: 768px) {
+  /* Only adjust modal-related elements to respect mobile URL bar */
+  .modal {
+    height: 100dvh !important;
+    height: 100vh !important;
+  }
+  
+  .modal-content {
+    max-height: calc(100dvh - 96px) !important;
+    max-height: calc(100vh - 96px) !important;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .modal {
+    height: 100dvh !important;
+    height: 100vh !important;
+    height: 100svh !important;
+  }
+  
+  .modal-content {
+    max-height: calc(100dvh - 120px) !important;
+    max-height: calc(100vh - 120px) !important;
+    max-height: calc(100svh - 120px) !important;
+  }
 }
